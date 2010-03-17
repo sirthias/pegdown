@@ -12,4 +12,8 @@ public class AstNode extends MutableTreeNodeImpl<AstNode> {
         return this;
     }
 
+    public AstNode setText(String text) {
+        this.text = text;
+        return this;
+    }
 }

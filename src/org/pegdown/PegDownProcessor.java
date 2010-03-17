@@ -8,7 +8,15 @@ import org.parboiled.support.ParsingResult;
 
 public class PegDownProcessor {
 
-    private final PegDownParser parser = Parboiled.createParser(PegDownParser.class);
+    private final PegDownParser parser;
+
+    public PegDownProcessor() {
+        this(false);
+    }
+
+    public PegDownProcessor(boolean suppressHtml) {
+        parser = Parboiled.createParser(PegDownParser.class, suppressHtml);
+    }
 
     public String toHtml(@NotNull String markDownSource) {
         ParsingResult<AstNode> result = ReportingParseRunner.run(parser.Doc(), markDownSource);

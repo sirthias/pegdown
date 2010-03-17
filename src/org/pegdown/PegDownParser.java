@@ -1,27 +1,34 @@
 package org.pegdown;
 
+import org.parboiled.Action;
 import org.parboiled.BaseParser;
+import org.parboiled.Context;
 import org.parboiled.Rule;
 import org.parboiled.common.StringUtils;
 import org.parboiled.google.base.Function;
+import org.parboiled.support.Cached;
 
 import static org.parboiled.trees.TreeUtils.addChild;
 
 @SuppressWarnings({"InfiniteRecursion"})
 public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
 
-    private String[] HTML_TAGS = new String[]{"address", "blockquote", "center", "dir", "div", "dl", "fieldset", "form",
-            "h1", "h2", "h3", "h4", "h5", "h6", "hr", "isindex", "menu", "noframes", "noscript", "ol", "p", "pre",
-            "table", "ul", "dd", "dt", "frameset", "li", "tbody", "td", "tfoot", "th", "thead", "tr", "script"};
+    private static final String[] HTML_TAGS = new String[]{"address", "blockquote", "center", "dir", "div", "dl",
+            "fieldset", "form", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "isindex", "menu", "noframes", "noscript",
+            "ol", "p", "pre", "table", "ul", "dd", "dt", "frameset", "li", "tbody", "td", "tfoot", "th", "thead", "tr",
+            "script", "style"};
+
+    protected final boolean suppressHtml;
+
+    public PegDownParser(boolean suppressHtml) {
+        this.suppressHtml = suppressHtml;
+    }
 
     Rule Doc() {
         return sequence(
-                CREATE(),
+                CREATE(NONE),
                 zeroOrMore(
-                        sequence(
-                                Block(),
-                                UP2(ADD_CHILD(LAST_VALUE()))
-                        )
+                        sequence(Block(), UP2(ATTACH(LAST_VALUE())))
                 )
         );
     }
@@ -30,7 +37,7 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
         return sequence(
                 zeroOrMore(BlankLine()),
                 firstOf(BlockQuote(), Verbatim(), Note(), Reference(), HorizontalRule(), Heading(), OrderedList(),
-                        BulletList(), HtmlBlock(), StyleBlock(), Para(), Plain())
+                        BulletList(), HtmlBlock(), Para(), Plain())
         );
     }
 
@@ -42,29 +49,22 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule Plain() {
-        return sequence(
-                Inlines(),
-                SET(LAST_VALUE().setType(PLAIN))
-        );
+        return sequence(Inlines(), SET(LAST_VALUE().setType(PLAIN)));
     }
 
     Rule BlockQuote() {
         return oneOrMore(
                 sequence(
-                        '>', optional(' '), Line(), UP(CREATE(LAST_VALUE(), BLOCKQUOTE)),
+                        '>', optional(' '), Line(), UP(CREATE(BLOCKQUOTE, LAST_VALUE())),
                         zeroOrMore(
                                 sequence(
                                         testNot('>'),
                                         testNot(BlankLine()),
-                                        Line(),
-                                        UP3(ADD_CHILD(LAST_VALUE()))
+                                        Line(), UP3(ATTACH(LAST_VALUE()))
                                 )
                         ),
                         zeroOrMore(
-                                sequence(
-                                        BlankLine(),
-                                        UP3(ADD_CHILD(LAST_VALUE()))
-                                )
+                                sequence(BlankLine(), UP3(ATTACH(LAST_VALUE())))
                         )
                 )
         );
@@ -74,12 +74,9 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
         return oneOrMore(
                 sequence(
                         zeroOrMore(BlankLine()),
-                        NonblankIndentedLine(), UP(CREATE(LAST_VALUE(), VERBATIM)),
+                        NonblankIndentedLine(), UP(CREATE(VERBATIM, LAST_VALUE())),
                         zeroOrMore(
-                                sequence(
-                                        NonblankIndentedLine(),
-                                        UP3(ADD_CHILD(LAST_VALUE()))
-                                )
+                                sequence(NonblankIndentedLine(), UP3(ATTACH(LAST_VALUE())))
                         )
                 )
         );
@@ -107,10 +104,7 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
                 AtxStart(), SET(),
                 Sp(),
                 oneOrMore(
-                        sequence(
-                                AtxInline(),
-                                UP2(ADD_CHILD(LAST_VALUE()))
-                        )
+                        sequence(AtxInline(), UP2(ATTACH(LAST_VALUE())))
                 ),
                 optional(sequence(Sp(), zeroOrMore('#'), Sp())),
                 Newline()
@@ -134,12 +128,9 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule SetextHeading1() {
         return sequence(
-                SetextInline(), CREATE(LAST_VALUE(), H1),
+                SetextInline(), CREATE(H1, LAST_VALUE()),
                 oneOrMore(
-                        sequence(
-                                SetextInline(),
-                                UP2(ADD_CHILD(LAST_VALUE()))
-                        )
+                        sequence(SetextInline(), UP2(ATTACH(LAST_VALUE())))
                 ),
                 Newline(), NOrMore('=', 3), Newline()
         );
@@ -147,12 +138,9 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule SetextHeading2() {
         return sequence(
-                SetextInline(), CREATE(LAST_VALUE(), H2),
+                SetextInline(), CREATE(H2, LAST_VALUE()),
                 oneOrMore(
-                        sequence(
-                                SetextInline(),
-                                UP2(ADD_CHILD(LAST_VALUE()))
-                        )
+                        sequence(SetextInline(), UP2(ATTACH(LAST_VALUE())))
                 ),
                 Newline(), NOrMore('-', 3), Newline()
         );
@@ -182,12 +170,9 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule ListTight() {
         return sequence(
-                ListItem(), CREATE(LAST_VALUE().setType(LISTITEM_TIGHT)),
+                ListItem(), CREATE(NONE, LAST_VALUE().setType(LISTITEM_TIGHT)),
                 zeroOrMore(
-                        sequence(
-                                ListItem(),
-                                UP2(ADD_CHILD(LAST_VALUE().setType(LISTITEM_TIGHT)))
-                        )
+                        sequence(ListItem(), UP2(ATTACH(LAST_VALUE().setType(LISTITEM_TIGHT))))
                 ),
                 zeroOrMore(BlankLine()),
                 testNot(firstOf(Bullet(), Enumerator()))
@@ -196,12 +181,12 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule ListLoose() {
         return sequence(
-                ListItem(), CREATE(LAST_VALUE().setType(LISTITEM_LOOSE)),
+                ListItem(), CREATE(NONE, LAST_VALUE().setType(LISTITEM_LOOSE)),
                 zeroOrMore(BlankLine()),
                 zeroOrMore(
                         sequence(
                                 ListItem(),
-                                UP2(ADD_CHILD(LAST_VALUE().setType(LISTITEM_LOOSE))),
+                                UP2(ATTACH(LAST_VALUE().setType(LISTITEM_LOOSE))),
                                 zeroOrMore(BlankLine())
                         )
                 )
@@ -211,7 +196,7 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule ListItem() {
         return sequence(
                 firstOf(Bullet(), Enumerator()),
-                ListBlock(), CREATE(LAST_VALUE()),
+                ListBlock(), CREATE(NONE, LAST_VALUE()),
                 zeroOrMore(
                         sequence(
                                 zeroOrMore(BlankLine()),
@@ -219,7 +204,7 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
                                         sequence(
                                                 Indent(),
                                                 ListBlock(),
-                                                UP4(ADD_CHILD(LAST_VALUE()))
+                                                UP4(ATTACH(LAST_VALUE()))
                                         )
                                 )
                         )
@@ -229,12 +214,9 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule ListBlock() {
         return sequence(
-                Line(), CREATE(LAST_VALUE(), LISTITEMBLOCK),
+                Line(), CREATE(LISTITEMBLOCK, LAST_VALUE()),
                 zeroOrMore(
-                        sequence(
-                                ListBlockLine(),
-                                UP2(ADD_CHILD(LAST_VALUE()))
-                        )
+                        sequence(ListBlockLine(), UP2(ATTACH(LAST_VALUE())))
                 )
         );
     }
@@ -259,7 +241,13 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
     //************* HTML BLOCK ****************
 
     Rule HtmlBlock() {
-        return sequence(firstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()), oneOrMore(BlankLine()));
+        return sequence(
+                sequence(
+                        firstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()), SET(),
+                        oneOrMore(BlankLine())
+                ),
+                suppressHtml || CREATE(HTMLBLOCK, LAST_TEXT())
+        );
     }
 
     Rule HtmlBlockInTags() {
@@ -294,15 +282,6 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
         return firstOf(rules);
     }
 
-    Rule StyleBlock() {
-        return sequence(InStyleTags(), zeroOrMore(BlankLine()));
-    }
-
-    Rule InStyleTags() {
-        return sequence(HtmlBlockOpen("style"), zeroOrMore(sequence(testNot(HtmlBlockClose("style")), any())),
-                HtmlBlockClose("style"));
-    }
-
     Rule HtmlBlockOpen(String name) {
         return sequence('<', Spn1(), stringIgnoreCase(name), Spn1(), zeroOrMore(HtmlAttribute()), '>');
     }
@@ -315,33 +294,52 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule Inlines() {
         return sequence(
-                oneOrMore(firstOf(sequence(testNot(Endline()), Inline()), sequence(Endline(), test(Inline())))),
+                InlineOrIntermediateEndline(), CREATE(NONE, LAST_VALUE()),
+                zeroOrMore(
+                        sequence(InlineOrIntermediateEndline(), UP2(ATTACH(LAST_VALUE())))
+                ),
                 optional(Endline())
+        );
+    }
+
+    Rule InlineOrIntermediateEndline() {
+        return firstOf(
+                sequence(testNot(Endline()), Inline()),
+                sequence(Endline(), test(Inline()))
         );
     }
 
     Rule Inline() {
         return firstOf(Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Link(), NoteReference(),
                 InlineNote(), Code(), RawHtml(), Entity(), EscapedChar(), Ellipsis(), EmDash(), EnDash(),
-                SingleQuoted(), DoubleQuoted(), Apostrophe(), SpecialChar());
+                SingleQuoted(), DoubleQuoted(), Apostrophe(), Symbol());
     }
 
     Rule Endline() {
         return firstOf(LineBreak(), TerminalEndline(), NormalEndline());
     }
 
-    Rule NormalEndline() {
-        return sequence(Sp(), Newline(), testNot(firstOf(
-                BlankLine(), '>', AtxStart(), sequence(Line(), firstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline())
-        )));
+    Rule LineBreak() {
+        return sequence("  ", NormalEndline(), CREATE(LINEBREAK));
     }
 
     Rule TerminalEndline() {
         return sequence(Sp(), Newline(), eoi());
     }
 
-    Rule LineBreak() {
-        return sequence("  ", NormalEndline());
+    Rule NormalEndline() {
+        return sequence(
+                Sp(), Newline(),
+                testNot(
+                        firstOf(
+                                BlankLine(),
+                                '>',
+                                AtxStart(),
+                                sequence(Line(), firstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline())
+                        )
+                ),
+                CREATE(SPACE, "\n")
+        );
     }
 
     //************* EMPHASIS / STRONG ****************
@@ -349,72 +347,63 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
     // This keeps the parser from getting bogged down on long strings of '*' or '_',
     // or strings of '*' or '_' with space on each side:
     Rule UlOrStarLine() {
-        return firstOf(UlLine(), StarLine());
+        return sequence(
+                firstOf(CharLine('_'), CharLine('*')),
+                CREATE(TEXT, LAST_TEXT())
+        );
     }
 
-    Rule StarLine() {
-        return firstOf(NOrMore('*', 4), sequence(Spacechar(), oneOrMore('*'), test(Spacechar())));
-    }
-
-    Rule UlLine() {
-        return firstOf(NOrMore('_', 4), sequence(Spacechar(), oneOrMore('_'), test(Spacechar())));
+    Rule CharLine(char c) {
+        return firstOf(NOrMore(c, 4), sequence(Spacechar(), oneOrMore(c), test(Spacechar())));
     }
 
     Rule Emph() {
-        return firstOf(EmphStar(), EmphUl());
-    }
-
-    Rule EmphStar() {
-        return sequence(OneStarOpen(), zeroOrMore(sequence(testNot(OneStarClose()), Inline())), OneStarClose());
-    }
-
-    Rule OneStarOpen() {
-        return sequence(testNot(StarLine()), '*', testNot(Spacechar()), testNot(Newline()));
-    }
-
-    Rule OneStarClose() {
-        return sequence(testNot(Spacechar()), testNot(Newline()), Inline(), testNot(StrongStar()), '*');
-    }
-
-    Rule EmphUl() {
-        return sequence(OneUlOpen(), zeroOrMore(sequence(testNot(OneUlClose()), Inline())), OneUlClose());
-    }
-
-    Rule OneUlOpen() {
-        return sequence(testNot(UlLine()), '_', testNot(Spacechar()), testNot(Newline()));
-    }
-
-    Rule OneUlClose() {
-        return sequence(testNot(Spacechar()), testNot(Newline()), Inline(), testNot(StrongUl()), '_',
-                testNot(Alphanumeric()));
+        return sequence(
+                firstOf(EmphOrStrong("*"), EmphOrStrong("_")),
+                SET(LAST_VALUE().setType(EMPH))
+        );
     }
 
     Rule Strong() {
-        return firstOf(StrongStar(), StrongUl());
+        return sequence(
+                firstOf(EmphOrStrong("**"), EmphOrStrong("__")),
+                SET(LAST_VALUE().setType(STRONG))
+        );
     }
 
-    Rule StrongStar() {
-        return sequence(TwoStarOpen(), zeroOrMore(sequence(testNot(TwoStarClose()), Inline())), TwoStarClose());
+    Rule EmphOrStrong(String chars) {
+        return sequence(
+                EmphOrStrongOpen(chars),
+                CREATE(NONE),
+                zeroOrMore(
+                        sequence(
+                                testNot(EmphOrStrongClose(chars)),
+                                Inline(), UP2_ATTACH_LAST_VALUE
+                        )
+                ),
+                EmphOrStrongClose(chars), ATTACH_LAST_VALUE
+        );
     }
 
-    Rule TwoStarOpen() {
-        return sequence(testNot(StarLine()), "**", testNot(Spacechar()), testNot(Newline()));
+    Rule EmphOrStrongOpen(String chars) {
+        return sequence(
+                testNot(CharLine(chars.charAt(0))),
+                chars,
+                testNot(Spacechar()),
+                testNot(Newline())
+        );
     }
 
-    Rule TwoStarClose() {
-        return sequence(testNot(Spacechar()), testNot(Newline()), Inline(), "**");
-    }
-
-    Rule StrongUl() {
-        return sequence(TwoUlOpen(), zeroOrMore(sequence(testNot(TwoUlClose()), Inline())), TwoUlClose());
-    }
-
-    Rule TwoUlOpen() {
-        return sequence(testNot(UlLine()), "__", testNot(Spacechar()), testNot(Newline()));
-    }
-
-    Rule TwoUlClose() {
-        return sequence(testNot(Spacechar()), testNot(Newline()), Inline(), "__", testNot(Alphanumeric()));
+    @Cached
+    Rule EmphOrStrongClose(String chars) {
+        return sequence(
+                testNot(Spacechar()),
+                testNot(Newline()),
+                Inline(), SET,
+                chars.length() == 1 ? testNot(EmphOrStrong(chars + chars)) : empty(),
+                chars.charAt(0) == '_' ? testNot(Alphanumeric()) : empty(),
+                '*'
+        );
     }
 
     //************* LINKS ****************
@@ -693,11 +682,14 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
     //************* BASICS ****************
 
     Rule Str() {
-        return sequence(NormalChar(), zeroOrMore(sequence(zeroOrMore('_'), NormalChar())));
+        return sequence(
+                sequence(NormalChar(), zeroOrMore(sequence(zeroOrMore('_'), NormalChar()))),
+                CREATE(TEXT, LAST_TEXT())
+        );
     }
 
     Rule Space() {
-        return sequence(oneOrMore(Spacechar()), CREATE(SPACE));
+        return sequence(oneOrMore(Spacechar()), CREATE(SPACE, " "));
     }
 
     Rule Spn1() {
@@ -721,7 +713,11 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule EscapedChar() {
-        return sequence('\\', testNot(Newline()), any());
+        return sequence('\\', testNot(Newline()), any(), CREATE(TEXT, LAST_TEXT()));
+    }
+
+    Rule Symbol() {
+        return sequence(SpecialChar(), CREATE(TEXT, LAST_TEXT()));
     }
 
     Rule SpecialChar() {
@@ -768,31 +764,60 @@ public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
         return charRange('0', '9');
     }
 
+    //************* ACTIONS ****************
+    // these Actions are used in Rule methods with parameters, therefore they need to be factored out
+
+    Rule SET = toRule(new Action<AstNode>() {
+        public boolean run(Context<AstNode> context) {
+            return SET();
+        }
+    });
+
+    Rule UP2_ATTACH_LAST_VALUE = toRule(new Action<AstNode>() {
+        public boolean run(Context<AstNode> context) {
+            setContext(context.getParent().getParent());
+            return ATTACH(LAST_VALUE());
+        }
+    });
+
+    Rule ATTACH_LAST_VALUE = toRule(new Action<AstNode>() {
+        public boolean run(Context<AstNode> context) {
+            return ATTACH(LAST_VALUE());
+        }
+    });
+
     //************* HELPERS ****************
 
     Rule NOrMore(char c, int n) {
         return sequence(StringUtils.repeat(c, n), zeroOrMore(c));
     }
 
-    boolean ADD_CHILD(AstNode astNode) {
-        addChild(getContext().getNodeValue(), astNode);
+    boolean ATTACH(AstNode astNode) {
+        if (astNode != null) addChild(getContext().getNodeValue(), astNode);
         return true;
     }
 
-    boolean CREATE() {
-        return CREATE(null, 0);
+    // this action is context independent, therefore we can model it directly as an Action
+    // so it can also be used in helper methods with parameters
+    @Cached
+    Rule CREATE(final int type) {
+        return toRule(new Action() {
+            public boolean run(Context context) {
+                return CREATE(type, null, null);
+            }
+        });
     }
 
-    boolean CREATE(int type) {
-        return CREATE(null, type);
+    boolean CREATE(int type, String text) {
+        return CREATE(type, text, null);
     }
 
-    boolean CREATE(AstNode child) {
-        return CREATE(child, 0);
+    boolean CREATE(int type, AstNode child) {
+        return CREATE(type, null, child);
     }
 
-    boolean CREATE(AstNode child, int type) {
-        AstNode astNode = new AstNode().setType(type);
+    boolean CREATE(int type, String text, AstNode child) {
+        AstNode astNode = new AstNode().setType(type).setText(text);
         if (child != null) addChild(astNode, child);
         return SET(astNode);
     }

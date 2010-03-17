@@ -34,8 +34,8 @@ public interface AstNodeType {
     static int QUOTED_DOUBLE = 29;
     static int REFERENCE = 30;
     static int SPACE = 31;
-    static int STR = 32;
-    static int STRONG = 33;
+    static int STRONG = 32;
+    static int TEXT = 33;
     static int VERBATIM = 34;
 
     static String[] TYPE_NAMES = new String[]{
@@ -66,8 +66,8 @@ public interface AstNodeType {
             "QUOTED_DOUBLE",
             "REFERENCE",
             "SPACE",
-            "STR",
             "STRONG",
+            "TEXT",
             "VERBATIM"
     };
 
