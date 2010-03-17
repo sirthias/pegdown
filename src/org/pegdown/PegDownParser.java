@@ -31,6 +31,32 @@ public class PegDownParser extends BaseParser {
         return Inlines();
     }
 
+    Rule BlockQuote() {
+        return oneOrMore(sequence(
+                '>', optional(' '), Line(),
+                zeroOrMore(sequence(testNot('>'), testNot(BlankLine()), Line())),
+                zeroOrMore(BlankLine())
+        ));
+    }
+
+    Rule Verbatim() {
+        return oneOrMore(VerbatimChunk());
+    }
+
+    Rule VerbatimChunk() {
+        return sequence(zeroOrMore(BlankLine()), oneOrMore(NonblankIndentedLine()));
+    }
+
+    Rule HorizontalRule() {
+        return sequence(NonindentSpace(), firstOf(
+                sequence('*', Sp(), '*', Sp(), '*', zeroOrMore(sequence(Sp(), '*'))),
+                sequence('-', Sp(), '-', Sp(), '-', zeroOrMore(sequence(Sp(), '-'))),
+                sequence('_', Sp(), '_', Sp(), '_', zeroOrMore(sequence(Sp(), '_')))
+        ), Sp(), Newline(), oneOrMore(BlankLine()));
+    }
+
+    //************* HEADING ****************
+
     Rule Heading() {
         return firstOf(AtxHeading(), SetextHeading());
     }
@@ -60,44 +86,14 @@ public class PegDownParser extends BaseParser {
         return sequence(oneOrMore(sequence(testNot(Endline()), Inline())), Newline(), NOrMore('-', 3), Newline());
     }
 
-    Rule BlockQuote() {
-        return BlockQuoteRaw();
-    }
-
-    Rule BlockQuoteRaw() {
-        return oneOrMore(sequence(
-                '>', optional(' '), Line(),
-                zeroOrMore(sequence(testNot('>'), testNot(BlankLine()), Line())),
-                zeroOrMore(BlankLine())
-        ));
-    }
-
-    Rule NonblankIndentedLine() {
-        return sequence(testNot(BlankLine()), IndentedLine());
-    }
-
-    Rule VerbatimChunk() {
-        return sequence(zeroOrMore(BlankLine()), oneOrMore(NonblankIndentedLine()));
-    }
-
-    Rule Verbatim() {
-        return oneOrMore(VerbatimChunk());
-    }
-
-    Rule HorizontalRule() {
-        return sequence(NonindentSpace(), firstOf(
-                sequence('*', Sp(), '*', Sp(), '*', zeroOrMore(sequence(Sp(), '*'))),
-                sequence('-', Sp(), '-', Sp(), '-', zeroOrMore(sequence(Sp(), '-'))),
-                sequence('_', Sp(), '_', Sp(), '_', zeroOrMore(sequence(Sp(), '_')))
-        ), Sp(), Newline(), oneOrMore(BlankLine()));
-    }
-
-    Rule Bullet() {
-        return sequence(testNot(HorizontalRule()), NonindentSpace(), charSet("+*-"), oneOrMore(Spacechar()));
-    }
+    //************* LISTS ****************
 
     Rule BulletList() {
         return sequence(test(Bullet()), firstOf(ListTight(), ListLoose()));
+    }
+
+    Rule OrderedList() {
+        return sequence(test(Enumerator()), firstOf(ListTight(), ListLoose()));
     }
 
     Rule ListTight() {
@@ -112,25 +108,31 @@ public class PegDownParser extends BaseParser {
         return sequence(firstOf(Bullet(), Enumerator()), ListBlock(), zeroOrMore(ListContinuationBlock()));
     }
 
+    Rule ListContinuationBlock() {
+        return sequence(zeroOrMore(BlankLine()), oneOrMore(sequence(Indent(), ListBlock())));
+    }
+
     Rule ListBlock() {
         return sequence(Line(), zeroOrMore(ListBlockLine()));
     }
 
-    Rule ListContinuationBlock() {
-        return sequence(zeroOrMore(BlankLine()), oneOrMore(sequence(Indent(), ListBlock())));
+    Rule ListBlockLine() {
+        return sequence(testNot(sequence(optional(Indent()), firstOf(Bullet(), Enumerator()))), testNot(BlankLine()),
+                testNot(HorizontalRule()), OptionallyIndentedLine());
     }
 
     Rule Enumerator() {
         return sequence(NonindentSpace(), oneOrMore(Digit()), '.', oneOrMore(Spacechar()));
     }
 
-    Rule OrderedList() {
-        return sequence(test(Enumerator()), firstOf(ListTight(), ListLoose()));
+    Rule Bullet() {
+        return sequence(testNot(HorizontalRule()), NonindentSpace(), charSet("+*-"), oneOrMore(Spacechar()));
     }
 
-    Rule ListBlockLine() {
-        return sequence(testNot(sequence(optional(Indent()), firstOf(Bullet(), Enumerator()))), testNot(BlankLine()),
-                testNot(HorizontalRule()), OptionallyIndentedLine());
+    //************* HTML BLOCK ****************
+
+    Rule HtmlBlock() {
+        return sequence(firstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()), oneOrMore(BlankLine()));
     }
 
     Rule HtmlBlockInTags() {
@@ -143,10 +145,6 @@ public class PegDownParser extends BaseParser {
                 );
             }
         });
-    }
-
-    Rule HtmlBlock() {
-        return sequence(firstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()), oneOrMore(BlankLine()));
     }
 
     Rule HtmlBlockSelfClosing() {
@@ -186,6 +184,8 @@ public class PegDownParser extends BaseParser {
         return sequence('<', Spn1(), '/', stringIgnoreCase(name), Spn1(), '>');
     }
 
+    //************* INLINES ****************
+
     Rule Inlines() {
         return sequence(
                 oneOrMore(firstOf(sequence(testNot(Endline()), Inline()), sequence(Endline(), test(Inline())))),
@@ -195,7 +195,8 @@ public class PegDownParser extends BaseParser {
 
     Rule Inline() {
         return firstOf(Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Link(), NoteReference(),
-                InlineNote(), Code(), RawHtml(), Entity(), EscapedChar(), Smart(), Symbol());
+                InlineNote(), Code(), RawHtml(), Entity(), EscapedChar(), Ellipsis(), EmDash(), EnDash(),
+                SingleQuoted(), DoubleQuoted(), Apostrophe(), SpecialChar());
     }
 
     Rule Endline() {
@@ -203,8 +204,9 @@ public class PegDownParser extends BaseParser {
     }
 
     Rule NormalEndline() {
-        return sequence(Sp(), Newline(), testNot(BlankLine()), testNot('>'), testNot(AtxStart()),
-                testNot(sequence(Line(), firstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline())));
+        return sequence(Sp(), Newline(), testNot(firstOf(
+                BlankLine(), '>', AtxStart(), sequence(Line(), firstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline())
+        )));
     }
 
     Rule TerminalEndline() {
@@ -215,9 +217,7 @@ public class PegDownParser extends BaseParser {
         return sequence("  ", NormalEndline());
     }
 
-    Rule Symbol() {
-        return SpecialChar();
-    }
+    //************* EMPHASIS / STRONG ****************
 
     // This keeps the parser from getting bogged down on long strings of '*' or '_',
     // or strings of '*' or '_' with space on each side:
@@ -237,6 +237,10 @@ public class PegDownParser extends BaseParser {
         return firstOf(EmphStar(), EmphUl());
     }
 
+    Rule EmphStar() {
+        return sequence(OneStarOpen(), zeroOrMore(sequence(testNot(OneStarClose()), Inline())), OneStarClose());
+    }
+
     Rule OneStarOpen() {
         return sequence(testNot(StarLine()), '*', testNot(Spacechar()), testNot(Newline()));
     }
@@ -245,8 +249,8 @@ public class PegDownParser extends BaseParser {
         return sequence(testNot(Spacechar()), testNot(Newline()), Inline(), testNot(StrongStar()), '*');
     }
 
-    Rule EmphStar() {
-        return sequence(OneStarOpen(), zeroOrMore(sequence(testNot(OneStarClose()), Inline())), OneStarClose());
+    Rule EmphUl() {
+        return sequence(OneUlOpen(), zeroOrMore(sequence(testNot(OneUlClose()), Inline())), OneUlClose());
     }
 
     Rule OneUlOpen() {
@@ -258,12 +262,12 @@ public class PegDownParser extends BaseParser {
                 testNot(Alphanumeric()));
     }
 
-    Rule EmphUl() {
-        return sequence(OneUlOpen(), zeroOrMore(sequence(testNot(OneUlClose()), Inline())), OneUlClose());
-    }
-
     Rule Strong() {
         return firstOf(StrongStar(), StrongUl());
+    }
+
+    Rule StrongStar() {
+        return sequence(TwoStarOpen(), zeroOrMore(sequence(testNot(TwoStarClose()), Inline())), TwoStarClose());
     }
 
     Rule TwoStarOpen() {
@@ -274,8 +278,8 @@ public class PegDownParser extends BaseParser {
         return sequence(testNot(Spacechar()), testNot(Newline()), Inline(), "**");
     }
 
-    Rule StrongStar() {
-        return sequence(TwoStarOpen(), zeroOrMore(sequence(testNot(TwoStarClose()), Inline())), TwoStarClose());
+    Rule StrongUl() {
+        return sequence(TwoUlOpen(), zeroOrMore(sequence(testNot(TwoUlClose()), Inline())), TwoUlClose());
     }
 
     Rule TwoUlOpen() {
@@ -286,32 +290,30 @@ public class PegDownParser extends BaseParser {
         return sequence(testNot(Spacechar()), testNot(Newline()), Inline(), "__", testNot(Alphanumeric()));
     }
 
-    Rule StrongUl() {
-        return sequence(TwoUlOpen(), zeroOrMore(sequence(testNot(TwoUlClose()), Inline())), TwoUlClose());
-    }
+    //************* LINKS ****************
 
     Rule Image() {
         return sequence('!', firstOf(ExplicitLink(), ReferenceLink()));
     }
 
     Rule Link() {
-        return firstOf(ExplicitLink(), ReferenceLink(), AutoLink());
+        return firstOf(ExplicitLink(), ReferenceLink(), AutoLinkUrl(), AutoLinkEmail());
+    }
+
+    Rule ExplicitLink() {
+        return sequence(Label(), Spn1(), '(', Sp(), Source(), Spn1(), optional(Title()), Sp(), ')');
     }
 
     Rule ReferenceLink() {
         return firstOf(ReferenceLinkSingle(), ReferenceLinkDouble());
     }
 
-    Rule ReferenceLinkDouble() {
-        return sequence(Label(), Spn1(), testNot("[]"), Label());
-    }
-
     Rule ReferenceLinkSingle() {
         return sequence(Label(), optional(sequence(Spn1(), "[]")));
     }
 
-    Rule ExplicitLink() {
-        return sequence(Label(), Spn1(), '(', Sp(), Source(), Spn1(), Title(), Sp(), ')');
+    Rule ReferenceLinkDouble() {
+        return sequence(Label(), Spn1(), testNot("[]"), Label());
     }
 
     Rule Source() {
@@ -326,7 +328,7 @@ public class PegDownParser extends BaseParser {
     }
 
     Rule Title() {
-        return firstOf(TitleSingle(), TitleDouble(), empty());
+        return firstOf(TitleSingle(), TitleDouble());
     }
 
     Rule TitleSingle() {
@@ -341,10 +343,6 @@ public class PegDownParser extends BaseParser {
         )), '"');
     }
 
-    Rule AutoLink() {
-        return firstOf(AutoLinkUrl(), AutoLinkEmail());
-    }
-
     Rule AutoLinkUrl() {
         return sequence('<', oneOrMore(Letter()), "://",
                 oneOrMore(sequence(testNot(Newline()), testNot('>'), any())), '>');
@@ -355,8 +353,10 @@ public class PegDownParser extends BaseParser {
                 oneOrMore(sequence(testNot(Newline()), testNot('>'), any())), '>');
     }
 
+    //************* REFERENCE ****************
+
     Rule Reference() {
-        return sequence(NonindentSpace(), testNot("[]"), Label(), ':', Spn1(), RefSrc(), Spn1(), RefTitle(),
+        return sequence(NonindentSpace(), testNot("[]"), Label(), ':', Spn1(), RefSrc(), Spn1(), optional(RefTitle()),
                 zeroOrMore(BlankLine()));
     }
 
@@ -369,11 +369,7 @@ public class PegDownParser extends BaseParser {
     }
 
     Rule RefTitle() {
-        return firstOf(RefTitleSingle(), RefTitleDouble(), RefTitleParens(), EmptyTitle());
-    }
-
-    Rule EmptyTitle() {
-        return empty();
+        return firstOf(RefTitleSingle(), RefTitleDouble(), RefTitleParens());
     }
 
     Rule RefTitleSingle() {
@@ -394,25 +390,7 @@ public class PegDownParser extends BaseParser {
         ), ')');
     }
 
-    Rule Ticks1() {
-        return sequence('`', testNot('`'));
-    }
-
-    Rule Ticks2() {
-        return sequence("``", testNot('`'));
-    }
-
-    Rule Ticks3() {
-        return sequence("```", testNot('`'));
-    }
-
-    Rule Ticks4() {
-        return sequence("````", testNot('`'));
-    }
-
-    Rule Ticks5() {
-        return sequence("`````", testNot('`'));
-    }
+    //************* CODE ****************
 
     Rule Code() {
         return firstOf(
@@ -449,28 +427,30 @@ public class PegDownParser extends BaseParser {
         );
     }
 
+    Rule Ticks1() {
+        return sequence('`', testNot('`'));
+    }
+
+    Rule Ticks2() {
+        return sequence("``", testNot('`'));
+    }
+
+    Rule Ticks3() {
+        return sequence("```", testNot('`'));
+    }
+
+    Rule Ticks4() {
+        return sequence("````", testNot('`'));
+    }
+
+    Rule Ticks5() {
+        return sequence("`````", testNot('`'));
+    }
+
+    //************* RAW HTML ****************
+
     Rule RawHtml() {
         return firstOf(HtmlComment(), HtmlTag());
-    }
-
-    Rule BlankLine() {
-        return sequence(Sp(), Newline());
-    }
-
-    Rule Quoted() {
-        return firstOf(
-                sequence('"', zeroOrMore(sequence(testNot('"'), any())), '"'),
-                sequence('\'', zeroOrMore(sequence(testNot('\''), any())), '\'')
-        );
-    }
-
-    Rule HtmlAttribute() {
-        return sequence(
-                zeroOrMore(firstOf(Alphanumeric(), '-')),
-                Spn1(),
-                optional(sequence('=', Spn1(), firstOf(Quoted(), oneOrMore(sequence(testNot('>'), Nonspacechar()))))),
-                Spn1()
-        );
     }
 
     Rule HtmlComment() {
@@ -482,80 +462,30 @@ public class PegDownParser extends BaseParser {
                 optional('/'), Spn1(), '>');
     }
 
-    Rule Space() {
-        return oneOrMore(Spacechar());
+    Rule HtmlAttribute() {
+        return sequence(
+                zeroOrMore(firstOf(Alphanumeric(), '-')),
+                Spn1(),
+                optional(sequence('=', Spn1(), firstOf(Quoted(), oneOrMore(sequence(testNot('>'), Nonspacechar()))))),
+                Spn1()
+        );
     }
 
-    Rule Str() {
-        return sequence(NormalChar(), zeroOrMore(sequence(zeroOrMore('_'), NormalChar())));
+    Rule Quoted() {
+        return firstOf(
+                sequence('"', zeroOrMore(sequence(testNot('"'), any())), '"'),
+                sequence('\'', zeroOrMore(sequence(testNot('\''), any())), '\'')
+        );
     }
 
-    Rule EscapedChar() {
-        return sequence('\\', testNot(Newline()), any());
+    //************* LINES ****************
+
+    Rule NonblankIndentedLine() {
+        return sequence(testNot(BlankLine()), IndentedLine());
     }
 
-    Rule Spacechar() {
-        return charSet(" \t");
-    }
-
-    Rule Nonspacechar() {
-        return sequence(testNot(Spacechar()), testNot(Newline()), any());
-    }
-
-    Rule Newline() {
-        return firstOf('\n', sequence('\r', optional('\n')));
-    }
-
-    Rule Sp() {
-        return zeroOrMore(Spacechar());
-    }
-
-    Rule Spn1() {
-        return sequence(Sp(), optional(sequence(Newline(), Sp())));
-    }
-
-    Rule SpecialChar() {
-        return charSet("*_`&[]<!\\.-'\"^");
-    }
-
-    Rule NormalChar() {
-        return sequence(testNot(firstOf(SpecialChar(), Spacechar(), Newline())), any());
-    }
-
-    Rule Alphanumeric() {
-        return firstOf(Letter(), Digit());
-    }
-
-    Rule Letter() {
-        return firstOf(charRange('A', 'Z'), charRange('a', 'z'));
-    }
-
-    Rule Digit() {
-        return charRange('0', '9');
-    }
-
-    Rule Entity() {
-        return firstOf(HexEntity(), DecEntity(), CharEntity());
-    }
-
-    Rule HexEntity() {
-        return sequence("&", charSet("xX"), oneOrMore(firstOf(Digit(), charRange('a', 'f'), charRange('A', 'F'))), ';');
-    }
-
-    Rule DecEntity() {
-        return sequence("&#", oneOrMore(Digit()), ';');
-    }
-
-    Rule CharEntity() {
-        return sequence('&', oneOrMore(Alphanumeric()), ';');
-    }
-
-    Rule NonindentSpace() {
-        return firstOf("   ", "  ", " ", empty());
-    }
-
-    Rule Indent() {
-        return firstOf('\t', "    ");
+    Rule BlankLine() {
+        return sequence(Sp(), Newline());
     }
 
     Rule IndentedLine() {
@@ -567,46 +497,13 @@ public class PegDownParser extends BaseParser {
     }
 
     Rule Line() {
-        return RawLine();
-    }
-
-    Rule RawLine() {
         return firstOf(
                 sequence(zeroOrMore(sequence(testNot('\r'), testNot('\n'), any())), Newline()),
                 sequence(oneOrMore(any()), eoi())
         );
     }
 
-    Rule SkipBlock() {
-        return firstOf(
-                sequence(oneOrMore(sequence(testNot(BlankLine()), RawLine())), zeroOrMore(BlankLine())),
-                oneOrMore(BlankLine())
-        );
-    }
-
-    Rule Smart() {
-        return firstOf(Ellipsis(), Dash(), SingleQuoted(), DoubleQuoted(), Apostrophe());
-    }
-
-    Rule Apostrophe() {
-        return ch('\'');
-    }
-
-    Rule Ellipsis() {
-        return firstOf("...", ". . .");
-    }
-
-    Rule Dash() {
-        return firstOf(EmDash(), EnDash());
-    }
-
-    Rule EnDash() {
-        return sequence('-', test(Digit()));
-    }
-
-    Rule EmDash() {
-        return firstOf("---", "--");
-    }
+    //************* QUOTES ****************
 
     Rule SingleQuoted() {
         return sequence(SingleQuoteStart(), oneOrMore(sequence(testNot(SingleQuoteEnd()), Inline())), SingleQuoteEnd());
@@ -625,12 +522,18 @@ public class PegDownParser extends BaseParser {
         return sequence('"', oneOrMore(sequence(testNot('"'), Inline())), '"');
     }
 
+    //************* NOTES ****************
+
+    Rule InlineNote() {
+        return sequence("^[", oneOrMore(sequence(testNot(']'), Inline())), ']');
+    }
+
     Rule NoteReference() {
         return RawNoteReference();
     }
 
     Rule RawNoteReference() {
-        return sequence("[^", oneOrMore(sequence(testNot(Newline()), testNot(']'), any())),']');
+        return sequence("[^", oneOrMore(sequence(testNot(Newline()), testNot(']'), any())), ']');
     }
 
     Rule Note() {
@@ -638,12 +541,104 @@ public class PegDownParser extends BaseParser {
                 zeroOrMore(sequence(test(Indent()), RawNoteBlock())));
     }
 
-    Rule InlineNote() {
-        return sequence("^[", oneOrMore(sequence(testNot(']'), Inline())), ']');
-    }
-
     Rule RawNoteBlock() {
         return sequence(oneOrMore(sequence(testNot(BlankLine()), OptionallyIndentedLine())), zeroOrMore(BlankLine()));
+    }
+
+    //************* ENTITIES ****************
+
+    Rule Entity() {
+        return firstOf(HexEntity(), DecEntity(), CharEntity());
+    }
+
+    Rule HexEntity() {
+        return sequence("&", charSet("xX"), oneOrMore(firstOf(Digit(), charRange('a', 'f'), charRange('A', 'F'))), ';');
+    }
+
+    Rule DecEntity() {
+        return sequence("&#", oneOrMore(Digit()), ';');
+    }
+
+    Rule CharEntity() {
+        return sequence('&', oneOrMore(Alphanumeric()), ';');
+    }
+
+    //************* BASICS ****************
+
+    Rule Str() {
+        return sequence(NormalChar(), zeroOrMore(sequence(zeroOrMore('_'), NormalChar())));
+    }
+
+    Rule Space() {
+        return oneOrMore(Spacechar());
+    }
+
+    Rule Spn1() {
+        return sequence(Sp(), optional(sequence(Newline(), Sp())));
+    }
+
+    Rule Sp() {
+        return zeroOrMore(Spacechar());
+    }
+
+    Rule Spacechar() {
+        return charSet(" \t");
+    }
+
+    Rule Nonspacechar() {
+        return sequence(testNot(Spacechar()), testNot(Newline()), any());
+    }
+
+    Rule NormalChar() {
+        return sequence(testNot(firstOf(SpecialChar(), Spacechar(), Newline())), any());
+    }
+
+    Rule EscapedChar() {
+        return sequence('\\', testNot(Newline()), any());
+    }
+
+    Rule SpecialChar() {
+        return charSet("*_`&[]<!\\.-'\"^");
+    }
+
+    Rule Newline() {
+        return firstOf('\n', sequence('\r', optional('\n')));
+    }
+
+    Rule NonindentSpace() {
+        return firstOf("   ", "  ", " ", empty());
+    }
+
+    Rule Indent() {
+        return firstOf('\t', "    ");
+    }
+
+    Rule Apostrophe() {
+        return ch('\'');
+    }
+
+    Rule Ellipsis() {
+        return firstOf("...", ". . .");
+    }
+
+    Rule EnDash() {
+        return sequence('-', test(Digit()));
+    }
+
+    Rule EmDash() {
+        return firstOf("---", "--");
+    }
+
+    Rule Alphanumeric() {
+        return firstOf(Letter(), Digit());
+    }
+
+    Rule Letter() {
+        return firstOf(charRange('A', 'Z'), charRange('a', 'z'));
+    }
+
+    Rule Digit() {
+        return charRange('0', '9');
     }
 
     //************* HELPERS ****************
