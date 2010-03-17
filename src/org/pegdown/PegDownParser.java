@@ -5,54 +5,95 @@ import org.parboiled.Rule;
 import org.parboiled.common.StringUtils;
 import org.parboiled.google.base.Function;
 
+import static org.parboiled.trees.TreeUtils.addChild;
+
 @SuppressWarnings({"InfiniteRecursion"})
-public class PegDownParser extends BaseParser {
+public class PegDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     private String[] HTML_TAGS = new String[]{"address", "blockquote", "center", "dir", "div", "dl", "fieldset", "form",
             "h1", "h2", "h3", "h4", "h5", "h6", "hr", "isindex", "menu", "noframes", "noscript", "ol", "p", "pre",
             "table", "ul", "dd", "dt", "frameset", "li", "tbody", "td", "tfoot", "th", "thead", "tr", "script"};
 
     Rule Doc() {
-        return zeroOrMore(Block());
+        return sequence(
+                CREATE(),
+                zeroOrMore(
+                        sequence(
+                                Block(),
+                                UP2(ADD_CHILD(LAST_VALUE()))
+                        )
+                )
+        );
     }
 
     Rule Block() {
-        return sequence(zeroOrMore(BlankLine()), firstOf(
-                BlockQuote(), Verbatim(), Note(), Reference(), HorizontalRule(), Heading(), OrderedList(), BulletList(),
-                HtmlBlock(), StyleBlock(), Para(), Plain()
-        ));
+        return sequence(
+                zeroOrMore(BlankLine()),
+                firstOf(BlockQuote(), Verbatim(), Note(), Reference(), HorizontalRule(), Heading(), OrderedList(),
+                        BulletList(), HtmlBlock(), StyleBlock(), Para(), Plain())
+        );
     }
 
     Rule Para() {
-        return sequence(NonindentSpace(), Inlines(), oneOrMore(BlankLine()));
+        return sequence(
+                sequence(NonindentSpace(), Inlines(), SET(), oneOrMore(BlankLine())),
+                SET(LAST_VALUE().setType(PARA))
+        );
     }
 
     Rule Plain() {
-        return Inlines();
+        return sequence(
+                Inlines(),
+                SET(LAST_VALUE().setType(PLAIN))
+        );
     }
 
     Rule BlockQuote() {
-        return oneOrMore(sequence(
-                '>', optional(' '), Line(),
-                zeroOrMore(sequence(testNot('>'), testNot(BlankLine()), Line())),
-                zeroOrMore(BlankLine())
-        ));
+        return oneOrMore(
+                sequence(
+                        '>', optional(' '), Line(), UP(CREATE(LAST_VALUE(), BLOCKQUOTE)),
+                        zeroOrMore(
+                                sequence(
+                                        testNot('>'),
+                                        testNot(BlankLine()),
+                                        Line(),
+                                        UP3(ADD_CHILD(LAST_VALUE()))
+                                )
+                        ),
+                        zeroOrMore(
+                                sequence(
+                                        BlankLine(),
+                                        UP3(ADD_CHILD(LAST_VALUE()))
+                                )
+                        )
+                )
+        );
     }
 
     Rule Verbatim() {
-        return oneOrMore(VerbatimChunk());
-    }
-
-    Rule VerbatimChunk() {
-        return sequence(zeroOrMore(BlankLine()), oneOrMore(NonblankIndentedLine()));
+        return oneOrMore(
+                sequence(
+                        zeroOrMore(BlankLine()),
+                        NonblankIndentedLine(), UP(CREATE(LAST_VALUE(), VERBATIM)),
+                        zeroOrMore(
+                                sequence(
+                                        NonblankIndentedLine(),
+                                        UP3(ADD_CHILD(LAST_VALUE()))
+                                )
+                        )
+                )
+        );
     }
 
     Rule HorizontalRule() {
-        return sequence(NonindentSpace(), firstOf(
-                sequence('*', Sp(), '*', Sp(), '*', zeroOrMore(sequence(Sp(), '*'))),
-                sequence('-', Sp(), '-', Sp(), '-', zeroOrMore(sequence(Sp(), '-'))),
-                sequence('_', Sp(), '_', Sp(), '_', zeroOrMore(sequence(Sp(), '_')))
-        ), Sp(), Newline(), oneOrMore(BlankLine()));
+        return sequence(
+                NonindentSpace(), firstOf(
+                        sequence('*', Sp(), '*', Sp(), '*', zeroOrMore(sequence(Sp(), '*'))),
+                        sequence('-', Sp(), '-', Sp(), '-', zeroOrMore(sequence(Sp(), '-'))),
+                        sequence('_', Sp(), '_', Sp(), '_', zeroOrMore(sequence(Sp(), '_')))
+                ), Sp(), Newline(), oneOrMore(BlankLine()),
+                CREATE(HRULE)
+        );
     }
 
     //************* HEADING ****************
@@ -62,12 +103,25 @@ public class PegDownParser extends BaseParser {
     }
 
     Rule AtxHeading() {
-        return sequence(AtxStart(), Sp(), oneOrMore(AtxInline()), optional(sequence(Sp(), zeroOrMore('#'), Sp())),
-                Newline());
+        return sequence(
+                AtxStart(), SET(),
+                Sp(),
+                oneOrMore(
+                        sequence(
+                                AtxInline(),
+                                UP2(ADD_CHILD(LAST_VALUE()))
+                        )
+                ),
+                optional(sequence(Sp(), zeroOrMore('#'), Sp())),
+                Newline()
+        );
     }
 
     Rule AtxStart() {
-        return firstOf("######", "#####", "####", "###", "##", "#");
+        return sequence(
+                firstOf("######", "#####", "####", "###", "##", "#"),
+                CREATE(H1 + LAST_TEXT().length() - 1)
+        );
     }
 
     Rule AtxInline() {
@@ -79,46 +133,119 @@ public class PegDownParser extends BaseParser {
     }
 
     Rule SetextHeading1() {
-        return sequence(oneOrMore(sequence(testNot(Endline()), Inline())), Newline(), NOrMore('=', 3), Newline());
+        return sequence(
+                SetextInline(), CREATE(LAST_VALUE(), H1),
+                oneOrMore(
+                        sequence(
+                                SetextInline(),
+                                UP2(ADD_CHILD(LAST_VALUE()))
+                        )
+                ),
+                Newline(), NOrMore('=', 3), Newline()
+        );
     }
 
     Rule SetextHeading2() {
-        return sequence(oneOrMore(sequence(testNot(Endline()), Inline())), Newline(), NOrMore('-', 3), Newline());
+        return sequence(
+                SetextInline(), CREATE(LAST_VALUE(), H2),
+                oneOrMore(
+                        sequence(
+                                SetextInline(),
+                                UP2(ADD_CHILD(LAST_VALUE()))
+                        )
+                ),
+                Newline(), NOrMore('-', 3), Newline()
+        );
+    }
+
+    Rule SetextInline() {
+        return sequence(testNot(Endline()), Inline());
     }
 
     //************* LISTS ****************
 
     Rule BulletList() {
-        return sequence(test(Bullet()), firstOf(ListTight(), ListLoose()));
+        return sequence(
+                test(Bullet()),
+                firstOf(ListTight(), ListLoose()),
+                SET(LAST_VALUE().setType(LIST_BULLET))
+        );
     }
 
     Rule OrderedList() {
-        return sequence(test(Enumerator()), firstOf(ListTight(), ListLoose()));
+        return sequence(
+                test(Enumerator()),
+                firstOf(ListTight(), ListLoose()),
+                SET(LAST_VALUE().setType(LIST_ORDERED))
+        );
     }
 
     Rule ListTight() {
-        return sequence(oneOrMore(ListItem()), zeroOrMore(BlankLine()), testNot(firstOf(Bullet(), Enumerator())));
+        return sequence(
+                ListItem(), CREATE(LAST_VALUE().setType(LISTITEM_TIGHT)),
+                zeroOrMore(
+                        sequence(
+                                ListItem(),
+                                UP2(ADD_CHILD(LAST_VALUE().setType(LISTITEM_TIGHT)))
+                        )
+                ),
+                zeroOrMore(BlankLine()),
+                testNot(firstOf(Bullet(), Enumerator()))
+        );
     }
 
     Rule ListLoose() {
-        return oneOrMore(sequence(ListItem(), zeroOrMore(BlankLine())));
+        return sequence(
+                ListItem(), CREATE(LAST_VALUE().setType(LISTITEM_LOOSE)),
+                zeroOrMore(BlankLine()),
+                zeroOrMore(
+                        sequence(
+                                ListItem(),
+                                UP2(ADD_CHILD(LAST_VALUE().setType(LISTITEM_LOOSE))),
+                                zeroOrMore(BlankLine())
+                        )
+                )
+        );
     }
 
     Rule ListItem() {
-        return sequence(firstOf(Bullet(), Enumerator()), ListBlock(), zeroOrMore(ListContinuationBlock()));
-    }
-
-    Rule ListContinuationBlock() {
-        return sequence(zeroOrMore(BlankLine()), oneOrMore(sequence(Indent(), ListBlock())));
+        return sequence(
+                firstOf(Bullet(), Enumerator()),
+                ListBlock(), CREATE(LAST_VALUE()),
+                zeroOrMore(
+                        sequence(
+                                zeroOrMore(BlankLine()),
+                                oneOrMore(
+                                        sequence(
+                                                Indent(),
+                                                ListBlock(),
+                                                UP4(ADD_CHILD(LAST_VALUE()))
+                                        )
+                                )
+                        )
+                )
+        );
     }
 
     Rule ListBlock() {
-        return sequence(Line(), zeroOrMore(ListBlockLine()));
+        return sequence(
+                Line(), CREATE(LAST_VALUE(), LISTITEMBLOCK),
+                zeroOrMore(
+                        sequence(
+                                ListBlockLine(),
+                                UP2(ADD_CHILD(LAST_VALUE()))
+                        )
+                )
+        );
     }
 
     Rule ListBlockLine() {
-        return sequence(testNot(sequence(optional(Indent()), firstOf(Bullet(), Enumerator()))), testNot(BlankLine()),
-                testNot(HorizontalRule()), OptionallyIndentedLine());
+        return sequence(
+                testNot(sequence(optional(Indent()), firstOf(Bullet(), Enumerator()))),
+                testNot(BlankLine()),
+                testNot(HorizontalRule()),
+                OptionallyIndentedLine()
+        );
     }
 
     Rule Enumerator() {
@@ -464,7 +591,7 @@ public class PegDownParser extends BaseParser {
 
     Rule HtmlAttribute() {
         return sequence(
-                zeroOrMore(firstOf(Alphanumeric(), '-')),
+                oneOrMore(firstOf(Alphanumeric(), '-')),
                 Spn1(),
                 optional(sequence('=', Spn1(), firstOf(Quoted(), oneOrMore(sequence(testNot('>'), Nonspacechar()))))),
                 Spn1()
@@ -570,7 +697,7 @@ public class PegDownParser extends BaseParser {
     }
 
     Rule Space() {
-        return oneOrMore(Spacechar());
+        return sequence(oneOrMore(Spacechar()), CREATE(SPACE));
     }
 
     Rule Spn1() {
@@ -614,19 +741,19 @@ public class PegDownParser extends BaseParser {
     }
 
     Rule Apostrophe() {
-        return ch('\'');
+        return sequence('\'', CREATE(APOSTROPHE));
     }
 
     Rule Ellipsis() {
-        return firstOf("...", ". . .");
+        return sequence(firstOf("...", ". . ."), CREATE(ELLIPSIS));
     }
 
     Rule EnDash() {
-        return sequence('-', test(Digit()));
+        return sequence('-', test(Digit()), CREATE(ENDASH));
     }
 
     Rule EmDash() {
-        return firstOf("---", "--");
+        return sequence(firstOf("---", "--"), CREATE(EMDASH));
     }
 
     Rule Alphanumeric() {
@@ -645,6 +772,29 @@ public class PegDownParser extends BaseParser {
 
     Rule NOrMore(char c, int n) {
         return sequence(StringUtils.repeat(c, n), zeroOrMore(c));
+    }
+
+    boolean ADD_CHILD(AstNode astNode) {
+        addChild(getContext().getNodeValue(), astNode);
+        return true;
+    }
+
+    boolean CREATE() {
+        return CREATE(null, 0);
+    }
+
+    boolean CREATE(int type) {
+        return CREATE(null, type);
+    }
+
+    boolean CREATE(AstNode child) {
+        return CREATE(child, 0);
+    }
+
+    boolean CREATE(AstNode child, int type) {
+        AstNode astNode = new AstNode().setType(type);
+        if (child != null) addChild(astNode, child);
+        return SET(astNode);
     }
 
 }
