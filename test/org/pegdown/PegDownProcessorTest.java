@@ -14,6 +14,7 @@ public class PegDownProcessorTest {
     public void test() throws Exception {
         test("Amps and angle encoding");
         test("Auto links");
+        test("Backslash escapes");
     }
 
     private void test(String testName) {

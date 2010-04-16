@@ -157,7 +157,7 @@ public class PegDownProcessor implements AstNodeType {
             case TEXT:
                 return print(node.text);
             case VERBATIM:
-                return printPadding().print("<pre><code>").print(encode(node.text)).print("\n</code></pre>");
+                return printPadding().print("<pre><code>").print(encode(node.text)).print("</code></pre>");
         }
         throw new IllegalStateException();
     }

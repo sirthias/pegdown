@@ -49,4 +49,5 @@ DEFAULT
         TEXT: "here:"
         SPACE: " "
         CODE: "<http://example.com/>"
-    VERBATIM: "or here: <http://example.com/>"
+    VERBATIM: "or here: <http://example.com/>
+"

@@ -74,11 +74,9 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                 create(VERBATIM, ""),
                 OneOrMore(
                         Sequence(
+                                create(DEFAULT, ""),
                                 ZeroOrMore(Sequence(BlankLine(), UP2(value().addText("\n")))),
-                                NonblankIndentedLine(), UP2(value().addText(lastValue().text)),
-                                ZeroOrMore(
-                                        Sequence(NonblankIndentedLine(), UP4(value().addText(lastValue().text)))
-                                )
+                                NonblankIndentedLine(), UP2(value().addText(DOWN2(value().text) + lastValue().text))
                         )
                 )
         );
@@ -606,7 +604,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule IndentedLine() {
-        return Sequence(Indent(), Line(), create(DEFAULT, lastText()));
+        return Sequence(Indent(), Line());
     }
 
     Rule OptionallyIndentedLine() {
@@ -614,9 +612,12 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule Line() {
-        return FirstOf(
-                Sequence(ZeroOrMore(Sequence(TestNot('\r'), TestNot('\n'), Any())), Newline()),
-                Sequence(OneOrMore(Any()), Eoi())
+        return Sequence(
+                FirstOf(
+                        Sequence(ZeroOrMore(Sequence(TestNot('\r'), TestNot('\n'), Any())).label("line"), Newline()),
+                        Sequence(OneOrMore(Any()).label("line"), Eoi())
+                ),
+                create(DEFAULT, text(nodeByLabel("line")) + '\n')
         );
     }
 
