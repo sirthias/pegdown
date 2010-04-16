@@ -2,7 +2,7 @@ package org.pegdown;
 
 import org.parboiled.trees.MutableTreeNodeImpl;
 
-public class AstNode extends MutableTreeNodeImpl<AstNode> {
+public class AstNode extends MutableTreeNodeImpl<AstNode> implements AstNodeType {
 
     public int type;
     public String text;
@@ -16,4 +16,10 @@ public class AstNode extends MutableTreeNodeImpl<AstNode> {
         this.text = text;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return text == null ? TYPE_NAMES[type] : TYPE_NAMES[type] + ": \"" + text + '"';
+    }
+
 }

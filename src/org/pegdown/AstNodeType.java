@@ -2,7 +2,7 @@ package org.pegdown;
 
 public interface AstNodeType {
 
-    static int NONE = 0;
+    static int DEFAULT = 0;
     static int APOSTROPHE = 1;
     static int BLOCKQUOTE = 2;
     static int CODE = 3;
@@ -23,23 +23,27 @@ public interface AstNodeType {
     static int LINEBREAK = 18;
     static int LIST_BULLET = 19;
     static int LIST_ORDERED = 20;
-    static int LISTITEM_TIGHT = 21;
-    static int LISTITEM_LOOSE = 22;
+    static int LISTITEM_LOOSE = 21;
+    static int LISTITEM_TIGHT = 22;
     static int LISTITEMBLOCK = 23;
     static int LINK = 24;
-    static int NOTE = 25;
-    static int PARA = 26;
-    static int PLAIN = 27;
-    static int QUOTED_SINGLE = 28;
-    static int QUOTED_DOUBLE = 29;
-    static int REFERENCE = 30;
-    static int SPACE = 31;
-    static int STRONG = 32;
-    static int TEXT = 33;
-    static int VERBATIM = 34;
+    static int LINK_URL = 25;
+    static int LINK_TITLE = 26;
+    static int LINK_REF = 27;
+    static int NOTE = 28;
+    static int PARA = 29;
+    static int PLAIN = 30;
+    static int QUOTED_SINGLE = 31;
+    static int QUOTED_DOUBLE = 32;
+    static int REFERENCE = 33;
+    static int SPACE = 34;
+    static int SPECIAL = 35;
+    static int STRONG = 36;
+    static int TEXT = 37;
+    static int VERBATIM = 38;
 
     static String[] TYPE_NAMES = new String[]{
-            "NONE",
+            "DEFAULT",
             "APOSTROPHE",
             "BLOCKQUOTE",
             "CODE",
@@ -55,10 +59,13 @@ public interface AstNodeType {
             "LINEBREAK",
             "LIST_BULLET",
             "LIST_ORDERED",
-            "LISTITEM_TIGHT",
             "LISTITEM_LOOSE",
+            "LISTITEM_TIGHT",
             "LISTITEMBLOCK",
             "LINK",
+            "LINK_URL",
+            "LINK_TITLE",
+            "LINK_REF",
             "NOTE",
             "PARA",
             "PLAIN",
@@ -66,6 +73,7 @@ public interface AstNodeType {
             "QUOTED_DOUBLE",
             "REFERENCE",
             "SPACE",
+            "SPECIAL",
             "STRONG",
             "TEXT",
             "VERBATIM"
