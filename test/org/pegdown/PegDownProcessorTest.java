@@ -13,14 +13,15 @@ public class PegDownProcessorTest {
     @Test
     public void test() throws Exception {
         test("Amps and angle encoding");
+        test("Auto links");
     }
 
     private void test(String testName) {
         String markdown = FileUtils.readAllTextFromResource(testName + ".text");
 
-        AstNode astRoot = processor.parseDocument(markdown).parseTreeRoot.getValue();
+        AstNode astRoot = processor.getParser().parseRawBlock(markdown).parseTreeRoot.getValue();
         String astPrintout = FileUtils.readAllTextFromResource(testName + ".ast.text");
-        assertEqualsMultiline(printTree(astRoot, new ToStringFormatter<AstNode>()), astPrintout);        
+        assertEqualsMultiline(printTree(astRoot, new ToStringFormatter<AstNode>()), astPrintout);
 
         String toHtml = processor.toHtml(markdown);
         String expected = FileUtils.readAllTextFromResource(testName + ".html");

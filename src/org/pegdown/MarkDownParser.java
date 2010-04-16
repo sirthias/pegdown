@@ -1,10 +1,12 @@
 package org.pegdown;
 
 import org.parboiled.BaseParser;
+import org.parboiled.ReportingParseRunner;
 import org.parboiled.Rule;
 import org.parboiled.annotations.Cached;
 import org.parboiled.common.StringUtils;
 import org.parboiled.google.base.Function;
+import org.parboiled.support.ParsingResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +36,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return Sequence(
                 ZeroOrMore(BlankLine()),
                 FirstOf(BlockQuote(), Verbatim(), Note(), Reference(), HorizontalRule(), Heading(), OrderedList(),
-                        BulletList(), HtmlBlock(), Para(), Plain())
+                        BulletList(), HtmlBlock(), Para(), Inlines())
         );
     }
 
@@ -45,35 +47,38 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         );
     }
 
-    Rule Plain() {
-        return Sequence(Inlines(), set(lastValue().setType(PLAIN)));
-    }
-
     Rule BlockQuote() {
-        return OneOrMore(
-                Sequence(
-                        '>', Optional(' '), Line(), UP(create(BLOCKQUOTE, lastValue())),
-                        ZeroOrMore(
-                                Sequence(
-                                        TestNot('>'),
-                                        TestNot(BlankLine()),
-                                        Line(), UP3(attach(lastValue()))
+        return Sequence(
+                create(BLOCKQUOTE, ""),
+                OneOrMore(
+                        Sequence(
+                                '>', Optional(' '), Line(), UP2(value().addText(lastText())),
+                                ZeroOrMore(
+                                        Sequence(
+                                                TestNot('>'),
+                                                TestNot(BlankLine()),
+                                                Line(), UP4(value().addText(lastText()))
+                                        )
+                                ),
+                                ZeroOrMore(
+                                        Sequence(BlankLine(), UP4(value().addText(lastText())))
                                 )
-                        ),
-                        ZeroOrMore(
-                                Sequence(BlankLine(), UP3(attach(lastValue())))
                         )
-                )
+                ),
+                set(parseRawBlock(value().text).parseTreeRoot.getValue().setType(BLOCKQUOTE))
         );
     }
 
     Rule Verbatim() {
-        return OneOrMore(
-                Sequence(
-                        ZeroOrMore(BlankLine()),
-                        NonblankIndentedLine(), UP(create(VERBATIM, lastValue())),
-                        ZeroOrMore(
-                                Sequence(NonblankIndentedLine(), UP3(attach(lastValue())))
+        return Sequence(
+                create(VERBATIM, ""),
+                OneOrMore(
+                        Sequence(
+                                ZeroOrMore(Sequence(BlankLine(), UP2(value().addText("\n")))),
+                                NonblankIndentedLine(), UP2(value().addText(lastValue().text)),
+                                ZeroOrMore(
+                                        Sequence(NonblankIndentedLine(), UP4(value().addText(lastValue().text)))
+                                )
                         )
                 )
         );
@@ -169,9 +174,9 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule ListTight() {
         return Sequence(
-                ListItem(), create(DEFAULT, lastValue().setType(LISTITEM_TIGHT)),
+                ListItem(), create(DEFAULT, lastValue()),
                 ZeroOrMore(
-                        Sequence(ListItem(), UP2(attach(lastValue().setType(LISTITEM_TIGHT))))
+                        Sequence(ListItem(), UP2(attach(lastValue())))
                 ),
                 ZeroOrMore(BlankLine()),
                 TestNot(FirstOf(Bullet(), Enumerator()))
@@ -180,12 +185,12 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule ListLoose() {
         return Sequence(
-                ListItem(), create(DEFAULT, lastValue().setType(LISTITEM_LOOSE)),
+                ListItem(), create(DEFAULT, lastValue()),
                 ZeroOrMore(BlankLine()),
                 ZeroOrMore(
                         Sequence(
                                 ListItem(),
-                                UP2(attach(lastValue().setType(LISTITEM_LOOSE))),
+                                UP2(attach(lastValue())),
                                 ZeroOrMore(BlankLine())
                         )
                 )
@@ -195,7 +200,8 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule ListItem() {
         return Sequence(
                 FirstOf(Bullet(), Enumerator()),
-                ListBlock(), create(DEFAULT, lastValue()),
+                create(LISTITEM, ""),
+                ListBlock(), value().addText(lastText()),
                 ZeroOrMore(
                         Sequence(
                                 ZeroOrMore(BlankLine()),
@@ -203,21 +209,17 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                                         Sequence(
                                                 Indent(),
                                                 ListBlock(),
-                                                UP4(attach(lastValue()))
+                                                UP4(value().addText(lastText()))
                                         )
                                 )
                         )
-                )
+                ),
+                set(parseRawBlock(value().text).parseTreeRoot.getValue().setType(LISTITEM))
         );
     }
 
     Rule ListBlock() {
-        return Sequence(
-                Line(), create(LISTITEMBLOCK, lastValue()),
-                ZeroOrMore(
-                        Sequence(ListBlockLine(), UP2(attach(lastValue())))
-                )
-        );
+        return Sequence(Line(), ZeroOrMore(ListBlockLine()));
     }
 
     Rule ListBlockLine() {
@@ -475,7 +477,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return Sequence(
                 '<',
                 Sequence(OneOrMore(Letter()), "://", OneOrMore(Sequence(TestNot(Newline()), TestNot('>'), Any()))),
-                create(LINK_URL, lastText()),
+                create(LINK, lastText(), new AstNode().setType(LINK_URL).setText(lastText())),
                 '>'
         );
     }
@@ -515,10 +517,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule RefTitle() {
-        return Sequence(
-                FirstOf(RefTitle('\'', '\''), RefTitle('"', '"'), RefTitle('(', ')')),
-                create(LINK_TITLE, lastText())
-        );
+        return FirstOf(RefTitle('\'', '\''), RefTitle('"', '"'), RefTitle('(', ')'));
     }
 
     Rule RefTitle(char open, char close) {
@@ -607,7 +606,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule IndentedLine() {
-        return Sequence(Indent(), Line());
+        return Sequence(Indent(), Line(), create(DEFAULT, lastText()));
     }
 
     Rule OptionallyIndentedLine() {
@@ -760,6 +759,16 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         AstNode astNode = new AstNode().setType(type).setText(text);
         if (child != null) addChild(astNode, child);
         return set(astNode);
+    }
+
+    ParsingResult<AstNode> parseRawBlock(String text) {
+        ParsingResult<AstNode> result = ReportingParseRunner.run(Doc(), text);
+        if (!result.matched) {
+            String errorMessage = "Internal error";
+            if (result.hasErrors()) errorMessage += ": " + result.parseErrors.get(0);
+            throw new RuntimeException(errorMessage);
+        }
+        return result;
     }
 
 }

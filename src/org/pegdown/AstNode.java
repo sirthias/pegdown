@@ -17,9 +17,13 @@ public class AstNode extends MutableTreeNodeImpl<AstNode> implements AstNodeType
         return this;
     }
 
+    public boolean addText(String text) {
+        this.text += text;
+        return true;
+    }
+
     @Override
     public String toString() {
         return text == null ? TYPE_NAMES[type] : TYPE_NAMES[type] + ": \"" + text + '"';
     }
-
 }

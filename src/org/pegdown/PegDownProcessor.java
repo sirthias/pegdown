@@ -2,7 +2,6 @@ package org.pegdown;
 
 import org.jetbrains.annotations.NotNull;
 import org.parboiled.Parboiled;
-import org.parboiled.ReportingParseRunner;
 import org.parboiled.common.StringUtils;
 import org.parboiled.google.base.Preconditions;
 import org.parboiled.support.ParsingResult;
@@ -15,6 +14,7 @@ public class PegDownProcessor implements AstNodeType {
     private final MarkDownParser parser;
     private final Map<String, String> refLinkUrls = new HashMap<String, String>();
     private StringBuilder sb;
+    private String padding;
 
     public PegDownProcessor() {
         this(false);
@@ -26,11 +26,20 @@ public class PegDownProcessor implements AstNodeType {
         parser = Parboiled.createParser((Class<MarkDownParser>) parserClass);
     }
 
+    public MarkDownParser getParser() {
+        return parser;
+    }
+
     public String toHtml(@NotNull String markDownSource) {
-        ParsingResult<AstNode> result = parseDocument(markDownSource);
+        parser.references.clear();
+        ParsingResult<AstNode> result = parser.parseRawBlock(markDownSource);
+
         sb = new StringBuilder();
         buildRefLinkUrls();
-        print(result.parseTreeRoot.getValue());
+
+        setPadding(0).print(result.parseTreeRoot.getValue());
+
+        sb.append('\n'); // add final newline
         return sb.toString();
     }
 
@@ -41,178 +50,143 @@ public class PegDownProcessor implements AstNodeType {
             AstNode urlNode = findChildNode(refNode, LINK_URL);
             Preconditions.checkState(urlNode != null);
             String key = printToString(refNode).toLowerCase();
-            refLinkUrls.put(key, urlNode.text);
+            String value = encode(urlNode.text);
+            AstNode titleNode = findChildNode(refNode, LINK_TITLE);
+            if (titleNode != null) {
+                value += "\" title=\"" + encode(titleNode.text);
+            }
+            refLinkUrls.put(key, value);
         }
     }
 
-    protected ParsingResult<AstNode> parseDocument(@NotNull String markDownSource) {
-        parser.references.clear();
-        ParsingResult<AstNode> result = ReportingParseRunner.run(parser.Doc(), markDownSource);
-        if (!result.matched) {
-            String errorMessage = "Internal error";
-            if (result.hasErrors()) errorMessage += ": " + result.parseErrors.get(0);
-            throw new RuntimeException(errorMessage);
+    private PegDownProcessor setPadding(int count) {
+        switch (count) {
+            case 0:
+                padding = "";
+                break;
+            case 1:
+                padding = "\n";
+                break;
+            case 2:
+                padding = "\n\n";
+                break;
+            default:
+                throw new IllegalStateException();
         }
-        return result;
+        return this;
     }
 
-    public void print(AstNode node) {
+    private PegDownProcessor printPadding() {
+        sb.append(padding);
+        return this;
+    }
+
+    private PegDownProcessor print(String string) {
+        sb.append(string);
+        return this;
+    }
+
+    private PegDownProcessor print(AstNode node) {
         switch (node.type) {
             case DEFAULT:
-                printChildren(node);
-                return;
+                return printChildren(node);
             case APOSTROPHE:
-                sb.append("&rsquo;");
-                return;
+                return print("&rsquo;");
             case BLOCKQUOTE:
-                printChildren(node, "\n\n<blockquote>", "</blockquote>");
-                return;
+                return printPadding().setPadding(0).printChildren(node, "<blockquote>\n  ", "\n</blockquote>");
             case CODE:
-                printChildren(node, "<code>", "</code>");
-                return;
+                return print("<code>").print(encode(node.text)).print("</code>");
             case ELLIPSIS:
-                sb.append("&hellip;");
-                return;
+                return print("&hellip;");
             case EMDASH:
-                sb.append("&mdash;");
-                return;
+                return print("&mdash;");
             case ENDASH:
-                sb.append("&ndash;");
-                return;
+                return print("&ndash;");
             case EMPH:
-                printChildren(node, "<em>", "</em>");
-                return;
+                return printChildren(node, "<em>", "</em>");
             case H1:
-                printChildren(node, "\n\n<h1>", "</h1>");
-                return;
+                return printChildren(node, "<h1>", "</h1>");
             case H2:
-                printChildren(node, "\n\n<h2>", "</h2>");
-                return;
+                return printChildren(node, "<h2>", "</h2>");
             case H3:
-                printChildren(node, "\n\n<h3>", "</h3>");
-                return;
+                return printChildren(node, "<h3>", "</h3>");
             case H4:
-                printChildren(node, "\n\n<h4>", "</h4>");
-                return;
+                return printChildren(node, "<h4>", "</h4>");
             case H5:
-                printChildren(node, "\n\n<h5>", "</h5>");
-                return;
+                return printChildren(node, "<h5>", "</h5>");
             case H6:
-                printChildren(node, "\n\n<h6>", "</h6>");
-                return;
+                return printChildren(node, "<h6>", "</h6>");
             case HRULE:
-                sb.append("\n\n<hr/>");
-                return;
+                return printPadding().print("<hr/>");
             case HTML:
-                sb.append(node.text);
-                return;
+                return print(node.text);
             case HTMLBLOCK:
-                sb.append("\n\n").append(node.text);
-                return;
+                return printPadding().print(node.text);
             case IMAGE:
-                printImage(node);
-                return;
+                return printImage(node);
             case LINEBREAK:
-                sb.append("<br/>\n");
-                return;
+                return print("<br/>\n");
             case LIST_BULLET:
-                printListBullet(node);
-                return;
+                return printPadding().printChildren(node, "<ul>", "\n</ul>");
             case LIST_ORDERED:
-                printListOrdered(node);
-                return;
-            case LISTITEM_LOOSE:
-                printListItemLoose(node);
-                return;
-            case LISTITEM_TIGHT:
-                printListItemTight(node);
-                return;
-            case LISTITEMBLOCK:
-                printListItemBlock(node);
-                return;
+                return printChildren(node, "<ol>", "\n</ol>");
+            case LISTITEM:
+                return printChildren(node, "\n<li>", "</li>");
             case LINK:
-                printLink(node);
-                return;
+                return printLink(node);
             case LINK_REF:
             case LINK_TITLE:
             case LINK_URL:
-                return;
+                return this;
             case NOTE:
-                printNote(node);
-                return;
+                return printNote(node);
             case PARA:
-                printChildren(node, "\n\n<p>", "</p>");
-                return;
-            case PLAIN:
-                printChildren(node);
-                return;
+                return printPadding().printChildren(node, "<p>", "</p>").setPadding(2);
             case QUOTED_SINGLE:
-                printChildren(node, "&lsquo;", "&rsquo;");
-                return;
+                return printChildren(node, "&lsquo;", "&rsquo;");
             case QUOTED_DOUBLE:
-                printChildren(node, "&ldquo;", "&rdquo;");
-                return;
+                return printChildren(node, "&ldquo;", "&rdquo;");
             case REFERENCE:
-                return;
+                return this;
             case SPACE:
-                sb.append(node.text);
-                return;
+                return print(node.text);
             case SPECIAL:
-                printSpecial(node);
-                return;
+                return printSpecial(node);
             case STRONG:
-                printChildren(node, "<strong>", "</strong>");
-                return;
+                return printChildren(node, "<strong>", "</strong>");
             case TEXT:
-                sb.append(node.text);
-                return;
+                return print(node.text);
             case VERBATIM:
-                printChildren(node, "\n\n<pre><code>", "</code></pre>");
-                return;
+                return printPadding().print("<pre><code>").print(encode(node.text)).print("\n</code></pre>");
         }
         throw new IllegalStateException();
     }
 
-    private void printImage(AstNode node) {
+    private PegDownProcessor printImage(AstNode node) {
         sb.append("<img src=\"");
         printLinkUrl(node);
         sb.append("\" alt=\"");
         printLinkTitle(node);
         sb.append('>');
-        printChildren(node);
-        sb.append("</img>");
+        printLinkName(node);
+        return print("</img>");
     }
 
-    private void printListBullet(AstNode node) {
-    }
-
-    private void printListOrdered(AstNode node) {
-    }
-
-    private void printListItemLoose(AstNode node) {
-    }
-
-    private void printListItemTight(AstNode node) {
-    }
-
-    private void printListItemBlock(AstNode node) {
-    }
-
-    private void printLink(AstNode node) {
+    private PegDownProcessor printLink(AstNode node) {
         sb.append("<a href=\"");
         printLinkUrl(node);
         sb.append('"');
         printLinkTitle(node);
         sb.append('>');
-        printChildren(node);
-        sb.append("</a>");
+        printLinkName(node);
+        return print("</a>");
     }
 
     private void printLinkUrl(AstNode node) {
         AstNode linkUrlNode = findChildNode(node, LINK_URL);
         if (linkUrlNode != null) {
             // explicit link
-            sb.append(linkUrlNode.text);
+            sb.append(encode(linkUrlNode.text));
             return;
         }
 
@@ -237,40 +211,41 @@ public class PegDownProcessor implements AstNodeType {
         }
     }
 
-    private void printNote(AstNode node) {
-    }
-
-    private void printSpecial(AstNode node) {
-        char c = node.text.charAt(0);
-        switch (c) {
-            case '&':
-                sb.append("&amp;");
-                break;
-            case '<':
-                sb.append("&lt;");
-                break;
-            case '>':
-                sb.append("&gt;");
-                break;
-            case '"':
-                sb.append("&quot;");
-                break;
-            default:
-                sb.append(c);
-                break;
+    private void printLinkName(AstNode node) {
+        if (StringUtils.isEmpty(node.text)) {
+            printChildren(node);
+        } else {
+            sb.append(encode(node.text));
         }
     }
 
-    private void printChildren(AstNode node, String open, String close) {
+    private PegDownProcessor printSpecial(AstNode node) {
+        char c = node.text.charAt(0);
+        String encoded = encode(c);
+        if (encoded != null) {
+            sb.append(encoded);
+        } else {
+            sb.append(c);
+        }
+        return this;
+    }
+
+    private PegDownProcessor printNote(AstNode node) {
+        return this;
+    }
+
+    private PegDownProcessor printChildren(AstNode node, String open, String close) {
         sb.append(open);
         printChildren(node);
         sb.append(close);
+        return this;
     }
 
-    private void printChildren(AstNode node) {
+    private PegDownProcessor printChildren(AstNode node) {
         for (AstNode child : node.getChildren()) {
             print(child);
         }
+        return this;
     }
 
     private String printToString(AstNode node) {
@@ -287,6 +262,37 @@ public class PegDownProcessor implements AstNodeType {
             if (node.type == type) return node;
         }
         return null;
+    }
+
+    private static String encode(String string) {
+        for (int i = 0; i < string.length(); i++) {
+            if (encode(string.charAt(i)) != null) {
+                StringBuilder sb = new StringBuilder();
+                for (i = 0; i < string.length(); i++) {
+                    char c = string.charAt(i);
+                    String encoded = encode(c);
+                    if (encoded != null) sb.append(encoded);
+                    else sb.append(c);
+                }
+                return sb.toString();
+            }
+        }
+        return string;
+    }
+
+    private static String encode(char c) {
+        switch (c) {
+            case '&':
+                return "&amp;";
+            case '<':
+                return "&lt;";
+            case '>':
+                return "&gt;";
+            case '"':
+                return "&quot;";
+            default:
+                return null;
+        }
     }
 
 }

@@ -1,0 +1,52 @@
+DEFAULT
+    PARA
+        TEXT: "Link:"
+        SPACE: " "
+        LINK: "http://example.com/"
+            LINK_URL: "http://example.com/"
+        TEXT: "."
+    PARA
+        TEXT: "With"
+        SPACE: " "
+        TEXT: "an"
+        SPACE: " "
+        TEXT: "ampersand:"
+        SPACE: " "
+        LINK: "http://example.com/?foo=1&bar=2"
+            LINK_URL: "http://example.com/?foo=1&bar=2"
+    LIST_BULLET
+        LISTITEM
+            DEFAULT
+                TEXT: "In"
+                SPACE: " "
+                TEXT: "a"
+                SPACE: " "
+                TEXT: "list?"
+        LISTITEM
+            DEFAULT
+                LINK: "http://example.com/"
+                    LINK_URL: "http://example.com/"
+        LISTITEM
+            DEFAULT
+                TEXT: "It"
+                SPACE: " "
+                TEXT: "should."
+    BLOCKQUOTE
+        PARA
+            TEXT: "Blockquoted:"
+            SPACE: " "
+            LINK: "http://example.com/"
+                LINK_URL: "http://example.com/"
+    PARA
+        TEXT: "Auto-links"
+        SPACE: " "
+        TEXT: "should"
+        SPACE: " "
+        TEXT: "not"
+        SPACE: " "
+        TEXT: "occur"
+        SPACE: " "
+        TEXT: "here:"
+        SPACE: " "
+        CODE: "<http://example.com/>"
+    VERBATIM: "or here: <http://example.com/>"

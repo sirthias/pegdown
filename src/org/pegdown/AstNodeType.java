@@ -23,24 +23,21 @@ public interface AstNodeType {
     static int LINEBREAK = 18;
     static int LIST_BULLET = 19;
     static int LIST_ORDERED = 20;
-    static int LISTITEM_LOOSE = 21;
-    static int LISTITEM_TIGHT = 22;
-    static int LISTITEMBLOCK = 23;
-    static int LINK = 24;
-    static int LINK_URL = 25;
-    static int LINK_TITLE = 26;
-    static int LINK_REF = 27;
-    static int NOTE = 28;
-    static int PARA = 29;
-    static int PLAIN = 30;
-    static int QUOTED_SINGLE = 31;
-    static int QUOTED_DOUBLE = 32;
-    static int REFERENCE = 33;
-    static int SPACE = 34;
-    static int SPECIAL = 35;
-    static int STRONG = 36;
-    static int TEXT = 37;
-    static int VERBATIM = 38;
+    static int LISTITEM = 21;
+    static int LINK = 22;
+    static int LINK_URL = 23;
+    static int LINK_TITLE = 24;
+    static int LINK_REF = 25;
+    static int NOTE = 26;
+    static int PARA = 27;
+    static int QUOTED_SINGLE = 28;
+    static int QUOTED_DOUBLE = 29;
+    static int REFERENCE = 30;
+    static int SPACE = 31;
+    static int SPECIAL = 32;
+    static int STRONG = 33;
+    static int TEXT = 34;
+    static int VERBATIM = 35;
 
     static String[] TYPE_NAMES = new String[]{
             "DEFAULT",
@@ -59,16 +56,13 @@ public interface AstNodeType {
             "LINEBREAK",
             "LIST_BULLET",
             "LIST_ORDERED",
-            "LISTITEM_LOOSE",
-            "LISTITEM_TIGHT",
-            "LISTITEMBLOCK",
+            "LISTITEM",
             "LINK",
             "LINK_URL",
             "LINK_TITLE",
             "LINK_REF",
             "NOTE",
             "PARA",
-            "PLAIN",
             "QUOTED_SINGLE",
             "QUOTED_DOUBLE",
             "REFERENCE",
