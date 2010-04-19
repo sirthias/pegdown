@@ -309,7 +309,7 @@ Minus: \-
         TEXT: "bar"
         HTML: "</span>"
         TEXT: "."
-    DEFAULT
+    PARA
         TEXT: "This"
         SPACE: " "
         TEXT: "is"

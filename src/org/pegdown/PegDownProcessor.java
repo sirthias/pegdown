@@ -1,6 +1,5 @@
 package org.pegdown;
 
-import org.jetbrains.annotations.NotNull;
 import org.parboiled.Parboiled;
 import org.parboiled.common.StringUtils;
 import org.parboiled.google.base.Preconditions;
@@ -10,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PegDownProcessor implements AstNodeType {
+
+    public static int TABSTOP = 4;
 
     private final MarkDownParser parser;
     private final Map<String, String> refLinkUrls = new HashMap<String, String>();
@@ -31,15 +32,43 @@ public class PegDownProcessor implements AstNodeType {
         return parser;
     }
 
-    public String toHtml(@NotNull String markDownSource) {
+    public String markDownToHtml(String markDownSource) {
         parser.references.clear();
-        ParsingResult<AstNode> result = parser.parseRawBlock(markDownSource + '\n');
+        ParsingResult<AstNode> result = parser.parseRawBlock(prepare(markDownSource));
 
         sb = new StringBuilder();
         buildRefLinkUrls();
 
         print(result.parseTreeRoot.getValue()).println();
 
+        return sb.toString();
+    }
+
+    // performs tabstop expansion and adds two trailing newlines
+    static String prepare(String markDownSource) {
+        StringBuilder sb = new StringBuilder(markDownSource.length() + 2);
+        int charsToTab = TABSTOP;
+        for (int i = 0; i < markDownSource.length(); i++) {
+            char c = markDownSource.charAt(i);
+            switch (c) {
+                case '\t':
+                    while (charsToTab > 0) {
+                        sb.append(' ');
+                        charsToTab--;
+                    }
+                    break;
+                case '\n':
+                    sb.append('\n');
+                    charsToTab = TABSTOP;
+                    break;
+                default:
+                    sb.append(c);
+                    charsToTab--;
+            }
+            if (charsToTab == 0) charsToTab = TABSTOP;
+        }
+        sb.append('\n');
+        sb.append('\n');
         return sb.toString();
     }
 
@@ -96,7 +125,7 @@ public class PegDownProcessor implements AstNodeType {
             case HTML:
                 return print(node.text);
             case HTMLBLOCK:
-                return printOnNL(node.text).println();
+                return printOnNL(node.text);
             case IMAGE:
                 return print("<img ").printLinkAttrs(node, "src", "alt").print(">").printLinkName(node).print("</img>");
             case LINEBREAK:

@@ -1,0 +1,29 @@
+DEFAULT
+    PARA
+        TEXT: "Simple"
+        SPACE: " "
+        TEXT: "block"
+        SPACE: " "
+        TEXT: "on"
+        SPACE: " "
+        TEXT: "one"
+        SPACE: " "
+        TEXT: "line:"
+    HTMLBLOCK: "<div>foo</div>"
+    PARA
+        TEXT: "And"
+        SPACE: " "
+        TEXT: "nested"
+        SPACE: " "
+        TEXT: "without"
+        SPACE: " "
+        TEXT: "indentation:"
+    HTMLBLOCK: "<div>
+<div>
+<div>
+foo
+</div>
+<div style=">"/>
+</div>
+<div>bar</div>
+</div>"

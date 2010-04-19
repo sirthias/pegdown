@@ -1,0 +1,43 @@
+DEFAULT
+    PARA
+        TEXT: "Dashes:"
+    HRULE
+    HRULE
+    HRULE
+    HRULE
+    VERBATIM: "---
+"
+    HRULE
+    HRULE
+    HRULE
+    HRULE
+    VERBATIM: "- - -
+"
+    PARA
+        TEXT: "Asterisks:"
+    HRULE
+    HRULE
+    HRULE
+    HRULE
+    VERBATIM: "***
+"
+    HRULE
+    HRULE
+    HRULE
+    HRULE
+    VERBATIM: "* * *
+"
+    PARA
+        TEXT: "Underscores:"
+    HRULE
+    HRULE
+    HRULE
+    HRULE
+    VERBATIM: "___
+"
+    HRULE
+    HRULE
+    HRULE
+    HRULE
+    VERBATIM: "_ _ _
+"

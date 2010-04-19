@@ -242,10 +242,10 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule HtmlBlock() {
         return Sequence(
                 Sequence(
-                        FirstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()), set(),
+                        FirstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()), UP(put()),
                         OneOrMore(BlankLine())
                 ),
-                create(HTMLBLOCK, lastText())
+                create(HTMLBLOCK, text(get()))
         );
     }
 

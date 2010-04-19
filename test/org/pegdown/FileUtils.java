@@ -1,7 +1,5 @@
 package org.pegdown;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.*;
 import java.nio.charset.Charset;
 
@@ -9,27 +7,27 @@ public class FileUtils {
 
     private FileUtils() {}
 
-    public static String readAllTextFromResource(@NotNull String resource) {
+    public static String readAllTextFromResource(String resource) {
         return readAllText(ClassLoader.getSystemClassLoader().getResourceAsStream(resource));
     }
 
-    public static String readAllTextFromResource(@NotNull String resource, @NotNull Charset charset) {
+    public static String readAllTextFromResource(String resource, Charset charset) {
         return readAllText(ClassLoader.getSystemClassLoader().getResourceAsStream(resource), charset);
     }
 
-    public static String readAllText(@NotNull String filename) {
+    public static String readAllText(String filename) {
         return readAllText(new File(filename));
     }
 
-    public static String readAllText(@NotNull String filename, @NotNull Charset charset) {
+    public static String readAllText(String filename, Charset charset) {
         return readAllText(new File(filename), charset);
     }
 
-    public static String readAllText(@NotNull File file) {
+    public static String readAllText(File file) {
         return readAllText(file, Charset.forName("UTF8"));
     }
 
-    public static String readAllText(@NotNull File file, @NotNull Charset charset) {
+    public static String readAllText(File file, Charset charset) {
         try {
             return readAllText(new FileInputStream(file), charset);
         }
@@ -42,7 +40,7 @@ public class FileUtils {
         return readAllText(stream, Charset.forName("UTF8"));
     }
 
-    public static String readAllText(InputStream stream, @NotNull Charset charset) {
+    public static String readAllText(InputStream stream, Charset charset) {
         if (stream == null) return null;
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream, charset));
         StringWriter writer = new StringWriter();
@@ -50,15 +48,15 @@ public class FileUtils {
         return writer.toString();
     }
 
-    public static byte[] readAllBytesFromResource(@NotNull String resource) {
+    public static byte[] readAllBytesFromResource(String resource) {
         return readAllBytes(ClassLoader.getSystemClassLoader().getResourceAsStream(resource));
     }
 
-    public static byte[] readAllBytes(@NotNull String filename) {
+    public static byte[] readAllBytes(String filename) {
         return readAllBytes(new File(filename));
     }
 
-    public static byte[] readAllBytes(@NotNull File file) {
+    public static byte[] readAllBytes(File file) {
         try {
             return readAllBytes(new FileInputStream(file));
         }
@@ -75,15 +73,15 @@ public class FileUtils {
         return out.toByteArray();
     }
 
-    public static void writeAllText(String text, @NotNull String filename) {
+    public static void writeAllText(String text, String filename) {
         writeAllText(text, new File(filename));
     }
 
-    public static void writeAllText(String text, @NotNull String filename, @NotNull Charset charset) {
+    public static void writeAllText(String text, String filename, Charset charset) {
         writeAllText(text, new File(filename), charset);
     }
 
-    public static void writeAllText(String text, @NotNull File file) {
+    public static void writeAllText(String text, File file) {
         try {
             ensureParentDir(file);
             writeAllText(text, new FileOutputStream(file), Charset.forName("UTF8"));
@@ -93,7 +91,7 @@ public class FileUtils {
         }
     }
 
-    public static void writeAllText(String text, @NotNull File file, @NotNull Charset charset) {
+    public static void writeAllText(String text, File file, Charset charset) {
         try {
             writeAllText(text, new FileOutputStream(file), charset);
         }
@@ -102,21 +100,21 @@ public class FileUtils {
         }
     }
 
-    public static void writeAllText(String text, @NotNull OutputStream stream) {
+    public static void writeAllText(String text, OutputStream stream) {
         writeAllText(text, stream, Charset.forName("UTF8"));
     }
 
-    public static void writeAllText(String text, @NotNull OutputStream stream, @NotNull Charset charset) {
+    public static void writeAllText(String text, OutputStream stream, Charset charset) {
         StringReader reader = new StringReader(text != null ? text : "");
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(stream, charset));
         copyAll(reader, writer);
     }
 
-    public static void writeAllBytes(@NotNull byte[] data, @NotNull String filename) {
+    public static void writeAllBytes(byte[] data, String filename) {
         writeAllBytes(data, new File(filename));
     }
 
-    public static void writeAllBytes(@NotNull byte[] data, @NotNull File file) {
+    public static void writeAllBytes(byte[] data, File file) {
         try {
             ensureParentDir(file);
             writeAllBytes(data, new FileOutputStream(file));
@@ -126,13 +124,13 @@ public class FileUtils {
         }
     }
 
-    public static void writeAllBytes(@NotNull byte[] data, @NotNull OutputStream stream) {
+    public static void writeAllBytes(byte[] data, OutputStream stream) {
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         BufferedOutputStream out = new BufferedOutputStream(stream);
         copyAll(in, out);
     }
 
-    public static void copyAll(@NotNull Reader reader, @NotNull Writer writer) {
+    public static void copyAll(Reader reader, Writer writer) {
         try {
             char[] data = new char[4096]; // copy in chunks of 4K
             int count;
@@ -146,7 +144,7 @@ public class FileUtils {
         }
     }
 
-    public static void copyAll(@NotNull InputStream in, @NotNull OutputStream out) {
+    public static void copyAll(InputStream in, OutputStream out) {
         try {
             byte[] data = new byte[4096]; // copy in chunks of 4K
             int count;
