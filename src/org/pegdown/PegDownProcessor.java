@@ -13,8 +13,9 @@ public class PegDownProcessor implements AstNodeType {
 
     private final MarkDownParser parser;
     private final Map<String, String> refLinkUrls = new HashMap<String, String>();
+    private final Map<String, String> refLinkTitles = new HashMap<String, String>();
     private StringBuilder sb;
-    private String padding;
+    private int indent = 0;
 
     public PegDownProcessor() {
         this(false);
@@ -32,14 +33,13 @@ public class PegDownProcessor implements AstNodeType {
 
     public String toHtml(@NotNull String markDownSource) {
         parser.references.clear();
-        ParsingResult<AstNode> result = parser.parseRawBlock(markDownSource);
+        ParsingResult<AstNode> result = parser.parseRawBlock(markDownSource + '\n');
 
         sb = new StringBuilder();
         buildRefLinkUrls();
 
-        setPadding(0).print(result.parseTreeRoot.getValue());
+        print(result.parseTreeRoot.getValue()).println();
 
-        sb.append('\n'); // add final newline
         return sb.toString();
     }
 
@@ -51,39 +51,14 @@ public class PegDownProcessor implements AstNodeType {
             Preconditions.checkState(urlNode != null);
             String key = printToString(refNode).toLowerCase();
             String value = encode(urlNode.text);
+            refLinkUrls.put(key, value);
+
             AstNode titleNode = findChildNode(refNode, LINK_TITLE);
             if (titleNode != null) {
-                value += "\" title=\"" + encode(titleNode.text);
+                String title = encode(titleNode.text);
+                refLinkTitles.put(key, title);
             }
-            refLinkUrls.put(key, value);
         }
-    }
-
-    private PegDownProcessor setPadding(int count) {
-        switch (count) {
-            case 0:
-                padding = "";
-                break;
-            case 1:
-                padding = "\n";
-                break;
-            case 2:
-                padding = "\n\n";
-                break;
-            default:
-                throw new IllegalStateException();
-        }
-        return this;
-    }
-
-    private PegDownProcessor printPadding() {
-        sb.append(padding);
-        return this;
-    }
-
-    private PegDownProcessor print(String string) {
-        sb.append(string);
-        return this;
     }
 
     private PegDownProcessor print(AstNode node) {
@@ -93,9 +68,9 @@ public class PegDownProcessor implements AstNodeType {
             case APOSTROPHE:
                 return print("&rsquo;");
             case BLOCKQUOTE:
-                return printPadding().setPadding(0).printChildren(node, "<blockquote>\n  ", "\n</blockquote>");
+                return printOnNL("<blockquote>").indent(+2).printChildren(node).indent(-2).printOnNL("</blockquote>");
             case CODE:
-                return print("<code>").print(encode(node.text)).print("</code>");
+                return print("<code>").printEncoded(node.text).print("</code>");
             case ELLIPSIS:
                 return print("&hellip;");
             case EMDASH:
@@ -103,37 +78,37 @@ public class PegDownProcessor implements AstNodeType {
             case ENDASH:
                 return print("&ndash;");
             case EMPH:
-                return printChildren(node, "<em>", "</em>");
+                return print("<em>").printChildren(node).print("</em>");
             case H1:
-                return printChildren(node, "<h1>", "</h1>");
+                return print("<h1>").printChildren(node).print("</h1>");
             case H2:
-                return printChildren(node, "<h2>", "</h2>");
+                return print("<h2>").printChildren(node).print("</h2>");
             case H3:
-                return printChildren(node, "<h3>", "</h3>");
+                return print("<h3>").printChildren(node).print("</h3>");
             case H4:
-                return printChildren(node, "<h4>", "</h4>");
+                return print("<h4>").printChildren(node).print("</h4>");
             case H5:
-                return printChildren(node, "<h5>", "</h5>");
+                return print("<h5>").printChildren(node).print("</h5>");
             case H6:
-                return printChildren(node, "<h6>", "</h6>");
+                return print("<h6>").printChildren(node).print("</h6>");
             case HRULE:
-                return printPadding().print("<hr/>");
+                return printOnNL("<hr/>").println();
             case HTML:
                 return print(node.text);
             case HTMLBLOCK:
-                return printPadding().print(node.text);
+                return printOnNL(node.text).println();
             case IMAGE:
-                return printImage(node);
+                return print("<img ").printLinkAttrs(node, "src", "alt").print(">").printLinkName(node).print("</img>");
             case LINEBREAK:
-                return print("<br/>\n");
+                return printOnNL("<br/>").println();
             case LIST_BULLET:
-                return printPadding().printChildren(node, "<ul>", "\n</ul>");
+                return printOnNL("<ul>").indent(+2).printChildren(node).indent(-2).printOnNL("</ul>");
             case LIST_ORDERED:
-                return printChildren(node, "<ol>", "\n</ol>");
+                return printOnNL("<ol>").indent(+2).printChildren(node).indent(-2).printOnNL("</ol>");
             case LISTITEM:
-                return printChildren(node, "\n<li>", "</li>");
+                return printOnNL("<li>").printChildren(node).print("</li>");
             case LINK:
-                return printLink(node);
+                return print("<a ").printLinkAttrs(node, "href", "title").print(">").printLinkName(node).print("</a>");
             case LINK_REF:
             case LINK_TITLE:
             case LINK_URL:
@@ -141,11 +116,11 @@ public class PegDownProcessor implements AstNodeType {
             case NOTE:
                 return printNote(node);
             case PARA:
-                return printPadding().printChildren(node, "<p>", "</p>").setPadding(2);
+                return printOnNL("<p>").printChildren(node).print("</p>");
             case QUOTED_SINGLE:
-                return printChildren(node, "&lsquo;", "&rsquo;");
+                return print("&lsquo;").printChildren(node).print("&rsquo;");
             case QUOTED_DOUBLE:
-                return printChildren(node, "&ldquo;", "&rdquo;");
+                return print("&ldquo;").printChildren(node).print("&rdquo;");
             case REFERENCE:
                 return this;
             case SPACE:
@@ -153,41 +128,64 @@ public class PegDownProcessor implements AstNodeType {
             case SPECIAL:
                 return printSpecial(node);
             case STRONG:
-                return printChildren(node, "<strong>", "</strong>");
+                return print("<strong>").printChildren(node).print("</strong>");
             case TEXT:
                 return print(node.text);
             case VERBATIM:
-                return printPadding().print("<pre><code>").print(encode(node.text)).print("</code></pre>");
+                return printOnNL("<pre><code>").printEncoded(node.text).print("</code></pre>");
         }
         throw new IllegalStateException();
     }
 
-    private PegDownProcessor printImage(AstNode node) {
-        sb.append("<img src=\"");
-        printLinkUrl(node);
-        sb.append("\" alt=\"");
-        printLinkTitle(node);
-        sb.append('>');
-        printLinkName(node);
-        return print("</img>");
+    private PegDownProcessor indent(int delta) {
+        indent += delta;
+        return this;
     }
 
-    private PegDownProcessor printLink(AstNode node) {
-        sb.append("<a href=\"");
-        printLinkUrl(node);
-        sb.append('"');
-        printLinkTitle(node);
-        sb.append('>');
-        printLinkName(node);
-        return print("</a>");
+    private PegDownProcessor print(String string) {
+        sb.append(string);
+        return this;
     }
 
-    private void printLinkUrl(AstNode node) {
+    private PegDownProcessor print(char c) {
+        sb.append(c);
+        return this;
+    }
+
+    private PegDownProcessor printIndent() {
+        for (int i = 0; i < indent; i++) {
+            print(' ');
+        }
+        return this;
+    }
+
+    private PegDownProcessor println() {
+        if (sb.length() > 0) {
+            print('\n');
+        }
+        return this;
+    }
+
+    private PegDownProcessor printOnNL(String string) {
+        println();
+        printIndent();
+        print(string);
+        return this;
+    }
+
+    private PegDownProcessor printEncoded(String string) {
+        return print(encode(string));
+    }
+
+    private PegDownProcessor printLinkAttrs(AstNode node, String hrefAttr, String titleAttr) {
         AstNode linkUrlNode = findChildNode(node, LINK_URL);
         if (linkUrlNode != null) {
             // explicit link
-            sb.append(encode(linkUrlNode.text));
-            return;
+            print(hrefAttr).print("=\"").printEncoded(linkUrlNode.text).print('"');
+
+            AstNode linkTitleNode = findChildNode(node, LINK_TITLE);
+            return linkTitleNode == null ? this :
+                    print(' ').print(titleAttr).print("=\"").printChildren(linkTitleNode).print('"');
         }
 
         // reference link
@@ -199,45 +197,23 @@ public class PegDownProcessor implements AstNodeType {
         }
 
         String linkUrl = refLinkUrls.get(linkRef);
-        sb.append(linkUrl == null ? "Undefined Link Reference!" : linkUrl);
+        print(hrefAttr).print("=\"").print(linkUrl == null ? "Undefined Link Reference!" : linkUrl).print('"');
+
+        String linkTitle = refLinkTitles.get(linkRef);
+        return linkTitle == null ? this : print(' ').print(titleAttr).print("=\"").print(linkTitle).print('"');
     }
 
-    private void printLinkTitle(AstNode node) {
-        AstNode linkTitleNode = findChildNode(node, LINK_TITLE);
-        if (linkTitleNode != null) {
-            sb.append(" title=\"");
-            printChildren(linkTitleNode);
-            sb.append('\'');
-        }
-    }
-
-    private void printLinkName(AstNode node) {
-        if (StringUtils.isEmpty(node.text)) {
-            printChildren(node);
-        } else {
-            sb.append(encode(node.text));
-        }
+    private PegDownProcessor printLinkName(AstNode node) {
+        return StringUtils.isEmpty(node.text) ? printChildren(node) : printEncoded(node.text);
     }
 
     private PegDownProcessor printSpecial(AstNode node) {
         char c = node.text.charAt(0);
         String encoded = encode(c);
-        if (encoded != null) {
-            sb.append(encoded);
-        } else {
-            sb.append(c);
-        }
-        return this;
+        return encoded != null ? print(encoded) : print(c);
     }
 
     private PegDownProcessor printNote(AstNode node) {
-        return this;
-    }
-
-    private PegDownProcessor printChildren(AstNode node, String open, String close) {
-        sb.append(open);
-        printChildren(node);
-        sb.append(close);
         return this;
     }
 
@@ -271,8 +247,11 @@ public class PegDownProcessor implements AstNodeType {
                 for (i = 0; i < string.length(); i++) {
                     char c = string.charAt(i);
                     String encoded = encode(c);
-                    if (encoded != null) sb.append(encoded);
-                    else sb.append(c);
+                    if (encoded != null) {
+                        sb.append(encoded);
+                    } else {
+                        sb.append(c);
+                    }
                 }
                 return sb.toString();
             }
