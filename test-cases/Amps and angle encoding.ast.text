@@ -54,8 +54,10 @@ DEFAULT
         SPACE: " "
         TEXT: "a"
         SPACE: " "
-        LINK
-            TEXT: "link"
+        REF_LINK
+            LINK_LABEL
+                TEXT: "link"
+            SPACE: " "
             LINK_REF
                 TEXT: "1"
         SPACE: " "
@@ -91,10 +93,12 @@ DEFAULT
         SPACE: " "
         TEXT: "text:"
         SPACE: " "
-        LINK
-            TEXT: "AT"
-            SPECIAL: "&"
-            TEXT: "T"
+        REF_LINK
+            LINK_LABEL
+                TEXT: "AT"
+                SPECIAL: "&"
+                TEXT: "T"
+            SPACE: " "
             LINK_REF
                 TEXT: "2"
         TEXT: "."
@@ -105,8 +109,9 @@ DEFAULT
         SPACE: " "
         TEXT: "inline"
         SPACE: " "
-        LINK
-            TEXT: "link"
+        EXP_LINK
+            LINK_LABEL
+                TEXT: "link"
             LINK_URL: "/script?foo=1&bar=2"
         TEXT: "."
     PARA
@@ -116,14 +121,17 @@ DEFAULT
         SPACE: " "
         TEXT: "inline"
         SPACE: " "
-        LINK
-            TEXT: "link"
+        EXP_LINK
+            LINK_LABEL
+                TEXT: "link"
             LINK_URL: "/script?foo=1&bar=2"
         TEXT: "."
     REFERENCE
-        TEXT: "1"
+        LINK_LABEL
+            TEXT: "1"
         LINK_URL: "http://example.com/?foo=1&bar=2"
     REFERENCE
-        TEXT: "2"
+        LINK_LABEL
+            TEXT: "2"
         LINK_URL: "http://att.com/"
         LINK_TITLE: "AT&T"

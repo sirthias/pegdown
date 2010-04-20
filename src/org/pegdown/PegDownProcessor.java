@@ -76,13 +76,13 @@ public class PegDownProcessor implements AstNodeType {
     private void buildRefLinkUrls() {
         refLinkUrls.clear();
         for (AstNode refNode : parser.references) {
-            AstNode urlNode = findChildNode(refNode, LINK_URL);
+            AstNode urlNode = child(refNode, LINK_URL);
             Preconditions.checkState(urlNode != null);
-            String key = printToString(refNode).toLowerCase();
+            String key = printToString(child(refNode, LINK_LABEL)).toLowerCase();
             String value = encode(urlNode.text);
             refLinkUrls.put(key, value);
 
-            AstNode titleNode = findChildNode(refNode, LINK_TITLE);
+            AstNode titleNode = child(refNode, LINK_TITLE);
             if (titleNode != null) {
                 String title = encode(titleNode.text);
                 refLinkTitles.put(key, title);
@@ -91,21 +91,35 @@ public class PegDownProcessor implements AstNodeType {
     }
 
     private PegDownProcessor print(AstNode node) {
+        if (node == null) return this;
+
         switch (node.type) {
             case DEFAULT:
                 return printChildren(node);
+
+            // basic elements
             case APOSTROPHE:
                 return print("&rsquo;");
-            case BLOCKQUOTE:
-                return printOnNL("<blockquote>").indent(+2).printChildren(node).indent(-2).printOnNL("</blockquote>");
-            case CODE:
-                return print("<code>").printEncoded(node.text).print("</code>");
             case ELLIPSIS:
                 return print("&hellip;");
             case EMDASH:
                 return print("&mdash;");
             case ENDASH:
                 return print("&ndash;");
+            case HTML:
+                return print(node.text);
+            case LINEBREAK:
+                return printOnNL("<br/>").println();
+            case SPACE:
+                return print(node.text);
+            case SPECIAL:
+                return printEncoded(node.text.charAt(0));
+            case TEXT:
+                return print(node.text);
+
+            // inline groups
+            case CODE:
+                return print("<code>").printEncoded(node.text).print("</code>");
             case EMPH:
                 return print("<em>").printChildren(node).print("</em>");
             case H1:
@@ -120,48 +134,61 @@ public class PegDownProcessor implements AstNodeType {
                 return print("<h5>").printChildren(node).print("</h5>");
             case H6:
                 return print("<h6>").printChildren(node).print("</h6>");
-            case HRULE:
-                return printOnNL("<hr/>").println();
-            case HTML:
-                return print(node.text);
-            case HTMLBLOCK:
-                return printOnNL(node.text);
-            case IMAGE:
-                return print("<img ").printLinkAttrs(node, "src", "alt").print(">").printLinkName(node).print("</img>");
-            case LINEBREAK:
-                return printOnNL("<br/>").println();
-            case LIST_BULLET:
-                return printOnNL("<ul>").indent(+2).printChildren(node).indent(-2).printOnNL("</ul>");
-            case LIST_ORDERED:
-                return printOnNL("<ol>").indent(+2).printChildren(node).indent(-2).printOnNL("</ol>");
-            case LISTITEM:
-                return printOnNL("<li>").printChildren(node).print("</li>");
-            case LINK:
-                return print("<a ").printLinkAttrs(node, "href", "title").print(">").printLinkName(node).print("</a>");
-            case LINK_REF:
-            case LINK_TITLE:
-            case LINK_URL:
-                return this;
-            case NOTE:
-                return printNote(node);
-            case PARA:
-                return printOnNL("<p>").printChildren(node).print("</p>");
-            case QUOTED_SINGLE:
-                return print("&lsquo;").printChildren(node).print("&rsquo;");
-            case QUOTED_DOUBLE:
-                return print("&ldquo;").printChildren(node).print("&rdquo;");
-            case REFERENCE:
-                return this;
-            case SPACE:
-                return print(node.text);
-            case SPECIAL:
-                return printSpecial(node);
             case STRONG:
                 return print("<strong>").printChildren(node).print("</strong>");
-            case TEXT:
-                return print(node.text);
+            case SINGLE_QUOTED:
+                return print("&lsquo;").printChildren(node).print("&rsquo;");
+            case DOUBLE_QUOTED:
+                return print("&ldquo;").printChildren(node).print("&rdquo;");
+
+            // blocks
+            case BLOCKQUOTE:
+                return printOnNL("<blockquote>").indent(+2).printChildren(node).indent(-2).printOnNL("</blockquote>");
+            case HRULE:
+                return printOnNL("<hr/>");
+            case HTMLBLOCK:
+                return printOnNL(node.text);
+            case PARA:
+                return printOnNL("<p>").printChildren(node).print("</p>");
             case VERBATIM:
                 return printOnNL("<pre><code>").printEncoded(node.text).print("</code></pre>");
+
+            // lists
+            case BULLET_LIST:
+                return printOnNL("<ul>").indent(+2).printChildren(node).indent(-2).printOnNL("</ul>");
+            case ORDERED_LIST:
+                return printOnNL("<ol>").indent(+2).printChildren(node).indent(-2).printOnNL("</ol>");
+            case LIST_ITEM:
+                return printOnNL("<li>").printChildren(node).print("</li>");
+
+            // links
+            case AUTO_LINK:
+                return print("<a href=\"").printEncoded(node.text).print("\">").printEncoded(node.text).print("</a>");
+            case EXP_LINK:
+                return print("<a href=\"").printChild(node, LINK_URL).print('"')
+                        .printChild(node, LINK_TITLE).print('>')
+                        .printChild(node, LINK_LABEL).print("</a>");
+            case EXP_IMG_LINK:
+                return print("<img src=\"").printChild(node, LINK_URL).print('"')
+                        .print(" alt=\"").printChild(node, LINK_LABEL).print("\"")
+                        .printChild(node, LINK_TITLE).print("/>");
+            case MAIL_LINK:
+                return print("<a href=\"mailto:").printEncoded(node.text).print("\">")
+                        .printEncoded(node.text).print("</a>");
+            case REF_LINK:
+                return printReferenceLink(node);
+            case REF_IMG_LINK:
+                return printReferenceImageLink(node);
+            case LINK_LABEL:
+                return printChildren(node);
+            case LINK_REF:
+                return print('[').printChildren(node).print(']'); // only reached for fake reference links 
+            case LINK_TITLE:
+                return print(" title=\"").printEncoded(node.text).print('"');
+            case LINK_URL:
+                return printEncoded(node.text);
+            case REFERENCE:
+                return this; // references are not printed
         }
         throw new IllegalStateException();
     }
@@ -172,7 +199,7 @@ public class PegDownProcessor implements AstNodeType {
     }
 
     private PegDownProcessor print(String string) {
-        sb.append(string);
+        if (StringUtils.isNotEmpty(string)) sb.append(string);
         return this;
     }
 
@@ -206,44 +233,38 @@ public class PegDownProcessor implements AstNodeType {
         return print(encode(string));
     }
 
-    private PegDownProcessor printLinkAttrs(AstNode node, String hrefAttr, String titleAttr) {
-        AstNode linkUrlNode = findChildNode(node, LINK_URL);
-        if (linkUrlNode != null) {
-            // explicit link
-            print(hrefAttr).print("=\"").printEncoded(linkUrlNode.text).print('"');
-
-            AstNode linkTitleNode = findChildNode(node, LINK_TITLE);
-            return linkTitleNode == null ? this :
-                    print(' ').print(titleAttr).print("=\"").printChildren(linkTitleNode).print('"');
-        }
-
-        // reference link
-        AstNode linkRefNode = findChildNode(node, LINK_REF);
-        String linkRef = linkRefNode == null ? "" : printToString(linkRefNode).toLowerCase();
-        if (StringUtils.isEmpty(linkRef)) {
-            // implicit reference link
-            linkRef = printToString(node).toLowerCase();
-        }
-
-        String linkUrl = refLinkUrls.get(linkRef);
-        print(hrefAttr).print("=\"").print(linkUrl == null ? "Undefined Link Reference!" : linkUrl).print('"');
-
-        String linkTitle = refLinkTitles.get(linkRef);
-        return linkTitle == null ? this : print(' ').print(titleAttr).print("=\"").print(linkTitle).print('"');
-    }
-
-    private PegDownProcessor printLinkName(AstNode node) {
-        return StringUtils.isEmpty(node.text) ? printChildren(node) : printEncoded(node.text);
-    }
-
-    private PegDownProcessor printSpecial(AstNode node) {
-        char c = node.text.charAt(0);
+    private PegDownProcessor printEncoded(char c) {
         String encoded = encode(c);
         return encoded != null ? print(encoded) : print(c);
     }
 
-    private PegDownProcessor printNote(AstNode node) {
-        return this;
+    private PegDownProcessor printReferenceLink(AstNode node) {
+        return printReferenceLink(node, "<a href=\"", ">", "</a>");
+    }
+
+    private PegDownProcessor printReferenceImageLink(AstNode node) {
+        return printReferenceLink(node, "<img src=\"", "\" alt=\"", "\"/>");
+    }
+
+    private PegDownProcessor printReferenceLink(AstNode node, String open, String middle, String end) {
+        String linkRef = getLinkRef(node);
+        String linkUrl = refLinkUrls.get(linkRef);
+        if (linkUrl == null) {
+            // "fake" reference link
+            return print('[').printChild(node, LINK_LABEL).print(']').printChild(node, SPACE).printChild(node, LINK_REF);
+        }
+        print(open).print(linkUrl).print('"');
+        String linkTitle = refLinkTitles.get(linkRef);
+        if (StringUtils.isNotEmpty(linkTitle)) {
+            print(" title=\"").print(linkTitle).print('"');
+        }
+        return print(middle).printChild(node, LINK_LABEL).print(end);
+    }
+
+    private String getLinkRef(AstNode node) {
+        AstNode linkRefNode = child(node, LINK_REF);
+        String linkRef = linkRefNode != null ? printToString(linkRefNode).toLowerCase() : null;
+        return StringUtils.isNotEmpty(linkRef) ? linkRef : printToString(child(node, LINK_LABEL)).toLowerCase();
     }
 
     private PegDownProcessor printChildren(AstNode node) {
@@ -253,18 +274,22 @@ public class PegDownProcessor implements AstNodeType {
         return this;
     }
 
+    private PegDownProcessor printChild(AstNode parent, int type) {
+        return print(child(parent, type));
+    }
+
     private String printToString(AstNode node) {
         int len = sb.length();
         printChildren(node);
         if (sb.length() == len) return "";
         String text = sb.substring(len, sb.length());
         sb.setLength(len);
-        return text;
+        return text.replace("\n ", " ").replace(" \n", " ").replace('\n', ' ');
     }
 
-    private AstNode findChildNode(AstNode parent, int type) {
-        for (AstNode node : parent.getChildren()) {
-            if (node.type == type) return node;
+    private AstNode child(AstNode parent, int type) {
+        for (AstNode child : parent.getChildren()) {
+            if (child.type == type) return child;
         }
         return null;
     }

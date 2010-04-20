@@ -2,8 +2,7 @@ DEFAULT
     PARA
         TEXT: "Link:"
         SPACE: " "
-        LINK: "http://example.com/"
-            LINK_URL: "http://example.com/"
+        AUTO_LINK: "http://example.com/"
         TEXT: "."
     PARA
         TEXT: "With"
@@ -12,21 +11,19 @@ DEFAULT
         SPACE: " "
         TEXT: "ampersand:"
         SPACE: " "
-        LINK: "http://example.com/?foo=1&bar=2"
-            LINK_URL: "http://example.com/?foo=1&bar=2"
-    LIST_BULLET
-        LISTITEM
+        AUTO_LINK: "http://example.com/?foo=1&bar=2"
+    BULLET_LIST
+        LIST_ITEM
             DEFAULT
                 TEXT: "In"
                 SPACE: " "
                 TEXT: "a"
                 SPACE: " "
                 TEXT: "list?"
-        LISTITEM
+        LIST_ITEM
             DEFAULT
-                LINK: "http://example.com/"
-                    LINK_URL: "http://example.com/"
-        LISTITEM
+                AUTO_LINK: "http://example.com/"
+        LIST_ITEM
             DEFAULT
                 TEXT: "It"
                 SPACE: " "
@@ -35,8 +32,7 @@ DEFAULT
         PARA
             TEXT: "Blockquoted:"
             SPACE: " "
-            LINK: "http://example.com/"
-                LINK_URL: "http://example.com/"
+            AUTO_LINK: "http://example.com/"
     PARA
         TEXT: "Auto-links"
         SPACE: " "

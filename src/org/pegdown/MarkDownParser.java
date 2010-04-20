@@ -158,7 +158,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return Sequence(
                 Test(Bullet()),
                 FirstOf(ListTight(), ListLoose()),
-                set(lastValue().setType(LIST_BULLET))
+                set(lastValue().setType(BULLET_LIST))
         );
     }
 
@@ -166,7 +166,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return Sequence(
                 Test(Enumerator()),
                 FirstOf(ListTight(), ListLoose()),
-                set(lastValue().setType(LIST_ORDERED))
+                set(lastValue().setType(ORDERED_LIST))
         );
     }
 
@@ -198,7 +198,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule ListItem() {
         return Sequence(
                 FirstOf(Bullet(), Enumerator()),
-                create(LISTITEM, ""),
+                create(LIST_ITEM, ""),
                 ListBlock(), value().addText(lastText()),
                 ZeroOrMore(
                         Sequence(
@@ -212,7 +212,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                                 )
                         )
                 ),
-                set(parseRawBlock(value().text).parseTreeRoot.getValue().setType(LISTITEM))
+                set(parseRawBlock(value().text).parseTreeRoot.getValue().setType(LIST_ITEM))
         );
     }
 
@@ -262,7 +262,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule HtmlBlockSelfClosing() {
-        return Sequence('<', Spn1(), HtmlBlockType(), Spn1(), ZeroOrMore(HtmlAttribute()), '/', Spn1(), '>');
+        return Sequence('<', Spn1(), HtmlBlockType(), Spn1(), ZeroOrMore(HtmlAttribute()), Optional('/'), Spn1(), '>');
     }
 
     Rule HtmlBlockType() {
@@ -407,39 +407,41 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     //************* LINKS ****************
 
     Rule Image() {
-        return Sequence('!', ExplicitOrReferenceLink(), set(lastValue().setType(IMAGE)));
-    }
-
-    Rule Link() {
-        return FirstOf(ExplicitOrReferenceLink(), AutoLinkUrl(), AutoLinkEmail());
-    }
-
-    Rule ExplicitOrReferenceLink() {
-        return Sequence(
-                Label(), set(lastValue().setType(LINK)),
+        return Sequence('!',
                 FirstOf(
-                        ExplicitLinkRest(),
-                        Sequence(NormalReferenceLinkRest(), UP2(attach(lastValue()))),
-                        Sequence(ImplicitReferenceLinkRest(), UP2(attach(lastValue())))
+                        Sequence(ExplicitLink(), set(lastValue().setType(EXP_IMG_LINK))),
+                        Sequence(ReferenceLink(), set(lastValue().setType(REF_IMG_LINK)))
                 )
         );
     }
 
-    Rule ExplicitLinkRest() {
+    Rule Link() {
+        return FirstOf(ExplicitLink(), ReferenceLink(), AutoLinkUrl(), AutoLinkEmail());
+    }
+
+    Rule ExplicitLink() {
         return Sequence(
+                Label(), create(EXP_LINK, lastValue()),
                 Spn1(), '(', Sp(),
-                Source(), UP2(attach(lastValue())),
-                Spn1(), Optional(Sequence(Title(), UP3(attach(lastValue())))),
+                Source(), attach(),
+                Spn1(), Optional(Sequence(Title(), UP2(attach()))),
                 Sp(), ')'
         );
     }
 
-    Rule NormalReferenceLinkRest() {
-        return Sequence(Spn1(), TestNot("[]"), Label(), set(lastValue().setType(LINK_REF)));
-    }
+    Rule ReferenceLink() {
+        return Sequence(
+                Label(), create(REF_LINK, lastValue()),
+                FirstOf(
+                        // regular reference link
+                        Sequence(Spn1(), UP2(put()), TestNot("[]"), Label(), set(lastValue().setType(LINK_REF))),
 
-    Rule ImplicitReferenceLinkRest() {
-        return Optional(Sequence(Spn1(), "[]", create(LINK_REF)));
+                        // implicit reference link
+                        Optional(Sequence(Spn1(), UP2(put()), "[]", create(LINK_REF, "")))
+                ),
+                attach(new AstNode().setType(SPACE).setText(text(get()))),
+                attach()
+        );
     }
 
     Rule Source() {
@@ -452,7 +454,8 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                         OneOrMore(Sequence(TestNot('('), TestNot(')'), TestNot('>'), Nonspacechar())),
                         create(LINK_URL, lastText())
                 ),
-                Sequence('(', SourceContents(), ')')
+                Sequence('(', SourceContents(), ')'),
+                Empty()
         );
     }
 
@@ -462,7 +465,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule Title(char delimiter) {
         return Sequence(
-                delimiter,
+                CharSet("\'\""),
                 ZeroOrMore(
                         Sequence(TestNot(Sequence(delimiter, Sp(), FirstOf(')', Newline()))), TestNot(Newline()), Any())
                 ),
@@ -475,7 +478,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return Sequence(
                 '<',
                 Sequence(OneOrMore(Letter()), "://", OneOrMore(Sequence(TestNot(Newline()), TestNot('>'), Any()))),
-                create(LINK, lastText(), new AstNode().setType(LINK_URL).setText(lastText())),
+                create(AUTO_LINK, lastText()),
                 '>'
         );
     }
@@ -485,7 +488,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                 '<',
                 Sequence(OneOrMore(FirstOf(Alphanumeric(), CharSet("-+_"))), '@',
                         OneOrMore(Sequence(TestNot(Newline()), TestNot('>'), Any()))),
-                create(LINK_URL, "mailto:" + lastText()),
+                create(MAIL_LINK, lastText()),
                 '>'
         );
     }
@@ -494,9 +497,9 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule Reference() {
         return Sequence(
-                NonindentSpace(), TestNot("[]"), Label(), set(lastValue().setType(REFERENCE)),
-                ':', Spn1(), RefSrc(), attach(lastValue()),
-                Spn1(), Optional(Sequence(RefTitle(), UP2(attach(lastValue())))),
+                NonindentSpace(), TestNot("[]"), Label(), create(REFERENCE, lastValue()),
+                ':', Spn1(), RefSrc(), attach(),
+                Spn1(), Optional(Sequence(RefTitle(), UP2(attach()))),
                 ZeroOrMore(BlankLine()),
                 references.add(value())
         );
@@ -504,7 +507,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule Label() {
         return Sequence(
-                '[', create(DEFAULT),
+                '[', create(LINK_LABEL),
                 ZeroOrMore(Sequence(TestNot(']'), Inline(), UP2(attach(lastValue())))),
                 ']'
         );
@@ -738,6 +741,10 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     //************* ACTIONS ****************
+
+    boolean attach() {
+        return attach(lastValue());
+    }
 
     boolean attach(AstNode astNode) {
         if (astNode != null) addChild(getContext().getNodeValue(), astNode);

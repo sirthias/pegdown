@@ -1,0 +1,18 @@
+DEFAULT
+    PARA
+        TEXT: "Paragraph"
+        SPACE: " "
+        TEXT: "one."
+    HTMLBLOCK: "<!-- This is a simple comment -->"
+    HTMLBLOCK: "<!--
+    This is another comment.
+-->"
+    PARA
+        TEXT: "Paragraph"
+        SPACE: " "
+        TEXT: "two."
+    HTMLBLOCK: "<!-- one comment block -- -- with two comments -->"
+    PARA
+        TEXT: "The"
+        SPACE: " "
+        TEXT: "end."

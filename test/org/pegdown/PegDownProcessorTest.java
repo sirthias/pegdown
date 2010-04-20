@@ -39,6 +39,9 @@ public class PegDownProcessorTest {
         test("Horizontal rules");
         test("Inline HTML (Advanced)");
         test("Inline HTML (Simple)");
+        test("Inline HTML comments");
+        test("Links, inline style");
+        test("Links, reference style");
     }
 
     private void test(String testName) {

@@ -3,74 +3,66 @@ package org.pegdown;
 public interface AstNodeType {
 
     static int DEFAULT = 0;
-    static int APOSTROPHE = 1;
-    static int BLOCKQUOTE = 2;
-    static int CODE = 3;
-    static int ELLIPSIS = 4;
-    static int EMDASH = 5;
-    static int ENDASH = 6;
-    static int EMPH = 7;
-    static int H1 = 8;
-    static int H2 = 9;
-    static int H3 = 10;
-    static int H4 = 11;
-    static int H5 = 12;
-    static int H6 = 13;
-    static int HRULE = 14;
-    static int HTML = 15;
-    static int HTMLBLOCK = 16;
-    static int IMAGE = 17;
-    static int LINEBREAK = 18;
-    static int LIST_BULLET = 19;
-    static int LIST_ORDERED = 20;
-    static int LISTITEM = 21;
-    static int LINK = 22;
-    static int LINK_URL = 23;
-    static int LINK_TITLE = 24;
-    static int LINK_REF = 25;
-    static int NOTE = 26;
-    static int PARA = 27;
-    static int QUOTED_SINGLE = 28;
-    static int QUOTED_DOUBLE = 29;
-    static int REFERENCE = 30;
-    static int SPACE = 31;
-    static int SPECIAL = 32;
-    static int STRONG = 33;
-    static int TEXT = 34;
-    static int VERBATIM = 35;
 
+    // basic elements
+    static int APOSTROPHE = 1;
+    static int ELLIPSIS = 2;
+    static int EMDASH = 3;
+    static int ENDASH = 4;
+    static int HTML = 5;
+    static int LINEBREAK = 6;
+    static int SPACE = 7;
+    static int SPECIAL = 8;
+    static int TEXT = 9;
+
+    // inline groups
+    static int CODE = 10;
+    static int EMPH = 11;
+    static int H1 = 12;
+    static int H2 = 13;
+    static int H3 = 14;
+    static int H4 = 15;
+    static int H5 = 16;
+    static int H6 = 17;
+    static int STRONG = 18;
+    static int SINGLE_QUOTED = 19;
+    static int DOUBLE_QUOTED = 20;
+
+    // blocks
+    static int BLOCKQUOTE = 21;
+    static int HRULE = 22;
+    static int HTMLBLOCK = 23;
+    static int PARA = 24;
+    static int VERBATIM = 25;
+
+    // lists
+    static int BULLET_LIST = 26;
+    static int ORDERED_LIST = 27;
+    static int LIST_ITEM = 28;
+
+    // links
+    static int AUTO_LINK = 29;
+    static int EXP_LINK = 30;
+    static int EXP_IMG_LINK = 31;
+    static int MAIL_LINK = 32;
+    static int REF_LINK = 33;
+    static int REF_IMG_LINK = 34;
+
+    static int LINK_LABEL = 35;
+    static int LINK_REF = 36;
+    static int LINK_TITLE = 37;
+    static int LINK_URL = 38;
+    static int REFERENCE = 39;
+
+    // reverse resolution
     static String[] TYPE_NAMES = new String[]{
             "DEFAULT",
-            "APOSTROPHE",
-            "BLOCKQUOTE",
-            "CODE",
-            "ELLIPSIS",
-            "EMDASH",
-            "ENDASH",
-            "EMPH",
-            "H1", "H2", "H3", "H4", "H5", "H6",
-            "HRULE",
-            "HTML",
-            "HTMLBLOCK",
-            "IMAGE",
-            "LINEBREAK",
-            "LIST_BULLET",
-            "LIST_ORDERED",
-            "LISTITEM",
-            "LINK",
-            "LINK_URL",
-            "LINK_TITLE",
-            "LINK_REF",
-            "NOTE",
-            "PARA",
-            "QUOTED_SINGLE",
-            "QUOTED_DOUBLE",
-            "REFERENCE",
-            "SPACE",
-            "SPECIAL",
-            "STRONG",
-            "TEXT",
-            "VERBATIM"
+            "APOSTROPHE", "ELLIPSIS", "EMDASH", "ENDASH", "HTML", "LINEBREAK", "SPACE", "SPECIAL", "TEXT",
+            "CODE", "EMPH", "H1", "H2", "H3", "H4", "H5", "H6", "STRONG", "SINGLE_QUOTED", "DOUBLE_QUOTED",
+            "BLOCKQUOTE", "HRULE", "HTMLBLOCK", "PARA", "VERBATIM",
+            "BULLET_LIST", "ORDERED_LIST", "LIST_ITEM",
+            "AUTO_LINK", "EXP_LINK", "EXP_IMG_LINK", "MAIL_LINK", "REF_LINK", "REF_IMG_LINK",
+            "LINK_LABEL", "LINK_REF", "LINK_TITLE", "LINK_URL", "REFERENCE"
     };
 
 }

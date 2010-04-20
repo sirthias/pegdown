@@ -99,16 +99,12 @@ Blah
 "
     PARA
         TEXT: "Hr's:"
-    PARA
-        HTML: "<hr>"
+    HTMLBLOCK: "<hr>"
     HTMLBLOCK: "<hr/>"
     HTMLBLOCK: "<hr />"
-    PARA
-        HTML: "<hr>"
-        SPACE: " "
+    HTMLBLOCK: "<hr>"
     HTMLBLOCK: "<hr/>"
     HTMLBLOCK: "<hr />"
     HTMLBLOCK: "<hr class="foo" id="bar" />"
     HTMLBLOCK: "<hr class="foo" id="bar"/>"
-    PARA
-        HTML: "<hr class="foo" id="bar" >"
+    HTMLBLOCK: "<hr class="foo" id="bar" >"
