@@ -13,17 +13,17 @@ DEFAULT
         SPACE: " "
         AUTO_LINK: "http://example.com/?foo=1&bar=2"
     BULLET_LIST
-        LIST_ITEM
+        TIGHT_LIST_ITEM
             DEFAULT
                 TEXT: "In"
                 SPACE: " "
                 TEXT: "a"
                 SPACE: " "
                 TEXT: "list?"
-        LIST_ITEM
+        TIGHT_LIST_ITEM
             DEFAULT
                 AUTO_LINK: "http://example.com/"
-        LIST_ITEM
+        TIGHT_LIST_ITEM
             DEFAULT
                 TEXT: "It"
                 SPACE: " "

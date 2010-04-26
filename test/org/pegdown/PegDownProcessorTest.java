@@ -42,13 +42,17 @@ public class PegDownProcessorTest {
         test("Inline HTML comments");
         test("Links, inline style");
         test("Links, reference style");
+        test("Links, shortcut references");
+        test("Literal quotes in titles");
+        test("Nested blockquotes");
+        test("Ordered and unordered lists");
     }
 
     private void test(String testName) {
         String markdown = FileUtils.readAllTextFromResource(testName + ".text");
 
         ParsingResult<AstNode> result = processor.getParser().parseRawBlock(prepare(markdown));
-        //assertEqualsMultiline(printNodeTree(result), "");
+        // assertEqualsMultiline(printNodeTree(result), "");  // for advanced debugging: check the parse tree
         AstNode astRoot = result.parseTreeRoot.getValue();
         String astPrintout = FileUtils.readAllTextFromResource(testName + ".ast.text");
         assertEqualsMultiline(printTree(astRoot, new ToStringFormatter<AstNode>()), astPrintout);

@@ -1,9 +1,8 @@
 package org.pegdown;
 
-import org.parboiled.BaseParser;
-import org.parboiled.ReportingParseRunner;
-import org.parboiled.Rule;
+import org.parboiled.*;
 import org.parboiled.annotations.Cached;
+import org.parboiled.annotations.SuppressSubnodes;
 import org.parboiled.common.StringUtils;
 import org.parboiled.google.base.Function;
 import org.parboiled.support.ParsingResult;
@@ -70,18 +69,20 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule Verbatim() {
+        Var<String> text = new Var<String>("");
+        Var<String> temp = new Var<String>("");
         return Sequence(
-                create(VERBATIM, ""),
                 OneOrMore(
                         Sequence(
-                                create(DEFAULT, ""),
-                                ZeroOrMore(Sequence(BlankLine(), UP2(value().addText("\n")))),
-                                NonblankIndentedLine(), UP2(value().addText(DOWN2(value().text) + lastValue().text))
+                                ZeroOrMore(Sequence(BlankLine(), temp.set(prevText()))),
+                                NonblankIndentedLine(), text.set(text.get() + temp.get() + prevValue().text)
                         )
-                )
+                ),
+                create(VERBATIM, text.get())
         );
     }
 
+    @SuppressSubnodes
     Rule HorizontalRule() {
         return Sequence(
                 NonindentSpace(),
@@ -172,9 +173,9 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule ListTight() {
         return Sequence(
-                ListItem(), create(DEFAULT, lastValue()),
+                ListItem(TIGHT_LIST_ITEM), create(DEFAULT, lastValue()),
                 ZeroOrMore(
-                        Sequence(ListItem(), UP2(attach(lastValue())))
+                        Sequence(ListItem(TIGHT_LIST_ITEM), UP2(attach(lastValue())))
                 ),
                 ZeroOrMore(BlankLine()),
                 TestNot(FirstOf(Bullet(), Enumerator()))
@@ -183,11 +184,11 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule ListLoose() {
         return Sequence(
-                ListItem(), create(DEFAULT, lastValue()),
+                ListItem(LOOSE_LIST_ITEM), create(DEFAULT, lastValue()),
                 ZeroOrMore(BlankLine()),
                 ZeroOrMore(
                         Sequence(
-                                ListItem(),
+                                ListItem(LOOSE_LIST_ITEM),
                                 UP2(attach(lastValue())),
                                 ZeroOrMore(BlankLine())
                         )
@@ -195,29 +196,99 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         );
     }
 
-    Rule ListItem() {
+    Rule ListItem(int type) {
+        // for a simpler parser design we use a recursive parsing strategy for list items:
+        // we collect the markdown source for an item, run a complete parsing cycle on this inner source and attach
+        // the root of the inner parsing results AST to the outer AST tree
+        // we use two helper variables in this ListItem rule, and since we cannot write to local variables from within
+        // a rule we have to use one level of indirection, org.parboiled.Var objects are the best solution for this,
+        // since they also provide for proper frame management in the case of rule recursions
+
+        Var<String> innerSource = new Var<String>();
+        Var<String> blanks = new Var<String>("");
+        Var<String> extraNLs = new Var<String>("");
+
         return Sequence(
                 FirstOf(Bullet(), Enumerator()),
-                create(LIST_ITEM, ""),
-                ListBlock(), value().addText(lastText()),
+
+                ListBlock(),
+                innerSource.set(lastNode().getValue().text), // set the inner source to the block text
+
                 ZeroOrMore(
                         Sequence(
-                                ZeroOrMore(BlankLine()),
+                                FirstOf(
+                                        // if we have blank lines append them to the inner source
+                                        Sequence(
+                                                OneOrMore(BlankLine()),
+                                                blanks.set(lastText())
+                                        ),
+
+                                        // if we do not have a blank line we need to trigger an inner parse
+                                        // so store the current inner source value in the helper string
+                                        // and reinitialize the inner source
+                                        blanks.set("\u0001")
+                                ),
                                 OneOrMore(
                                         Sequence(
-                                                Indent(),
-                                                ListBlock(),
-                                                UP4(value().addText(lastText()))
+                                                Indent(), ListBlock(),
+
+                                                // append potentially captured blanks and the block text
+                                                innerSource.set(act(innerSource.get(), blanks.exchange(""), lastNode()
+                                                        .getValue().text))
                                         )
-                                )
+                                ),
+                                extraNLs.set("\n\n")
                         )
                 ),
-                set(parseRawBlock(value().text).parseTreeRoot.getValue().setType(LIST_ITEM))
+
+                // finally, after having built the complete source we run an inner parse and attach its AST root
+                listAction(type, innerSource.get() + extraNLs.get())
         );
     }
 
+    String act(String innerSource, String blanks, String text) {
+        return innerSource + blanks + text;
+    }
+
+    boolean listAction(int type, String innerSource) {
+        int start = 0;
+        int end = innerSource.indexOf('\u0001', start);
+        if (end == -1) {
+            Context<AstNode> context = getContext();
+            AstNode astNode = parseRawBlock(type == LOOSE_LIST_ITEM ? innerSource + "\n\n" : innerSource).parseTreeRoot
+                    .getValue();
+            setContext(context);
+            return set(astNode.setType(type));
+        }
+
+        create(type);
+
+        while (true) {
+            end = innerSource.indexOf('\u0001', start);
+            if (end == -1) end = innerSource.length();
+            String sourcePart = innerSource.substring(start, end);
+
+            Context<AstNode> context = getContext();
+            AstNode astNode = parseRawBlock(type == LOOSE_LIST_ITEM ? sourcePart + "\n\n" : sourcePart).parseTreeRoot
+                    .getValue();
+            setContext(context);
+            attach(astNode.getChildren().get(0));
+
+            if (end == innerSource.length()) return true;
+            start = end + 1;
+        }
+    }
+
     Rule ListBlock() {
-        return Sequence(Line(), ZeroOrMore(ListBlockLine()));
+        Var<String> source = new Var<String>();
+        return Sequence(
+                Line(),
+                source.set(prevValue().text),
+                ZeroOrMore(
+                        Sequence(ListBlockLine(), source.set(source.get() + prevValue().text))
+                ),
+                create(DEFAULT, source.get())
+        );
     }
 
     Rule ListBlockLine() {
@@ -240,12 +311,13 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     //************* HTML BLOCK ****************
 
     Rule HtmlBlock() {
+        Var<String> blockSource = new Var<String>();
         return Sequence(
                 Sequence(
-                        FirstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()), UP(put()),
+                        FirstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()), blockSource.set(prevText()),
                         OneOrMore(BlankLine())
                 ),
-                create(HTMLBLOCK, text(get()))
+                create(HTMLBLOCK, blockSource.get())
         );
     }
 
@@ -430,16 +502,18 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule ReferenceLink() {
+        Var<String> spaceSource = new Var<String>();
         return Sequence(
                 Label(), create(REF_LINK, lastValue()),
                 FirstOf(
                         // regular reference link
-                        Sequence(Spn1(), UP2(put()), TestNot("[]"), Label(), set(lastValue().setType(LINK_REF))),
+                        Sequence(Spn1(), spaceSource.set(prevText()), TestNot("[]"), Label(),
+                                set(lastValue().setType(LINK_REF))),
 
                         // implicit reference link
-                        Optional(Sequence(Spn1(), UP2(put()), "[]", create(LINK_REF, "")))
+                        Optional(Sequence(Spn1(), spaceSource.set(prevText()), "[]", create(LINK_REF, "")))
                 ),
-                attach(new AstNode().setType(SPACE).setText(text(get()))),
+                attach(new AstNode().setType(SPACE).setText(spaceSource.get())),
                 attach()
         );
     }
@@ -555,9 +629,8 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                                         FirstOf(Spacechar(), Sequence(Newline(), TestNot(BlankLine()))))
                         )
                 ),
-                put(),
-                Sp(), ticks,
-                create(CODE, text(get()))
+                create(CODE, prevText()),
+                Sp(), ticks
         );
     }
 
@@ -602,8 +675,9 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return Sequence(TestNot(BlankLine()), IndentedLine());
     }
 
+    @SuppressSubnodes
     Rule BlankLine() {
-        return Sequence(Sp(), Newline());
+        return Sequence(Sp(), Newline(), create(DEFAULT, lastText()));
     }
 
     Rule IndentedLine() {
@@ -617,10 +691,13 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule Line() {
         return Sequence(
                 FirstOf(
-                        Sequence(ZeroOrMore(Sequence(TestNot('\r'), TestNot('\n'), Any())).label("line"), Newline()),
-                        Sequence(OneOrMore(Any()).label("line"), Eoi())
+                        Sequence(
+                                ZeroOrMore(Sequence(TestNot('\r'), TestNot('\n'), Any())).suppressSubnodes(),
+                                Newline()
+                        ),
+                        Sequence(OneOrMore(Any()).suppressSubnodes(), Test(Eoi()))
                 ),
-                create(DEFAULT, text(nodeByLabel("line")) + '\n')
+                create(DEFAULT, lastText())
         );
     }
 
@@ -669,7 +746,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule Str() {
         return Sequence(
-                Sequence(NormalChar(), ZeroOrMore(Sequence(ZeroOrMore('_'), NormalChar()))),
+                Sequence(NormalChar(), ZeroOrMore(Sequence(ZeroOrMore('_'), NormalChar()))).suppressSubnodes(),
                 create(TEXT, lastText())
         );
     }

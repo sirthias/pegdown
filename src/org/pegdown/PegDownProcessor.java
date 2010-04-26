@@ -158,8 +158,10 @@ public class PegDownProcessor implements AstNodeType {
                 return printOnNL("<ul>").indent(+2).printChildren(node).indent(-2).printOnNL("</ul>");
             case ORDERED_LIST:
                 return printOnNL("<ol>").indent(+2).printChildren(node).indent(-2).printOnNL("</ol>");
-            case LIST_ITEM:
+            case TIGHT_LIST_ITEM:
                 return printOnNL("<li>").printChildren(node).print("</li>");
+            case LOOSE_LIST_ITEM:
+                return printOnNL("<li>").indent(+2).printChildren(node).indent(-2).printOnNL("</li>");
 
             // links
             case AUTO_LINK:
