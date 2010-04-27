@@ -29,6 +29,7 @@ public class PegDownProcessorTest {
 
     @Test
     public void test() throws Exception {
+        // MarkdownTest suite
         test("Amps and angle encoding");
         test("Auto links");
         test("Backslash escapes");
@@ -50,10 +51,11 @@ public class PegDownProcessorTest {
         test("Tabs");
         test("Tidyness");
 
-        test("Quoted Blockquote");
-        
         test("Markdown Documentation - Basics");
         test("Markdown Documentation - Syntax");
+        
+        // custom tests
+        test("Quoted Blockquote");        
     }
 
     private void test(String testName) {
