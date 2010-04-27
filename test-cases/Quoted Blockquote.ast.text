@@ -1,0 +1,6 @@
+DEFAULT
+    VERBATIM: "> Line A
+> Line B
+>
+> Line after blank line.
+"

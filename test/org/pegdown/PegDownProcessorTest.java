@@ -46,6 +46,14 @@ public class PegDownProcessorTest {
         test("Literal quotes in titles");
         test("Nested blockquotes");
         test("Ordered and unordered lists");
+        test("Strong and em together");
+        test("Tabs");
+        test("Tidyness");
+
+        test("Quoted Blockquote");
+        
+        test("Markdown Documentation - Basics");
+        test("Markdown Documentation - Syntax");
     }
 
     private void test(String testName) {
@@ -54,16 +62,18 @@ public class PegDownProcessorTest {
         ParsingResult<AstNode> result = processor.getParser().parseRawBlock(prepare(markdown));
         // assertEqualsMultiline(printNodeTree(result), "");  // for advanced debugging: check the parse tree
         AstNode astRoot = result.parseTreeRoot.getValue();
-        String astPrintout = FileUtils.readAllTextFromResource(testName + ".ast.text");
-        assertEqualsMultiline(printTree(astRoot, new ToStringFormatter<AstNode>()), astPrintout);
+        String expectedAst = FileUtils.readAllTextFromResource(testName + ".ast.text");
+        String actualAst = printTree(astRoot, new ToStringFormatter<AstNode>());
+        assertEqualsMultiline(actualAst, expectedAst);
 
-        String toHtml = processor.markDownToHtml(markdown);
-        assertEqualsMultiline(toHtml, FileUtils.readAllTextFromResource(testName + ".compact.html"));
+        String expectedHtml = FileUtils.readAllTextFromResource(testName + ".compact.html");
+        String actualHtml = processor.markDownToHtml(markdown);
+        assertEqualsMultiline(actualHtml, expectedHtml);
 
         // tidy up html for fair equality test
-        toHtml = tidy(toHtml);
-        String expected = tidy(FileUtils.readAllTextFromResource(testName + ".html"));
-        assertEqualsMultiline(toHtml, expected);
+        actualHtml = tidy(actualHtml);
+        expectedHtml = tidy(FileUtils.readAllTextFromResource(testName + ".html"));
+        assertEqualsMultiline(actualHtml, expectedHtml);
     }
 
     private String tidy(String html) {

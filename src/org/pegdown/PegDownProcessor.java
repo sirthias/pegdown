@@ -16,7 +16,7 @@ public class PegDownProcessor implements AstNodeType {
     private final Map<String, String> refLinkUrls = new HashMap<String, String>();
     private final Map<String, String> refLinkTitles = new HashMap<String, String>();
     private StringBuilder sb;
-    private int indent = 0;
+    private int indent;
 
     public PegDownProcessor() {
         this(false);
@@ -34,6 +34,10 @@ public class PegDownProcessor implements AstNodeType {
 
     public String markDownToHtml(String markDownSource) {
         parser.references.clear();
+        refLinkUrls.clear();
+        refLinkTitles.clear();
+        indent = 0;
+
         ParsingResult<AstNode> result = parser.parseRawBlock(prepare(markDownSource));
 
         sb = new StringBuilder();

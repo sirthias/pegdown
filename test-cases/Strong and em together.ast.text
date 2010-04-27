@@ -1,0 +1,45 @@
+DEFAULT
+    PARA
+        STRONG
+            EMPH
+                TEXT: "This"
+                SPACE: " "
+                TEXT: "is"
+                SPACE: " "
+                TEXT: "strong"
+                SPACE: " "
+                TEXT: "and"
+                SPACE: " "
+                TEXT: "em."
+    PARA
+        TEXT: "So"
+        SPACE: " "
+        TEXT: "is"
+        SPACE: " "
+        STRONG
+            EMPH
+                TEXT: "this"
+        SPACE: " "
+        TEXT: "word."
+    PARA
+        STRONG
+            EMPH
+                TEXT: "This"
+                SPACE: " "
+                TEXT: "is"
+                SPACE: " "
+                TEXT: "strong"
+                SPACE: " "
+                TEXT: "and"
+                SPACE: " "
+                TEXT: "em."
+    PARA
+        TEXT: "So"
+        SPACE: " "
+        TEXT: "is"
+        SPACE: " "
+        STRONG
+            EMPH
+                TEXT: "this"
+        SPACE: " "
+        TEXT: "word."

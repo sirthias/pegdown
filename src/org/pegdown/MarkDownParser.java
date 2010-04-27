@@ -2,6 +2,8 @@ package org.pegdown;
 
 import org.parboiled.*;
 import org.parboiled.annotations.Cached;
+import org.parboiled.annotations.Label;
+import org.parboiled.annotations.SkipActionsInPredicates;
 import org.parboiled.annotations.SuppressSubnodes;
 import org.parboiled.common.StringUtils;
 import org.parboiled.google.base.Function;
@@ -13,6 +15,7 @@ import java.util.List;
 import static org.parboiled.trees.TreeUtils.addChild;
 
 @SuppressWarnings({"InfiniteRecursion"})
+@SkipActionsInPredicates
 public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     static final String[] HTML_TAGS = new String[]{"address", "blockquote", "center", "dir", "div", "dl",
@@ -74,8 +77,8 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return Sequence(
                 OneOrMore(
                         Sequence(
-                                ZeroOrMore(Sequence(BlankLine(), temp.set(prevText()))),
-                                NonblankIndentedLine(), text.set(text.get() + temp.get() + prevValue().text)
+                                ZeroOrMore(Sequence(BlankLine(), temp.set("\n"))),
+                                NonblankIndentedLine(), text.set(text.get() + temp.getAndSet("") + prevValue().text)
                         )
                 ),
                 create(VERBATIM, text.get())
@@ -233,7 +236,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                                                 Indent(), ListBlock(),
 
                                                 // append potentially captured blanks and the block text
-                                                innerSource.set(act(innerSource.get(), blanks.exchange(""), lastNode()
+                                                innerSource.set(act(innerSource.get(), blanks.getAndSet(""), lastNode()
                                                         .getValue().text))
                                         )
                                 ),
@@ -430,31 +433,43 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule Emph() {
         return Sequence(
                 FirstOf(EmphOrStrong("*"), EmphOrStrong("_")),
-                set(lastValue().setType(EMPH))
+                inPredicate() || set(lastValue().setType(EMPH))
         );
     }
 
     Rule Strong() {
         return Sequence(
                 FirstOf(EmphOrStrong("**"), EmphOrStrong("__")),
-                set(lastValue().setType(STRONG))
+                inPredicate() || set(lastValue().setType(STRONG))
         );
     }
 
+    @Label
     Rule EmphOrStrong(String chars) {
         return Sequence(
                 EmphOrStrongOpen(chars),
-                create(DEFAULT),
+                inPredicate() || create(DEFAULT),
                 ZeroOrMore(
                         Sequence(
                                 TestNot(EmphOrStrongClose(chars)),
-                                Inline(), UP2(attach(lastValue()))
+                                Inline(), inPredicate() || emAction(getContext(), lastValue())
                         )
                 ),
-                EmphOrStrongClose(chars), attach(lastValue())
+                inPredicate() || debug(getContext()),
+                EmphOrStrongClose(chars), inPredicate() || attach(lastValue())
         );
     }
 
+    boolean debug(Context<AstNode> context) {
+        return true;
+    }
+
+    boolean emAction(Context<AstNode> context, AstNode astNode) {
+        setContext(getContext().getParent().getParent());
+        return attach(astNode);
+    }
+
+    @Label
     Rule EmphOrStrongOpen(String chars) {
         return Sequence(
                 TestNot(CharLine(chars.charAt(0))),
@@ -465,14 +480,15 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     @Cached
+    @Label
     Rule EmphOrStrongClose(String chars) {
         return Sequence(
                 TestNot(Spacechar()),
                 TestNot(Newline()),
                 Inline(), set(),
                 chars.length() == 1 ? TestNot(EmphOrStrong(chars + chars)) : Empty(),
-                chars.charAt(0) == '_' ? TestNot(Alphanumeric()) : Empty(),
-                '*'
+                chars,
+                chars.charAt(0) == '_' ? TestNot(Alphanumeric()) : Empty()
         );
     }
 
