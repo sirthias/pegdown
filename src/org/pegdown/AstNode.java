@@ -8,13 +8,12 @@ public class AstNode extends MutableTreeNodeImpl<AstNode> implements AstNodeType
     public int type;
     public String text;
 
-    public AstNode(int type) {
-        this(type, null);
+    public AstNode() {
+        this(DEFAULT);
     }
 
-    public AstNode(int type, String text) {
+    public AstNode(int type) {
         this.type = type;
-        this.text = text;
     }
 
     public AstNode withType(int type) {

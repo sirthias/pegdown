@@ -1,45 +1,52 @@
 package org.pegdown;
 
-import org.parboiled.*;
-import org.parboiled.annotations.Cached;
-import org.parboiled.annotations.Label;
-import org.parboiled.annotations.SkipActionsInPredicates;
-import org.parboiled.annotations.SuppressSubnodes;
+import org.parboiled.BaseParser;
+import org.parboiled.Context;
+import org.parboiled.ReportingParseRunner;
+import org.parboiled.Rule;
+import org.parboiled.annotations.*;
 import org.parboiled.common.StringUtils;
-import org.parboiled.google.base.Function;
 import org.parboiled.support.ParsingResult;
+import org.parboiled.support.StringVar;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
-import static org.parboiled.trees.TreeUtils.addChild;
 
 @SuppressWarnings({"InfiniteRecursion"})
 @SkipActionsInPredicates
 public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
-    static final String[] HTML_TAGS = new String[]{"address", "blockquote", "center", "dir", "div", "dl",
-            "fieldset", "form", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "isindex", "menu", "noframes", "noscript",
-            "ol", "p", "pre", "table", "ul", "dd", "dt", "frameset", "li", "tbody", "td", "tfoot", "th", "thead", "tr",
-            "script", "style"};
+    static final String[] HTML_TAGS = new String[]{
+            "address", "blockquote", "center", "dd", "dir", "div", "dl", "dt", "fieldset", "form", "frameset", "h1",
+            "h2", "h3", "h4", "h5", "h6", "hr", "isindex", "li", "menu", "noframes", "noscript", "ol", "p", "pre",
+            "script", "style", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul"
+    };
 
     // special list for quick access to all AstNodes for link references in the document
     // with this list we do not need to search the AST for reference nodes but already have them right here
     final List<AstNode> references = new ArrayList<AstNode>();
 
+    @SuppressSubnodes
     Rule Doc() {
         return Sequence(
-                set(new AstNode(DEFAULT)),
+                set(new AstNode()),
                 ZeroOrMore(
-                        Sequence(Block(), UP2(value().addChild(prevValue())))
+                        Sequence(Block(), debug(getContext()))
                 )
         );
+    }
+
+    boolean debug(Context<AstNode> context) {
+        Context<AstNode> c = context.getParent().getParent();
+        c.getTreeValue().addChild(prevValue());
+        return true;
     }
 
     Rule Block() {
         return Sequence(
                 ZeroOrMore(BlankLine()),
-                FirstOf(BlockQuote(), Verbatim(), Note(), Reference(), HorizontalRule(), Heading(), OrderedList(),
+                FirstOf(BlockQuote(), Verbatim(), Reference(), HorizontalRule(), Heading(), OrderedList(),
                         BulletList(), HtmlBlock(), Para(), Inlines())
         );
     }
@@ -82,11 +89,10 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                                 NonblankIndentedLine(), text.append(temp.getAndSet(""), prevValue().text)
                         )
                 ),
-                set(new AstNode(VERBATIM, text.get()))
+                set(new AstNode(VERBATIM).withText(text.get()))
         );
     }
 
-    @SuppressSubnodes
     Rule HorizontalRule() {
         return Sequence(
                 NonindentSpace(),
@@ -136,7 +142,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule SetextHeading1() {
         return Sequence(
                 SetextInline(), set(new AstNode(H1).withChild(prevValue())),
-                OneOrMore(
+                ZeroOrMore(
                         Sequence(SetextInline(), UP2(value().addChild(prevValue())))
                 ),
                 Newline(), NOrMore('=', 3), Newline()
@@ -177,7 +183,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule ListTight() {
         return Sequence(
-                ListItem(TIGHT_LIST_ITEM), set(new AstNode(DEFAULT).withChild(prevValue())),
+                ListItem(TIGHT_LIST_ITEM), set(new AstNode().withChild(prevValue())),
                 ZeroOrMore(
                         Sequence(ListItem(TIGHT_LIST_ITEM), UP2(value().addChild(prevValue())))
                 ),
@@ -188,7 +194,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule ListLoose() {
         return Sequence(
-                ListItem(LOOSE_LIST_ITEM), set(new AstNode(DEFAULT).withChild(prevValue())),
+                ListItem(LOOSE_LIST_ITEM), set(new AstNode().withChild(prevValue())),
                 ZeroOrMore(BlankLine()),
                 ZeroOrMore(
                         Sequence(ListItem(LOOSE_LIST_ITEM), UP2(value().addChild(prevValue())), ZeroOrMore(BlankLine()))
@@ -209,7 +215,8 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                 FirstOf(Bullet(), Enumerator()),
 
                 ListBlock(),
-                innerSource.set(prevValue().text),
+                innerSource.set(prevValue().text) &&
+                        (type == TIGHT_LIST_ITEM || extraNLs.set("\n\n")), // append extra \n\n to loose list items
 
                 ZeroOrMore(
                         Sequence(
@@ -217,10 +224,8 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                                         // if we have blank lines append them to the inner source
                                         OneOrMore(Sequence(BlankLine(), blanks.append("\n"))),
 
-                                        // if we do not have a blank line we need to trigger an inner parse
-                                        // so store the current inner source value in the helper string
-                                        // and reinitialize the inner source
-                                        blanks.set("\u0001")
+                                        // if we do not have a blank line we append a boundary marker
+                                        blanks.set(type == TIGHT_LIST_ITEM ? "\u0001" : "\n\n\u0001")
                                 ),
                                 OneOrMore(
                                         Sequence(
@@ -230,38 +235,37 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                                                 innerSource.append(blanks.getAndSet(""), prevValue().text)
                                         )
                                 ),
-                                extraNLs.set("\n\n")
+                                extraNLs.set("\n\n") // if we have several lines always add two extra newlines
                         )
                 ),
 
                 // finally, after having built the complete source we run an inner parse and attach its AST root
-                listAction(type, innerSource.get() + extraNLs.get())
+                setListItemNode(type, innerSource.get() + extraNLs.get())
         );
     }
 
-    boolean listAction(int type, String innerSource) {
+    boolean setListItemNode(int type, String innerSource) {
         int start = 0;
-        int end = innerSource.indexOf('\u0001', start);
+        int end = innerSource.indexOf('\u0001', start); // look for boundary markers
         if (end == -1) {
+            // if we have just one part simply parse and set
             Context<AstNode> context = getContext();
-            AstNode astNode = parseRawBlock(type == LOOSE_LIST_ITEM ? innerSource + "\n\n" : innerSource).parseTreeRoot
-                    .getValue();
-            setContext(context);
+            AstNode astNode = parseRawBlock(innerSource).parseTreeRoot.getValue();
+            setContext(context); // we need to save and restore the context since we might be recursing
             return set(astNode.withType(type));
         }
 
-        create(type);
-
+        // ok, we have several parts, so create the root node and attach all part roots
+        set(new AstNode(type));
         while (true) {
             end = innerSource.indexOf('\u0001', start);
             if (end == -1) end = innerSource.length();
             String sourcePart = innerSource.substring(start, end);
 
             Context<AstNode> context = getContext();
-            AstNode astNode = parseRawBlock(type == LOOSE_LIST_ITEM ? sourcePart + "\n\n" : sourcePart).parseTreeRoot
-                    .getValue();
+            AstNode astNode = parseRawBlock(sourcePart).parseTreeRoot.getValue();
             setContext(context);
-            attach(astNode.getChildren().get(0));
+            value().addChild(astNode.getChildren().get(0)); // skip one superfluous level
 
             if (end == innerSource.length()) return true;
             start = end + 1;
@@ -269,14 +273,14 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule ListBlock() {
-        Var<String> source = new Var<String>();
+        StringVar source = new StringVar();
         return Sequence(
                 Line(),
                 source.set(prevValue().text),
                 ZeroOrMore(
-                        Sequence(ListBlockLine(), source.set(source.get() + prevValue().text))
+                        Sequence(ListBlockLine(), source.append(prevValue().text))
                 ),
-                create(DEFAULT, source.get())
+                set(new AstNode().withText(source.get()))
         );
     }
 
@@ -300,63 +304,53 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     //************* HTML BLOCK ****************
 
     Rule HtmlBlock() {
-        Var<String> blockSource = new Var<String>();
         return Sequence(
-                Sequence(
-                        FirstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()), blockSource.set(prevText()),
-                        OneOrMore(BlankLine())
-                ),
-                create(HTMLBLOCK, blockSource.get())
+                FirstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()),
+                set(new AstNode(HTMLBLOCK).withText(prevText())),
+                OneOrMore(BlankLine())
         );
     }
 
     Rule HtmlBlockInTags() {
-        return FirstOfAllHtmlTagsFor(new Function<String, Rule>() {
-            public Rule apply(String tag) {
-                return Sequence(
-                        HtmlBlockOpen(tag),
-                        ZeroOrMore(FirstOf(HtmlBlockInTags(), Sequence(TestNot(HtmlBlockClose(tag)), Any()))),
-                        HtmlBlockClose(tag)
-                );
-            }
-        });
+        StringVar tagName = new StringVar();
+        return Sequence(
+                HtmlBlockOpen(), tagName.set(prevValue().text),
+                ZeroOrMore(FirstOf(HtmlBlockInTags(), Sequence(TestNot(HtmlBlockClose(tagName)), Any()))),
+                HtmlBlockClose(tagName)
+        );
     }
 
     Rule HtmlBlockSelfClosing() {
-        return Sequence('<', Spn1(), HtmlBlockType(), Spn1(), ZeroOrMore(HtmlAttribute()), Optional('/'), Spn1(), '>');
+        return Sequence('<', Spn1(), DefinedHtmlTagName(), Spn1(), ZeroOrMore(HtmlAttribute()), Optional('/'), Spn1(),
+                '>');
     }
 
-    Rule HtmlBlockType() {
-        return FirstOfAllHtmlTagsFor(new Function<String, Rule>() {
-            public Rule apply(String tag) {
-                return StringIgnoreCase(tag);
-            }
-        });
+    Rule HtmlBlockOpen() {
+        return Sequence('<', Spn1(), DefinedHtmlTagName(), set(), Spn1(), ZeroOrMore(HtmlAttribute()), '>');
     }
 
-    Rule FirstOfAllHtmlTagsFor(Function<String, Rule> function) {
-        Rule[] rules = new Rule[HTML_TAGS.length];
-        for (int i = 0; i < HTML_TAGS.length; i++) {
-            rules[i] = function.apply(HTML_TAGS[i]);
-        }
-        return FirstOf(rules);
+    @DontSkipActionsInPredicates
+    Rule HtmlBlockClose(StringVar tagName) {
+        return Sequence('<', Spn1(), '/', OneOrMore(Alphanumeric()), prevText().equals(tagName.get()), Spn1(), '>');
     }
 
-    Rule HtmlBlockOpen(String name) {
-        return Sequence('<', Spn1(), StringIgnoreCase(name), Spn1(), ZeroOrMore(HtmlAttribute()), '>');
-    }
-
-    Rule HtmlBlockClose(String name) {
-        return Sequence('<', Spn1(), '/', StringIgnoreCase(name), Spn1(), '>');
+    Rule DefinedHtmlTagName() {
+        StringVar name = new StringVar();
+        return Sequence(
+                OneOrMore(Alphanumeric()),
+                name.set(prevText().toLowerCase()) &&
+                        Arrays.binarySearch(HTML_TAGS, name.get()) >= 0 &&
+                        set(new AstNode().withText(name.get()))
+        );
     }
 
     //************* INLINES ****************
 
     Rule Inlines() {
         return Sequence(
-                InlineOrIntermediateEndline(), create(DEFAULT, lastValue()),
+                InlineOrIntermediateEndline(), set(new AstNode().withChild(prevValue())),
                 ZeroOrMore(
-                        Sequence(InlineOrIntermediateEndline(), UP2(attach(lastValue())))
+                        Sequence(InlineOrIntermediateEndline(), UP2(value().addChild(prevValue())))
                 ),
                 Optional(Endline())
         );
@@ -370,8 +364,8 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule Inline() {
-        return FirstOf(Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Link(), NoteReference(),
-                InlineNote(), Code(), RawHtml(), Entity(), EscapedChar(), Symbol());
+        return FirstOf(Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Link(), Code(), RawHtml(),
+                Entity(), EscapedChar(), Symbol());
     }
 
     Rule Endline() {
@@ -379,7 +373,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule LineBreak() {
-        return Sequence("  ", NormalEndline(), create(LINEBREAK));
+        return Sequence("  ", NormalEndline(), set(new AstNode(LINEBREAK)));
     }
 
     Rule TerminalEndline() {
@@ -397,7 +391,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                                 Sequence(Line(), FirstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline())
                         )
                 ),
-                create(SPACE, "\n")
+                set(new AstNode(SPACE).withText("\n"))
         );
     }
 
@@ -408,7 +402,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule UlOrStarLine() {
         return Sequence(
                 FirstOf(CharLine('_'), CharLine('*')),
-                create(TEXT, lastText())
+                set(new AstNode(TEXT).withText(prevText()))
         );
     }
 
@@ -419,14 +413,14 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule Emph() {
         return Sequence(
                 FirstOf(EmphOrStrong("*"), EmphOrStrong("_")),
-                inPredicate() || set(lastValue().withType(EMPH))
+                set(prevValue().withType(EMPH))
         );
     }
 
     Rule Strong() {
         return Sequence(
                 FirstOf(EmphOrStrong("**"), EmphOrStrong("__")),
-                inPredicate() || set(lastValue().withType(STRONG))
+                set(prevValue().withType(STRONG))
         );
     }
 
@@ -434,25 +428,15 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule EmphOrStrong(String chars) {
         return Sequence(
                 EmphOrStrongOpen(chars),
-                inPredicate() || create(DEFAULT),
+                set(new AstNode()),
                 ZeroOrMore(
                         Sequence(
                                 TestNot(EmphOrStrongClose(chars)),
-                                Inline(), inPredicate() || emAction(getContext(), lastValue())
+                                Inline(), UP2(value().addChild(prevValue()))
                         )
                 ),
-                inPredicate() || debug(getContext()),
-                EmphOrStrongClose(chars), inPredicate() || attach(lastValue())
+                EmphOrStrongClose(chars), value().addChild(prevValue())
         );
-    }
-
-    boolean debug(Context<AstNode> context) {
-        return true;
-    }
-
-    boolean emAction(Context<AstNode> context, AstNode astNode) {
-        setContext(getContext().getParent().getParent());
-        return attach(astNode);
     }
 
     @Label
@@ -483,8 +467,8 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule Image() {
         return Sequence('!',
                 FirstOf(
-                        Sequence(ExplicitLink(), set(lastValue().withType(EXP_IMG_LINK))),
-                        Sequence(ReferenceLink(), set(lastValue().withType(REF_IMG_LINK)))
+                        Sequence(ExplicitLink(), set(prevValue().withType(EXP_IMG_LINK))),
+                        Sequence(ReferenceLink(), set(prevValue().withType(REF_IMG_LINK)))
                 )
         );
     }
@@ -495,28 +479,29 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule ExplicitLink() {
         return Sequence(
-                Label(), create(EXP_LINK, lastValue()),
+                Label(), set(new AstNode(EXP_LINK).withChild(prevValue())),
                 Spn1(), '(', Sp(),
-                Source(), attach(),
-                Spn1(), Optional(Sequence(Title(), UP2(attach()))),
+                Source(), value().addChild(prevValue()),
+                Spn1(), Optional(Sequence(Title(), UP2(value().addChild(prevValue())))),
                 Sp(), ')'
         );
     }
 
     Rule ReferenceLink() {
-        Var<String> spaceSource = new Var<String>();
+        StringVar blanks = new StringVar();
         return Sequence(
-                Label(), create(REF_LINK, lastValue()),
+                Label(), set(new AstNode(REF_LINK).withChild(prevValue())),
                 FirstOf(
                         // regular reference link
-                        Sequence(Spn1(), spaceSource.set(prevText()), TestNot("[]"), Label(),
-                                set(lastValue().withType(LINK_REF))),
+                        Sequence(Spn1(), blanks.set(prevText()), TestNot("[]"), Label(),
+                                set(prevValue().withType(LINK_REF))),
 
                         // implicit reference link
-                        Optional(Sequence(Spn1(), spaceSource.set(prevText()), "[]", create(LINK_REF, "")))
+                        Optional(
+                                Sequence(Spn1(), blanks.set(prevText()), "[]", set(new AstNode(LINK_REF).withText("")))
+                        )
                 ),
-                attach(new AstNode(SPACE, spaceSource.get())),
-                attach()
+                value().addChild(new AstNode(SPACE).withText(blanks.get())) && value().addChild(prevValue())
         );
     }
 
@@ -528,7 +513,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return FirstOf(
                 Sequence(
                         OneOrMore(Sequence(TestNot('('), TestNot(')'), TestNot('>'), Nonspacechar())),
-                        create(LINK_URL, lastText())
+                        set(new AstNode(LINK_URL).withText(prevText()))
                 ),
                 Sequence('(', SourceContents(), ')'),
                 Empty()
@@ -545,7 +530,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                 ZeroOrMore(
                         Sequence(TestNot(Sequence(delimiter, Sp(), FirstOf(')', Newline()))), TestNot(Newline()), Any())
                 ),
-                create(LINK_TITLE, lastText()),
+                set(new AstNode(LINK_TITLE).withText(prevText())),
                 delimiter
         );
     }
@@ -554,7 +539,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return Sequence(
                 '<',
                 Sequence(OneOrMore(Letter()), "://", OneOrMore(Sequence(TestNot(Newline()), TestNot('>'), Any()))),
-                create(AUTO_LINK, lastText()),
+                set(new AstNode(AUTO_LINK).withText(prevText())),
                 '>'
         );
     }
@@ -564,7 +549,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                 '<',
                 Sequence(OneOrMore(FirstOf(Alphanumeric(), CharSet("-+_"))), '@',
                         OneOrMore(Sequence(TestNot(Newline()), TestNot('>'), Any()))),
-                create(MAIL_LINK, lastText()),
+                set(new AstNode(MAIL_LINK).withText(prevText())),
                 '>'
         );
     }
@@ -573,9 +558,9 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule Reference() {
         return Sequence(
-                NonindentSpace(), TestNot("[]"), Label(), create(REFERENCE, lastValue()),
-                ':', Spn1(), RefSrc(), attach(),
-                Spn1(), Optional(Sequence(RefTitle(), UP2(attach()))),
+                NonindentSpace(), TestNot("[]"), Label(), set(new AstNode(REFERENCE).withChild(prevValue())),
+                ':', Spn1(), RefSrc(), value().addChild(prevValue()),
+                Spn1(), Optional(Sequence(RefTitle(), UP2(value().addChild(prevValue())))),
                 ZeroOrMore(BlankLine()),
                 references.add(value())
         );
@@ -583,14 +568,14 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule Label() {
         return Sequence(
-                '[', create(LINK_LABEL),
-                ZeroOrMore(Sequence(TestNot(']'), Inline(), UP2(attach(lastValue())))),
+                '[', set(new AstNode(LINK_LABEL)),
+                ZeroOrMore(Sequence(TestNot(']'), Inline(), UP2(value().addChild(prevValue())))),
                 ']'
         );
     }
 
     Rule RefSrc() {
-        return Sequence(OneOrMore(Nonspacechar()), create(LINK_URL, lastText()));
+        return Sequence(OneOrMore(Nonspacechar()), set(new AstNode(LINK_URL).withText(prevText())));
     }
 
     Rule RefTitle() {
@@ -603,7 +588,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                 ZeroOrMore(
                         Sequence(TestNot(Sequence(close, Sp(), FirstOf(Newline(), Eoi()))), TestNot(Newline()), Any())
                 ),
-                create(LINK_TITLE, lastText()),
+                set(new AstNode(LINK_TITLE).withText(prevText())),
                 close
         );
     }
@@ -631,7 +616,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                                         FirstOf(Spacechar(), Sequence(Newline(), TestNot(BlankLine()))))
                         )
                 ),
-                create(CODE, prevText()),
+                set(new AstNode(CODE).withText(prevText())),
                 Sp(), ticks
         );
     }
@@ -643,7 +628,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     //************* RAW HTML ****************
 
     Rule RawHtml() {
-        return Sequence(FirstOf(HtmlComment(), HtmlTag()), create(HTML, lastText()));
+        return Sequence(FirstOf(HtmlComment(), HtmlTag()), set(new AstNode(HTML).withText(prevText())));
     }
 
     Rule HtmlComment() {
@@ -677,7 +662,6 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return Sequence(TestNot(BlankLine()), IndentedLine());
     }
 
-    @SuppressSubnodes
     Rule BlankLine() {
         return Sequence(Sp(), Newline());
     }
@@ -691,7 +675,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule Line() {
-        Var<String> line = new Var<String>();
+        StringVar line = new StringVar();
         return Sequence(
                 FirstOf(
                         Sequence(
@@ -700,37 +684,14 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                         ),
                         Sequence(OneOrMore(Any()), line.set(prevText()), Eoi())
                 ),
-                create(DEFAULT, line.get())
+                set(new AstNode(DEFAULT).withText(line.get()))
         );
-    }
-
-    //************* NOTES ****************
-
-    Rule InlineNote() {
-        return Sequence("^[", OneOrMore(Sequence(TestNot(']'), Inline())), ']');
-    }
-
-    Rule NoteReference() {
-        return RawNoteReference();
-    }
-
-    Rule RawNoteReference() {
-        return Sequence("[^", OneOrMore(Sequence(TestNot(Newline()), TestNot(']'), Any())), ']');
-    }
-
-    Rule Note() {
-        return Sequence(NonindentSpace(), RawNoteReference(), ':', Sp(), RawNoteBlock(),
-                ZeroOrMore(Sequence(Test(Indent()), RawNoteBlock())));
-    }
-
-    Rule RawNoteBlock() {
-        return Sequence(OneOrMore(Sequence(TestNot(BlankLine()), OptionallyIndentedLine())), ZeroOrMore(BlankLine()));
     }
 
     //************* ENTITIES ****************
 
     Rule Entity() {
-        return Sequence(FirstOf(HexEntity(), DecEntity(), CharEntity()), create(HTML, lastText()));
+        return Sequence(FirstOf(HexEntity(), DecEntity(), CharEntity()), set(new AstNode(HTML).withText(prevText())));
     }
 
     Rule HexEntity() {
@@ -749,13 +710,13 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
 
     Rule Str() {
         return Sequence(
-                Sequence(NormalChar(), ZeroOrMore(Sequence(ZeroOrMore('_'), NormalChar()))).suppressSubnodes(),
-                create(TEXT, lastText())
+                Sequence(NormalChar(), ZeroOrMore(Sequence(ZeroOrMore('_'), NormalChar()))),
+                set(new AstNode(TEXT).withText(prevText()))
         );
     }
 
     Rule Space() {
-        return Sequence(OneOrMore(Spacechar()), create(SPACE, " "));
+        return Sequence(OneOrMore(Spacechar()), set(new AstNode(SPACE).withText(" ")));
     }
 
     Rule Spn1() {
@@ -779,11 +740,11 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule EscapedChar() {
-        return Sequence('\\', TestNot(Newline()), Any(), create(TEXT, lastText()));
+        return Sequence('\\', TestNot(Newline()), Any(), set(new AstNode(TEXT).withText(prevText())));
     }
 
     Rule Symbol() {
-        return Sequence(SpecialChar(), create(SPECIAL, lastText()));
+        return Sequence(SpecialChar(), set(new AstNode(SPECIAL).withText(prevText())));
     }
 
     Rule SpecialChar() {
@@ -821,31 +782,6 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     //************* ACTIONS ****************
-
-    boolean attach() {
-        return attach(lastValue());
-    }
-
-    boolean attach(AstNode astNode) {
-        if (astNode != null) addChild(getContext().getNodeValue(), astNode);
-        return true;
-    }
-
-    boolean create(int type) {
-        return create(type, null, null);
-    }
-
-    boolean create(int type, String text) {
-        return create(type, text, null);
-    }
-
-    boolean create(int type, AstNode child) {
-        return create(type, null, child);
-    }
-
-    boolean create(int type, String text, AstNode child) {
-        return set(new AstNode(type, text)) && value().addChild(child);
-    }
 
     ParsingResult<AstNode> parseRawBlock(String text) {
         ParsingResult<AstNode> result = ReportingParseRunner.run(Doc(), text);

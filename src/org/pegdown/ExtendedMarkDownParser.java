@@ -18,19 +18,19 @@ public class ExtendedMarkDownParser extends MarkDownParser {
     //************* SMARTS ****************
 
     Rule Apostrophe() {
-        return Sequence('\'', create(APOSTROPHE));
+        return Sequence('\'', set(new AstNode(APOSTROPHE)));
     }
 
     Rule Ellipsis() {
-        return Sequence(FirstOf("...", ". . ."), create(ELLIPSIS));
+        return Sequence(FirstOf("...", ". . ."), set(new AstNode(ELLIPSIS)));
     }
 
     Rule EnDash() {
-        return Sequence('-', Test(Digit()), create(ENDASH));
+        return Sequence('-', Test(Digit()), set(new AstNode(ENDASH)));
     }
 
     Rule EmDash() {
-        return Sequence(FirstOf("---", "--"), create(EMDASH));
+        return Sequence(FirstOf("---", "--"), set(new AstNode(EMDASH)));
     }
 
     //************* QUOTES ****************

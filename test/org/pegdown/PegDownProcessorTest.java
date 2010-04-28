@@ -55,7 +55,24 @@ public class PegDownProcessorTest {
         test("Markdown Documentation - Syntax");
         
         // custom tests
-        test("Quoted Blockquote");        
+        test("Linebreaks");
+        test("Quoted Blockquote");
+
+        /*ParsingResult<AstNode> result = processor.getParser().parseRawBlock(prepare("" +
+                "Markdown: Basics\n" +
+                "================\n" +
+                "\n" +
+                "<ul id=\"ProjectSubmenu\">\n" +
+                "    <li><a href=\"/projects/markdown/\" title=\"Markdown Project Page\">Main</a></li>\n" +
+                "    <li><a class=\"selected\" title=\"Markdown Basics\">Basics</a></li>\n" +
+                "    <li><a href=\"/projects/markdown/syntax\" title=\"Markdown Syntax Documentation\">Syntax</a></li>\n" +
+                "    <li><a href=\"/projects/markdown/license\" title=\"Pricing and License Information\">License</a></li>\n" +
+                "    <li><a href=\"/projects/markdown/dingus\" title=\"Online Markdown Web Form\">Dingus</a></li>\n" +
+                "</ul>"));
+        // assertEqualsMultiline(printNodeTree(result), "");  // for advanced debugging: check the parse tree
+        AstNode astRoot = result.parseTreeRoot.getValue();
+        String actualAst = printTree(astRoot, new ToStringFormatter<AstNode>());
+        assertEqualsMultiline(actualAst, "");*/
     }
 
     private void test(String testName) {
