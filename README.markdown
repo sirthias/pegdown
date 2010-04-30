@@ -27,6 +27,12 @@ The first time you create a [PegDownProcessor][] it can take up to a few hundred
 
 See <http://sirthias.github.com/pegdown/api> for the pegdown API documation.
 
+Credits
+-------
+
+The underlying PEG grammar was developed by John MacFarlane and made available with his
+"peg-markdown" tool (http://github.com/jgm/peg-markdown).   
+
 
 Any feedback is, of course, very welcome.
   
