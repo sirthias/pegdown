@@ -1,6 +1,3 @@
-pegdown
-=======
-
 Introduction
 ------------
 
@@ -18,7 +15,7 @@ More extensions like support for tables, etc. are planned.
 Installation
 ------------
 
-Download the JAR for latest version from the [Download Page][].  
+Download the JAR for latest version from the [download page][].  
 Additionally _pegdown_ requires the [parboiled][] JAR on the classpath (v0.9.7.0 or better).
 
 Documentation
