@@ -8,37 +8,66 @@ import org.parboiled.support.ParsingResult;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A clean and lightweight Markdown-to-HTML filter based on a PEG parser implemented with parboiled.
+ *
+ * @see <a href="http://daringfireball.net/projects/markdown/">Markdown</a>
+ * @see <a href="http://www.parboiled.org/">parboiled.org</a>
+ */
 public class PegDownProcessor implements AstNodeType {
 
+    /**
+     * Defines the number of spaces in a tab, can be changed externally if required.
+     */
     public static int TABSTOP = 4;
 
     private final MarkDownParser parser;
     private final Map<String, String> refLinkUrls = new HashMap<String, String>();
     private final Map<String, String> refLinkTitles = new HashMap<String, String>();
     private StringBuilder sb;
-    private int indent;
+    private int indent; // the current output indent
 
+    /**
+     * Creates a new processor instance without any enabled extensions.
+     */
     public PegDownProcessor() {
-        this(false);
+        this(Extensions.NONE);
     }
 
+    /**
+     * Creates a new processor instance with the given {@link org.pegdown.Extensions}.
+     *
+     * @param options the flags of the extensions to enable as a bitmask
+     */
     @SuppressWarnings({"unchecked"})
-    public PegDownProcessor(boolean enableExtensions) {
-        Class<?> parserClass = enableExtensions ? ExtendedMarkDownParser.class : MarkDownParser.class;
-        parser = Parboiled.createParser((Class<MarkDownParser>) parserClass);
+    public PegDownProcessor(int options) {
+        parser = options == Extensions.NONE ?
+                Parboiled.createParser(MarkDownParser.class) :
+                Parboiled.createParser(ExtendedMarkDownParser.class, options);
     }
 
-    public MarkDownParser getParser() {
+    /**
+     * Returns the underlying parboiled parser object
+     *
+     * @return the parser
+     */
+    MarkDownParser getParser() {
         return parser;
     }
 
-    public String markDownToHtml(String markDownSource) {
+    /**
+     * Converts the given markdown source to HTML.
+     *
+     * @param markdownSource the markdown source to convert
+     * @return the HTML
+     */
+    public String markdownToHtml(String markdownSource) {
         parser.references.clear();
         refLinkUrls.clear();
         refLinkTitles.clear();
         indent = 0;
 
-        ParsingResult<AstNode> result = parser.parseRawBlock(prepare(markDownSource));
+        ParsingResult<AstNode> result = parser.parseRawBlock(prepare(markdownSource));
 
         sb = new StringBuilder();
         buildRefLinkUrls();
@@ -49,6 +78,7 @@ public class PegDownProcessor implements AstNodeType {
     }
 
     // performs tabstop expansion and adds two trailing newlines
+
     static String prepare(String markDownSource) {
         StringBuilder sb = new StringBuilder(markDownSource.length() + 2);
         int charsToTab = TABSTOP;
@@ -83,12 +113,12 @@ public class PegDownProcessor implements AstNodeType {
             AstNode urlNode = child(refNode, LINK_URL);
             Preconditions.checkState(urlNode != null);
             String key = printToString(child(refNode, LINK_LABEL)).toLowerCase();
-            String value = encode(urlNode.text);
+            String value = encode(urlNode.getText());
             refLinkUrls.put(key, value);
 
             AstNode titleNode = child(refNode, LINK_TITLE);
             if (titleNode != null) {
-                String title = encode(titleNode.text);
+                String title = encode(titleNode.getText());
                 refLinkTitles.put(key, title);
             }
         }
@@ -97,7 +127,7 @@ public class PegDownProcessor implements AstNodeType {
     private PegDownProcessor print(AstNode node) {
         if (node == null) return this;
 
-        switch (node.type) {
+        switch (node.getType()) {
             case DEFAULT:
                 return printChildren(node);
 
@@ -111,19 +141,19 @@ public class PegDownProcessor implements AstNodeType {
             case ENDASH:
                 return print("&ndash;");
             case HTML:
-                return print(node.text);
+                return print(node.getText());
             case LINEBREAK:
                 return printOnNL("<br/>").println();
             case SPACE:
-                return print(node.text);
+                return print(node.getText());
             case SPECIAL:
-                return printEncoded(node.text.charAt(0));
+                return printEncoded(node.getText().charAt(0));
             case TEXT:
-                return print(node.text);
+                return print(node.getText());
 
             // inline groups
             case CODE:
-                return print("<code>").printEncoded(node.text).print("</code>");
+                return print("<code>").printEncoded(node.getText()).print("</code>");
             case EMPH:
                 return print("<em>").printChildren(node).print("</em>");
             case H1:
@@ -151,11 +181,11 @@ public class PegDownProcessor implements AstNodeType {
             case HRULE:
                 return printOnNL("<hr/>");
             case HTMLBLOCK:
-                return printOnNL(node.text);
+                return printOnNL(node.getText());
             case PARA:
                 return printOnNL("<p>").printChildren(node).print("</p>");
             case VERBATIM:
-                return printOnNL("<pre><code>").printEncoded(node.text).print("</code></pre>");
+                return printOnNL("<pre><code>").printEncoded(node.getText()).print("</code></pre>");
 
             // lists
             case BULLET_LIST:
@@ -169,7 +199,8 @@ public class PegDownProcessor implements AstNodeType {
 
             // links
             case AUTO_LINK:
-                return print("<a href=\"").printEncoded(node.text).print("\">").printEncoded(node.text).print("</a>");
+                return print("<a href=\"").printEncoded(node.getText()).print("\">").printEncoded(node.getText())
+                        .print("</a>");
             case EXP_LINK:
                 return print("<a href=\"").printChild(node, LINK_URL).print('"')
                         .printChild(node, LINK_TITLE).print('>')
@@ -179,8 +210,8 @@ public class PegDownProcessor implements AstNodeType {
                         .print(" alt=\"").printChild(node, LINK_LABEL).print("\"")
                         .printChild(node, LINK_TITLE).print("/>");
             case MAIL_LINK:
-                return print("<a href=\"mailto:").printEncoded(node.text).print("\">")
-                        .printEncoded(node.text).print("</a>");
+                return print("<a href=\"mailto:").printEncoded(node.getText()).print("\">")
+                        .printEncoded(node.getText()).print("</a>");
             case REF_LINK:
                 return printReferenceLink(node);
             case REF_IMG_LINK:
@@ -190,9 +221,9 @@ public class PegDownProcessor implements AstNodeType {
             case LINK_REF:
                 return print('[').printChildren(node).print(']'); // only reached for fake reference links 
             case LINK_TITLE:
-                return print(" title=\"").printEncoded(node.text).print('"');
+                return print(" title=\"").printEncoded(node.getText()).print('"');
             case LINK_URL:
-                return printEncoded(node.text);
+                return printEncoded(node.getText());
             case REFERENCE:
                 return this; // references are not printed
         }
@@ -257,7 +288,8 @@ public class PegDownProcessor implements AstNodeType {
         String linkUrl = refLinkUrls.get(linkRef);
         if (linkUrl == null) {
             // "fake" reference link
-            return print('[').printChild(node, LINK_LABEL).print(']').printChild(node, SPACE).printChild(node, LINK_REF);
+            return print('[').printChild(node, LINK_LABEL).print(']').printChild(node, SPACE)
+                    .printChild(node, LINK_REF);
         }
         print(open).print(linkUrl).print('"');
         String linkTitle = refLinkTitles.get(linkRef);
@@ -295,7 +327,7 @@ public class PegDownProcessor implements AstNodeType {
 
     private AstNode child(AstNode parent, int type) {
         for (AstNode child : parent.getChildren()) {
-            if (child.type == type) return child;
+            if (child.getType() == type) return child;
         }
         return null;
     }

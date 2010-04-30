@@ -1,5 +1,8 @@
 package org.pegdown;
 
+/**
+ * Convenience interface defining the AST node type constants as well as a lookup array for reverse naming resolution. 
+ */
 public interface AstNodeType {
 
     static int DEFAULT = 0;

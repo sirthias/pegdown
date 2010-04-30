@@ -18,6 +18,7 @@ import static org.pegdown.TestUtils.assertEqualsMultiline;
 public class PegDownProcessorTest {
 
     private final PegDownProcessor processor = new PegDownProcessor();
+    private final PegDownProcessor extProcessor = new PegDownProcessor(Extensions.ALL);
     private final Tidy tidy = new Tidy();
 
     @BeforeClass
@@ -58,24 +59,18 @@ public class PegDownProcessorTest {
         test("Linebreaks");
         test("Quoted Blockquote");
 
-        /*ParsingResult<AstNode> result = processor.getParser().parseRawBlock(prepare("" +
-                "Markdown: Basics\n" +
-                "================\n" +
-                "\n" +
-                "<ul id=\"ProjectSubmenu\">\n" +
-                "    <li><a href=\"/projects/markdown/\" title=\"Markdown Project Page\">Main</a></li>\n" +
-                "    <li><a class=\"selected\" title=\"Markdown Basics\">Basics</a></li>\n" +
-                "    <li><a href=\"/projects/markdown/syntax\" title=\"Markdown Syntax Documentation\">Syntax</a></li>\n" +
-                "    <li><a href=\"/projects/markdown/license\" title=\"Pricing and License Information\">License</a></li>\n" +
-                "    <li><a href=\"/projects/markdown/dingus\" title=\"Online Markdown Web Form\">Dingus</a></li>\n" +
-                "</ul>"));
-        // assertEqualsMultiline(printNodeTree(result), "");  // for advanced debugging: check the parse tree
-        AstNode astRoot = result.parseTreeRoot.getValue();
-        String actualAst = printTree(astRoot, new ToStringFormatter<AstNode>());
-        assertEqualsMultiline(actualAst, "");*/
+        testExt("Extensions");
     }
 
     private void test(String testName) {
+        test(processor, testName);
+    }
+
+    private void testExt(String testName) {
+        test(extProcessor, testName);
+    }
+
+    private void test(PegDownProcessor processor, String testName) {
         String markdown = FileUtils.readAllTextFromResource(testName + ".text");
 
         ParsingResult<AstNode> result = processor.getParser().parseRawBlock(prepare(markdown));
@@ -86,13 +81,16 @@ public class PegDownProcessorTest {
         assertEqualsMultiline(actualAst, expectedAst);
 
         String expectedHtml = FileUtils.readAllTextFromResource(testName + ".compact.html");
-        String actualHtml = processor.markDownToHtml(markdown);
+        String actualHtml = processor.markdownToHtml(markdown);
         assertEqualsMultiline(actualHtml, expectedHtml);
 
         // tidy up html for fair equality test
-        actualHtml = tidy(actualHtml);
-        expectedHtml = tidy(FileUtils.readAllTextFromResource(testName + ".html"));
-        assertEqualsMultiline(actualHtml, expectedHtml);
+        String expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html");
+        if (expectedUntidy != null) {
+            actualHtml = tidy(actualHtml);
+            expectedHtml = tidy(expectedUntidy);
+            assertEqualsMultiline(actualHtml, expectedHtml);
+        }
     }
 
     private String tidy(String html) {

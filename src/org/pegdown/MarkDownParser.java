@@ -13,6 +13,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Parboiled parser for the standard markdown syntax.
+ * Builds an Abstract Syntax Tree (AST) of {@link org.pegdown.AstNode} objects.
+ */
 @SuppressWarnings({"InfiniteRecursion"})
 @SkipActionsInPredicates
 public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
@@ -32,15 +36,9 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return Sequence(
                 set(new AstNode()),
                 ZeroOrMore(
-                        Sequence(Block(), debug(getContext()))
+                        Sequence(Block(), UP2(value().addChild(prevValue())))
                 )
         );
-    }
-
-    boolean debug(Context<AstNode> context) {
-        Context<AstNode> c = context.getParent().getParent();
-        c.getTreeValue().addChild(prevValue());
-        return true;
     }
 
     Rule Block() {
@@ -62,12 +60,12 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return Sequence(
                 OneOrMore(
                         Sequence(
-                                '>', Optional(' '), Line(), innerSource.append(prevValue().text),
+                                '>', Optional(' '), Line(), innerSource.append(prevValue().getText()),
                                 ZeroOrMore(
                                         Sequence(
                                                 TestNot('>'),
                                                 TestNot(BlankLine()),
-                                                Line(), innerSource.append(prevValue().text)
+                                                Line(), innerSource.append(prevValue().getText())
                                         )
                                 ),
                                 ZeroOrMore(
@@ -75,6 +73,8 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                                 )
                         )
                 ),
+                // trigger an recursive parsing run on the innerSource we just built
+                // and attach the root of the inner parses AST
                 set(parseRawBlock(innerSource.get()).parseTreeRoot.getValue().withType(BLOCKQUOTE))
         );
     }
@@ -86,7 +86,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                 OneOrMore(
                         Sequence(
                                 ZeroOrMore(Sequence(BlankLine(), temp.append("\n"))),
-                                NonblankIndentedLine(), text.append(temp.getAndSet(""), prevValue().text)
+                                NonblankIndentedLine(), text.append(temp.getAndSet(""), prevValue().getText())
                         )
                 ),
                 set(new AstNode(VERBATIM).withText(text.get()))
@@ -215,7 +215,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                 FirstOf(Bullet(), Enumerator()),
 
                 ListBlock(),
-                innerSource.set(prevValue().text) &&
+                innerSource.set(prevValue().getText()) &&
                         (type == TIGHT_LIST_ITEM || extraNLs.set("\n\n")), // append extra \n\n to loose list items
 
                 ZeroOrMore(
@@ -232,7 +232,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
                                                 Indent(), ListBlock(),
 
                                                 // append potentially captured blanks and the block text
-                                                innerSource.append(blanks.getAndSet(""), prevValue().text)
+                                                innerSource.append(blanks.getAndSet(""), prevValue().getText())
                                         )
                                 ),
                                 extraNLs.set("\n\n") // if we have several lines always add two extra newlines
@@ -244,6 +244,9 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         );
     }
 
+    // special action running the inner parse for list node source
+    // the innerSource can contain \u0001 boundary markers, which indicate, where to split the innerSource
+    // and run independent inner parsing runs
     boolean setListItemNode(int type, String innerSource) {
         int start = 0;
         int end = innerSource.indexOf('\u0001', start); // look for boundary markers
@@ -276,9 +279,9 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         StringVar source = new StringVar();
         return Sequence(
                 Line(),
-                source.set(prevValue().text),
+                source.set(prevValue().getText()),
                 ZeroOrMore(
-                        Sequence(ListBlockLine(), source.append(prevValue().text))
+                        Sequence(ListBlockLine(), source.append(prevValue().getText()))
                 ),
                 set(new AstNode().withText(source.get()))
         );
@@ -314,7 +317,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule HtmlBlockInTags() {
         StringVar tagName = new StringVar();
         return Sequence(
-                HtmlBlockOpen(), tagName.set(prevValue().text),
+                HtmlBlockOpen(), tagName.set(prevValue().getText()),
                 ZeroOrMore(FirstOf(HtmlBlockInTags(), Sequence(TestNot(HtmlBlockClose(tagName)), Any()))),
                 HtmlBlockClose(tagName)
         );
@@ -338,8 +341,8 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         StringVar name = new StringVar();
         return Sequence(
                 OneOrMore(Alphanumeric()),
-                name.set(prevText().toLowerCase()) &&
-                        Arrays.binarySearch(HTML_TAGS, name.get()) >= 0 &&
+                name.set(prevText().toLowerCase()) && // compare ignoring case
+                        Arrays.binarySearch(HTML_TAGS, name.get()) >= 0 && // make sure its a defined tag
                         set(new AstNode().withText(name.get()))
         );
     }
@@ -367,7 +370,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         return FirstOf(Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Link(), Code(), RawHtml(),
                 Entity(), EscapedChar(), Symbol());
     }
-
+    
     Rule Endline() {
         return FirstOf(LineBreak(), TerminalEndline(), NormalEndline());
     }
@@ -780,8 +783,6 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule NOrMore(char c, int n) {
         return Sequence(StringUtils.repeat(c, n), ZeroOrMore(c));
     }
-
-    //************* ACTIONS ****************
 
     ParsingResult<AstNode> parseRawBlock(String text) {
         ParsingResult<AstNode> result = ReportingParseRunner.run(Doc(), text);

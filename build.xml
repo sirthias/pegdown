@@ -34,7 +34,7 @@
             <compilerarg line="-Xlint:all -Xlint:-serial"/>
         </javac>
         <copy toDir="build/tests">
-            <fileset dir="/" includes="test-cases/**"/>
+            <fileset dir="test-cases"/>
         </copy>
     </target>
 
@@ -49,10 +49,8 @@
 
     <target name="javadoc" description="Builds javadoc">
         <mkdir dir="build/javadoc"/>
-        <javadoc destdir="build/javadoc" windowtitle="pegdown ${version} API">
-            <packageset dir="src" defaultexcludes="yes">
-                <include name="org/pegdown/**"/>
-            </packageset>
+        <javadoc destdir="build/javadoc" sourcepath="src" defaultexcludes="yes"
+                 windowtitle="pegdown ${version} API">
             <classpath refid="compile.classpath"/>
             <link href="http://java.sun.com/javase/6/docs/api"/>
         </javadoc>
@@ -72,7 +70,7 @@
             <attribute name="Bundle-License" value="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
             <attribute name="Bundle-Version" value="${version}"/>
             <attribute name="Bundle-Description"
-                       value="pegdown, a Java 1.5+ library providing a clean and light-weight markdown processor"/>
+                       value="pegdown, a Java 1.5+ library providing a clean and lightweight markdown processor"/>
             <attribute name="Bundle-Name" value="pegdown"/>
             <attribute name="Bundle-DocURL" value="http://www.pegdown.org"/>
             <attribute name="Bundle-Vendor" value="pegdown.org"/>
@@ -89,8 +87,9 @@
 
     <target name="testjar" depends="compile.tests, jar" description="Run all tests against the library jar">
         <testng verbose="2" parallel="true" suitename="All Tests" outputdir="test-output" haltonfailure="true">
-            <classfileset dir="build/tests" includes="**/*Test.class" />
+            <classfileset dir="build/tests" includes="**/*Test.class"/>
             <classpath location="build/pegdown-${version}.jar"/>
+            <classpath refid="compile.classpath"/>
             <classpath location="build/tests"/>
         </testng>
     </target>

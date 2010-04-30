@@ -3,10 +3,14 @@ package org.pegdown;
 import org.parboiled.trees.MutableTreeNodeImpl;
 import org.parboiled.trees.TreeUtils;
 
+/**
+ * Very simple Abstract Syntax Tree node implementation based on a {@link org.parboiled.trees.MutableTreeNodeImpl}.
+ * Defines two fields and some convenience setters.
+ */
 public class AstNode extends MutableTreeNodeImpl<AstNode> implements AstNodeType {
 
-    public int type;
-    public String text;
+    private int type;
+    private String text;
 
     public AstNode() {
         this(DEFAULT);
@@ -14,6 +18,14 @@ public class AstNode extends MutableTreeNodeImpl<AstNode> implements AstNodeType
 
     public AstNode(int type) {
         this.type = type;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public String getText() {
+        return text;
     }
 
     public AstNode withType(int type) {
