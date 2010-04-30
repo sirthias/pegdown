@@ -31,7 +31,7 @@ Credits
 -------
 
 The underlying PEG grammar was developed by John MacFarlane and made available with his
-"peg-markdown" tool (http://github.com/jgm/peg-markdown).   
+tool [peg-markdown](http://github.com/jgm/peg-markdown).   
 
 
 Any feedback is, of course, very welcome.
