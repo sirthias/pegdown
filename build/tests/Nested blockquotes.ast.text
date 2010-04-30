@@ -1,0 +1,9 @@
+DEFAULT
+    BLOCKQUOTE
+        PARA
+            TEXT: "foo"
+        BLOCKQUOTE
+            PARA
+                TEXT: "bar"
+        PARA
+            TEXT: "foo"

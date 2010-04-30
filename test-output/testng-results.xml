@@ -1,0 +1,16 @@
+<testng-results>
+  <reporter-output>
+  </reporter-output>
+  <suite name="All Tests">
+    <groups>
+    </groups>
+    <test name="Ant test">
+      <class name="org.pegdown.PegDownProcessorTest">
+        <test-method status="PASS" signature="setup()" name="setup" is-config="true" duration-ms="4" started-at="2010-04-30T13:59:42Z" finished-at="2010-04-30T13:59:42Z">
+        </test-method>
+        <test-method status="PASS" signature="test()" name="test" duration-ms="1740" started-at="2010-04-30T13:59:42Z" finished-at="2010-04-30T13:59:44Z">
+        </test-method>
+      </class>
+    </test>
+  </suite>
+</testng-results>

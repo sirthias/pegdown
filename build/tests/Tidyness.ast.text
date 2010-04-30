@@ -1,0 +1,28 @@
+DEFAULT
+    BLOCKQUOTE
+        PARA
+            TEXT: "A"
+            SPACE: " "
+            TEXT: "list"
+            SPACE: " "
+            TEXT: "within"
+            SPACE: " "
+            TEXT: "a"
+            SPACE: " "
+            TEXT: "blockquote:"
+        BULLET_LIST
+            TIGHT_LIST_ITEM
+                DEFAULT
+                    TEXT: "asterisk"
+                    SPACE: " "
+                    TEXT: "1"
+            TIGHT_LIST_ITEM
+                DEFAULT
+                    TEXT: "asterisk"
+                    SPACE: " "
+                    TEXT: "2"
+            TIGHT_LIST_ITEM
+                DEFAULT
+                    TEXT: "asterisk"
+                    SPACE: " "
+                    TEXT: "3"

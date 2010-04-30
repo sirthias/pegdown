@@ -1,0 +1,14 @@
+DEFAULT
+    BLOCKQUOTE
+        PARA
+            TEXT: "Example:"
+        VERBATIM: "sub status {
+    print "working";
+}
+"
+        PARA
+            TEXT: "Or:"
+        VERBATIM: "sub status {
+    return "working";
+}
+"

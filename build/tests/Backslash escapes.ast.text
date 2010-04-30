@@ -1,0 +1,328 @@
+DEFAULT
+    PARA
+        TEXT: "These"
+        SPACE: " "
+        TEXT: "should"
+        SPACE: " "
+        TEXT: "all"
+        SPACE: " "
+        TEXT: "get"
+        SPACE: " "
+        TEXT: "escaped:"
+    PARA
+        TEXT: "Backslash:"
+        SPACE: " "
+        TEXT: "\"
+    PARA
+        TEXT: "Backtick:"
+        SPACE: " "
+        TEXT: "`"
+    PARA
+        TEXT: "Asterisk:"
+        SPACE: " "
+        TEXT: "*"
+    PARA
+        TEXT: "Underscore:"
+        SPACE: " "
+        TEXT: "_"
+    PARA
+        TEXT: "Left"
+        SPACE: " "
+        TEXT: "brace:"
+        SPACE: " "
+        TEXT: "{"
+    PARA
+        TEXT: "Right"
+        SPACE: " "
+        TEXT: "brace:"
+        SPACE: " "
+        TEXT: "}"
+    PARA
+        TEXT: "Left"
+        SPACE: " "
+        TEXT: "bracket:"
+        SPACE: " "
+        TEXT: "["
+    PARA
+        TEXT: "Right"
+        SPACE: " "
+        TEXT: "bracket:"
+        SPACE: " "
+        TEXT: "]"
+    PARA
+        TEXT: "Left"
+        SPACE: " "
+        TEXT: "paren:"
+        SPACE: " "
+        TEXT: "("
+    PARA
+        TEXT: "Right"
+        SPACE: " "
+        TEXT: "paren:"
+        SPACE: " "
+        TEXT: ")"
+    PARA
+        TEXT: "Greater-than:"
+        SPACE: " "
+        TEXT: ">"
+    PARA
+        TEXT: "Hash:"
+        SPACE: " "
+        TEXT: "#"
+    PARA
+        TEXT: "Period:"
+        SPACE: " "
+        TEXT: "."
+    PARA
+        TEXT: "Bang:"
+        SPACE: " "
+        TEXT: "!"
+    PARA
+        TEXT: "Plus:"
+        SPACE: " "
+        TEXT: "+"
+    PARA
+        TEXT: "Minus:"
+        SPACE: " "
+        TEXT: "-"
+    PARA
+        TEXT: "These"
+        SPACE: " "
+        TEXT: "should"
+        SPACE: " "
+        TEXT: "not,"
+        SPACE: " "
+        TEXT: "because"
+        SPACE: " "
+        TEXT: "they"
+        SPACE: " "
+        TEXT: "occur"
+        SPACE: " "
+        TEXT: "within"
+        SPACE: " "
+        TEXT: "a"
+        SPACE: " "
+        TEXT: "code"
+        SPACE: " "
+        TEXT: "block:"
+    VERBATIM: "Backslash: \\
+
+Backtick: \`
+
+Asterisk: \*
+
+Underscore: \_
+
+Left brace: \{
+
+Right brace: \}
+
+Left bracket: \[
+
+Right bracket: \]
+
+Left paren: \(
+
+Right paren: \)
+
+Greater-than: \>
+
+Hash: \#
+
+Period: \.
+
+Bang: \!
+
+Plus: \+
+
+Minus: \-
+"
+    PARA
+        TEXT: "Nor"
+        SPACE: " "
+        TEXT: "should"
+        SPACE: " "
+        TEXT: "these,"
+        SPACE: " "
+        TEXT: "which"
+        SPACE: " "
+        TEXT: "occur"
+        SPACE: " "
+        TEXT: "in"
+        SPACE: " "
+        TEXT: "code"
+        SPACE: " "
+        TEXT: "spans:"
+    PARA
+        TEXT: "Backslash:"
+        SPACE: " "
+        CODE: "\\"
+    PARA
+        TEXT: "Backtick:"
+        SPACE: " "
+        CODE: "\`"
+    PARA
+        TEXT: "Asterisk:"
+        SPACE: " "
+        CODE: "\*"
+    PARA
+        TEXT: "Underscore:"
+        SPACE: " "
+        CODE: "\_"
+    PARA
+        TEXT: "Left"
+        SPACE: " "
+        TEXT: "brace:"
+        SPACE: " "
+        CODE: "\{"
+    PARA
+        TEXT: "Right"
+        SPACE: " "
+        TEXT: "brace:"
+        SPACE: " "
+        CODE: "\}"
+    PARA
+        TEXT: "Left"
+        SPACE: " "
+        TEXT: "bracket:"
+        SPACE: " "
+        CODE: "\["
+    PARA
+        TEXT: "Right"
+        SPACE: " "
+        TEXT: "bracket:"
+        SPACE: " "
+        CODE: "\]"
+    PARA
+        TEXT: "Left"
+        SPACE: " "
+        TEXT: "paren:"
+        SPACE: " "
+        CODE: "\("
+    PARA
+        TEXT: "Right"
+        SPACE: " "
+        TEXT: "paren:"
+        SPACE: " "
+        CODE: "\)"
+    PARA
+        TEXT: "Greater-than:"
+        SPACE: " "
+        CODE: "\>"
+    PARA
+        TEXT: "Hash:"
+        SPACE: " "
+        CODE: "\#"
+    PARA
+        TEXT: "Period:"
+        SPACE: " "
+        CODE: "\."
+    PARA
+        TEXT: "Bang:"
+        SPACE: " "
+        CODE: "\!"
+    PARA
+        TEXT: "Plus:"
+        SPACE: " "
+        CODE: "\+"
+    PARA
+        TEXT: "Minus:"
+        SPACE: " "
+        CODE: "\-"
+    PARA
+        TEXT: "These"
+        SPACE: " "
+        TEXT: "should"
+        SPACE: " "
+        TEXT: "get"
+        SPACE: " "
+        TEXT: "escaped,"
+        SPACE: " "
+        TEXT: "even"
+        SPACE: " "
+        TEXT: "though"
+        SPACE: " "
+        TEXT: "they're"
+        SPACE: " "
+        TEXT: "matching"
+        SPACE: " "
+        TEXT: "pairs"
+        SPACE: " "
+        TEXT: "for"
+        SPACE: "
+"
+        TEXT: "other"
+        SPACE: " "
+        TEXT: "Markdown"
+        SPACE: " "
+        TEXT: "constructs:"
+    PARA
+        TEXT: "*"
+        TEXT: "asterisks"
+        TEXT: "*"
+    PARA
+        TEXT: "_"
+        TEXT: "underscores"
+        TEXT: "_"
+    PARA
+        TEXT: "`"
+        TEXT: "backticks"
+        TEXT: "`"
+    PARA
+        TEXT: "This"
+        SPACE: " "
+        TEXT: "is"
+        SPACE: " "
+        TEXT: "a"
+        SPACE: " "
+        TEXT: "code"
+        SPACE: " "
+        TEXT: "span"
+        SPACE: " "
+        TEXT: "with"
+        SPACE: " "
+        TEXT: "a"
+        SPACE: " "
+        TEXT: "literal"
+        SPACE: " "
+        TEXT: "backslash-backtick"
+        SPACE: " "
+        TEXT: "sequence:"
+        SPACE: " "
+        CODE: "\`"
+    PARA
+        TEXT: "This"
+        SPACE: " "
+        TEXT: "is"
+        SPACE: " "
+        TEXT: "a"
+        SPACE: " "
+        TEXT: "tag"
+        SPACE: " "
+        TEXT: "with"
+        SPACE: " "
+        TEXT: "unescaped"
+        SPACE: " "
+        TEXT: "backticks"
+        SPACE: " "
+        HTML: "<span attr='`ticks`'>"
+        TEXT: "bar"
+        HTML: "</span>"
+        TEXT: "."
+    PARA
+        TEXT: "This"
+        SPACE: " "
+        TEXT: "is"
+        SPACE: " "
+        TEXT: "a"
+        SPACE: " "
+        TEXT: "tag"
+        SPACE: " "
+        TEXT: "with"
+        SPACE: " "
+        TEXT: "backslashes"
+        SPACE: " "
+        HTML: "<span attr='\\backslashes\\'>"
+        TEXT: "bar"
+        HTML: "</span>"
+        TEXT: "."
