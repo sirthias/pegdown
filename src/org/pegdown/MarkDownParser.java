@@ -33,7 +33,7 @@ import java.util.List;
 
 /**
  * Parboiled parser for the standard markdown syntax.
- * Builds an Abstract Syntax Tree (AST) of {@link org.pegdown.AstNode} objects.
+ * Builds an Abstract Syntax Tree (AST) of {@link AstNode} objects.
  */
 @SuppressWarnings({"InfiniteRecursion"})
 @SkipActionsInPredicates
@@ -45,9 +45,8 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
             "script", "style", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul"
     };
 
-    // special list for quick access to all AstNodes for link references in the document
-    // with this list we do not need to search the AST for reference nodes but already have them right here
     final List<AstNode> references = new ArrayList<AstNode>();
+    final List<AstNode> abbreviations = new ArrayList<AstNode>();
 
     @SuppressSubnodes
     Rule Doc() {
@@ -445,7 +444,6 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         );
     }
 
-    @Label
     Rule EmphOrStrong(String chars) {
         return Sequence(
                 EmphOrStrongOpen(chars),
@@ -460,7 +458,6 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
         );
     }
 
-    @Label
     Rule EmphOrStrongOpen(String chars) {
         return Sequence(
                 TestNot(CharLine(chars.charAt(0))),
@@ -471,7 +468,6 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     @Cached
-    @Label
     Rule EmphOrStrongClose(String chars) {
         return Sequence(
                 TestNot(Spacechar()),
@@ -580,7 +576,7 @@ public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule Reference() {
         return Sequence(
                 NonindentSpace(), TestNot("[]"), Label(), set(new AstNode(REFERENCE).withChild(prevValue())),
-                ':', Spn1(), RefSrc(), value().addChild(prevValue()),
+                ':', Sp(), RefSrc(), value().addChild(prevValue()),
                 Spn1(), Optional(Sequence(RefTitle(), UP2(value().addChild(prevValue())))),
                 ZeroOrMore(BlankLine()),
                 references.add(value())

@@ -23,30 +23,57 @@ import org.parboiled.common.ArrayBuilder;
 
 /**
  * Parboiled parser for the extended pegdown Markdown syntax.
- * Builds an Abstract Syntax Tree (AST) of {@link org.pegdown.AstNode} objects.
+ * Builds an Abstract Syntax Tree (AST) of {@link AstNode} objects.
  */
 @SuppressWarnings({"InfiniteRecursion"})
 public class ExtendedMarkDownParser extends MarkDownParser implements Extensions {
 
     private final int options;
-
+    
     public ExtendedMarkDownParser(Integer options) {
         this.options = options;
     }
 
     @Override
-    Rule Inline() {
-        ArrayBuilder<Rule> rules = new ArrayBuilder<Rule>(
-                Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Link(), Code(), RawHtml(),
-                Entity(), EscapedChar()
+    Rule Block() {
+        return Sequence(
+                ZeroOrMore(BlankLine()),
+                FirstOf(new ArrayBuilder<Rule>()
+                        .add(BlockQuote(), Verbatim())
+                        .addNonNulls(ext(ABBREVIATIONS) ? Abbreviation() : null)
+                        .add(Reference(), HorizontalRule(), Heading(), OrderedList(), BulletList(), HtmlBlock(), Para(),
+                                Inlines())
+                        .get()
+                )
         );
-        if (ext(QUOTES)) {
-            rules.add(SingleQuoted(), DoubleQuoted());
-        }
-        if (ext(SMARTS)) {
-            rules.add(Ellipsis(), EnDash(), EmDash(), Apostrophe());
-        }
-        return FirstOf(rules.add(Symbol()).get());
+    }
+
+    Rule Abbreviation() {
+        return Sequence(
+                NonindentSpace(), '*', TestNot("[]"), Label(), set(new AstNode(ABBREVIATION).withChild(prevValue())),
+                ':', Sp(), AbbreviationText(), value().addChild(prevValue()),
+                ZeroOrMore(BlankLine()),
+                abbreviations.add(value())
+        );
+    }
+    
+    Rule AbbreviationText() {
+        return Sequence(
+                set(new AstNode(LINK_TITLE)),
+                ZeroOrMore(Sequence(TestNot(Newline()), Inline(), UP2(value().addChild(prevValue()))))
+        );
+    }
+
+    @Override
+    Rule Inline() {
+        return FirstOf(new ArrayBuilder<Rule>()
+                .add(Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Link(), Code(), RawHtml(),
+                        Entity(), EscapedChar())
+                .addNonNulls(ext(QUOTES) ? new Rule[]{SingleQuoted(), DoubleQuoted()} : null)
+                .addNonNulls(ext(SMARTS) ? new Rule[]{Ellipsis(), EnDash(), EmDash(), Apostrophe()} : null)
+                .add(Symbol())
+                .get()
+        );
     }
 
     @Override
