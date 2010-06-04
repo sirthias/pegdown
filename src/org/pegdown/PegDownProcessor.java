@@ -42,6 +42,7 @@ public class PegDownProcessor implements AstNodeType {
     private final MarkDownParser parser;
     private final Map<String, String> refLinkUrls = new HashMap<String, String>();
     private final Map<String, String> refLinkTitles = new HashMap<String, String>();
+    private final Map<String, String> abbreviations = new HashMap<String, String>();
     private StringBuilder sb;
     private int indent; // the current output indent
 
@@ -81,6 +82,7 @@ public class PegDownProcessor implements AstNodeType {
      */
     public String markdownToHtml(String markdownSource) {
         parser.references.clear();
+        parser.abbreviations.clear();
         refLinkUrls.clear();
         refLinkTitles.clear();
         indent = 0;
@@ -89,6 +91,7 @@ public class PegDownProcessor implements AstNodeType {
 
         sb = new StringBuilder();
         buildRefLinkUrls();
+        buildAbbreviations();
 
         print(result.parseTreeRoot.getValue()).println();
 
@@ -127,10 +130,11 @@ public class PegDownProcessor implements AstNodeType {
     @SuppressWarnings({"ConstantConditions"})
     private void buildRefLinkUrls() {
         refLinkUrls.clear();
+        if (parser.references.isEmpty()) return;
         for (AstNode refNode : parser.references) {
+            String key = printToString(child(refNode, LINK_LABEL)).toLowerCase();
             AstNode urlNode = child(refNode, LINK_URL);
             Preconditions.checkState(urlNode != null);
-            String key = printToString(child(refNode, LINK_LABEL)).toLowerCase();
             String value = encode(urlNode.getText());
             refLinkUrls.put(key, value);
 
@@ -139,6 +143,19 @@ public class PegDownProcessor implements AstNodeType {
                 String title = encode(titleNode.getText());
                 refLinkTitles.put(key, title);
             }
+        }
+    }
+
+    @SuppressWarnings({"ConstantConditions"})
+    private void buildAbbreviations() {
+        abbreviations.clear();
+        if (parser.abbreviations.isEmpty()) return;
+        for (AstNode refNode : parser.abbreviations) {
+            String key = printToString(child(refNode, LINK_LABEL));
+            AstNode titleNode = child(refNode, LINK_TITLE);
+            Preconditions.checkState(titleNode != null);
+            String value = encode(printToString(titleNode));
+            abbreviations.put(key, value);
         }
     }
 
@@ -201,7 +218,7 @@ public class PegDownProcessor implements AstNodeType {
             case HTMLBLOCK:
                 return printOnNL(node.getText());
             case PARA:
-                return printOnNL("<p>").printChildren(node).print("</p>");
+                return printOnNL("<p>").printChildrenWithAbbreviations(node).print("</p>");
             case VERBATIM:
                 return printOnNL("<pre><code>").printEncoded(node.getText()).print("</code></pre>");
 
@@ -243,7 +260,8 @@ public class PegDownProcessor implements AstNodeType {
             case LINK_URL:
                 return printEncoded(node.getText());
             case REFERENCE:
-                return this; // references are not printed
+            case ABBREVIATION:
+                return this; // reference and abbreviation definitions are not printed
         }
         throw new IllegalStateException();
     }
@@ -275,6 +293,33 @@ public class PegDownProcessor implements AstNodeType {
             print('\n');
         }
         return this;
+    }
+
+    private PegDownProcessor printChildrenWithAbbreviations(AstNode node) {
+        if (abbreviations.isEmpty()) return printChildren(node);
+        
+        String string = printToString(node);
+        for (Map.Entry<String, String> entry : abbreviations.entrySet()) {
+            String abbr = entry.getKey();
+            int ix = string.indexOf(abbr);
+            if (ix == -1) continue;
+            StringBuilder sb = new StringBuilder();
+            int start = 0;
+            String text = entry.getValue();
+            while (ix >= 0) {
+                sb.append(string.substring(start, ix));
+                sb.append("<abbr");
+                if (StringUtils.isNotEmpty(text)) sb.append(" title=\"").append(text).append('"');
+                sb.append('>');
+                sb.append(abbr);
+                sb.append("</abbr>");
+                start = ix + abbr.length();
+                ix = string.indexOf(abbr, start);
+            }
+            sb.append(string.substring(start));
+            string = sb.toString();
+        }
+        return print(string);
     }
 
     private PegDownProcessor printOnNL(String string) {

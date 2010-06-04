@@ -55,33 +55,34 @@ public interface AstNodeType {
     static int HTMLBLOCK = 23;
     static int PARA = 24;
     static int VERBATIM = 25;
+    static int ABBREVIATION = 26;
 
     // lists
-    static int BULLET_LIST = 26;
-    static int ORDERED_LIST = 27;
-    static int TIGHT_LIST_ITEM = 28;
-    static int LOOSE_LIST_ITEM = 29;
+    static int BULLET_LIST = 27;
+    static int ORDERED_LIST = 28;
+    static int TIGHT_LIST_ITEM = 29;
+    static int LOOSE_LIST_ITEM = 30;
 
     // links
-    static int AUTO_LINK = 30;
-    static int EXP_LINK = 31;
-    static int EXP_IMG_LINK = 32;
-    static int MAIL_LINK = 33;
-    static int REF_LINK = 34;
-    static int REF_IMG_LINK = 35;
+    static int AUTO_LINK = 31;
+    static int EXP_LINK = 32;
+    static int EXP_IMG_LINK = 33;
+    static int MAIL_LINK = 34;
+    static int REF_LINK = 35;
+    static int REF_IMG_LINK = 36;
 
-    static int LINK_LABEL = 36;
-    static int LINK_REF = 37;
-    static int LINK_TITLE = 38;
-    static int LINK_URL = 39;
-    static int REFERENCE = 40;
+    static int LINK_LABEL = 37;
+    static int LINK_REF = 38;
+    static int LINK_TITLE = 39;
+    static int LINK_URL = 40;
+    static int REFERENCE = 41;
 
     // reverse resolution
     static String[] TYPE_NAMES = new String[]{
             "DEFAULT",
             "APOSTROPHE", "ELLIPSIS", "EMDASH", "ENDASH", "HTML", "LINEBREAK", "SPACE", "SPECIAL", "TEXT",
             "CODE", "EMPH", "H1", "H2", "H3", "H4", "H5", "H6", "STRONG", "SINGLE_QUOTED", "DOUBLE_QUOTED",
-            "BLOCKQUOTE", "HRULE", "HTMLBLOCK", "PARA", "VERBATIM",
+            "BLOCKQUOTE", "HRULE", "HTMLBLOCK", "PARA", "VERBATIM", "ABBREVIATION",
             "BULLET_LIST", "ORDERED_LIST", "TIGHT_LIST_ITEM", "LOOSE_LIST_ITEM",
             "AUTO_LINK", "EXP_LINK", "EXP_IMG_LINK", "MAIL_LINK", "REF_LINK", "REF_IMG_LINK",
             "LINK_LABEL", "LINK_REF", "LINK_TITLE", "LINK_URL", "REFERENCE"

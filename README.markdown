@@ -4,13 +4,23 @@ Introduction
 _pegdown_ is a pure Java library for clean and lightweight [Markdown][] processing.
 It's implementation is based on a [parboiled][] PEG parser and is therefore rather easy to understand and extend.
 
-_pegdown_ is 100% compatible with the original Markdown specification and fully passes the original Markdown test suite. 
-On top of the standard Markdown feature set _pegdown_ will implement a number of extensions similar to what [PHP Markdown Extra][] offers. Currently _pegdown_ offers only two small extensions over standard Markdown:
+_pegdown_ is nearly 100% compatible with the original Markdown specification and fully passes the original Markdown test suite.
+On top of the standard Markdown feature set _pegdown_ will implement a number of extensions similar to what [PHP Markdown Extra][] offers.
+Currently _pegdown_ offers the following extensions over standard Markdown:
 
 * SMARTS: Beautifys apostrophes, dashes and ellipsises.
 * QUOTES: Beautifys single and double quotes.
+* SMARTYPANTS: Convenience extensions enabling both, SMARTS and QUOTES, at once
+* ABBREVIATIONS: See [PHP Markdown Extra] 
 
 More extensions like support for tables, etc. are planned.
+
+Note: _pegdown_ differs from the original Markdown in that it ignores in-word emphasis as in
+
+    > my_file.txt
+    > 2*3*4=5
+
+Currently this "extension" cannot be switched off.
 
 Installation
 ------------

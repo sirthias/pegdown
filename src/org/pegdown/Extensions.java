@@ -24,7 +24,9 @@ public interface Extensions {
 
     static final int SMARTS = 0x01;
     static final int QUOTES = 0x02;
+    static final int SMARTYPANTS = 0x03; // see http://daringfireball.net/projects/smartypants/
+    static final int ABBREVIATIONS = 0x04;
 
-    static final int ALL = 0x03;
+    static final int ALL = 0xFF;
 
 }
