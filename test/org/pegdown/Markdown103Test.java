@@ -20,7 +20,7 @@ package org.pegdown;
 
 import org.testng.annotations.Test;
 
-public class MarkdownTest103 extends AbstractTest {
+public class Markdown103Test extends AbstractTest {
 
     private final PegDownProcessor processor = new PegDownProcessor();
 

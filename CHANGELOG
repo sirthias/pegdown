@@ -1,3 +1,9 @@
+Version 0.8.1.0 (2010-05-31)
+----------------------------
+- Fixed problem with SetextHeading2
+- Fixed performance problem in inputs with complex emphasis constructs
+- Added support for parens in link urls (must be escaped in explicit links) 
+
 Version 0.8.0.1 (2010-04-30)
 ----------------------------
 first public release

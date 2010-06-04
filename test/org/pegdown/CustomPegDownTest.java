@@ -20,7 +20,7 @@ package org.pegdown;
 
 import org.testng.annotations.Test;
 
-public class CustomPegDownTests extends AbstractTest {
+public class CustomPegDownTest extends AbstractTest {
 
     private final PegDownProcessor processor = new PegDownProcessor(Extensions.ALL);
 
@@ -33,6 +33,7 @@ public class CustomPegDownTests extends AbstractTest {
     public void customPegDownTests() throws Exception {
         test("pegdown/Abbreviations");
         test("pegdown/Linebreaks");
+        test("pegdown/Parens_in_URL");
         test("pegdown/Quoted Blockquote");
         
         test("pegdown/Extensions");
