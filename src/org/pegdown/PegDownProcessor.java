@@ -39,7 +39,7 @@ public class PegDownProcessor implements AstNodeType {
      */
     public static int TABSTOP = 4;
 
-    private final MarkDownParser parser;
+    private final MarkdownParser parser;
     private final Map<String, String> refLinkUrls = new HashMap<String, String>();
     private final Map<String, String> refLinkTitles = new HashMap<String, String>();
     private final Map<String, String> abbreviations = new HashMap<String, String>();
@@ -61,8 +61,8 @@ public class PegDownProcessor implements AstNodeType {
     @SuppressWarnings({"unchecked"})
     public PegDownProcessor(int options) {
         parser = options == Extensions.NONE ?
-                Parboiled.createParser(MarkDownParser.class) :
-                Parboiled.createParser(ExtendedMarkDownParser.class, options);
+                Parboiled.createParser(MarkdownParser.class) :
+                Parboiled.createParser(ExtendedMarkdownParser.class, options);
     }
 
     /**
@@ -70,7 +70,7 @@ public class PegDownProcessor implements AstNodeType {
      *
      * @return the parser
      */
-    MarkDownParser getParser() {
+    MarkdownParser getParser() {
         return parser;
     }
 
@@ -178,7 +178,7 @@ public class PegDownProcessor implements AstNodeType {
             case HTML:
                 return print(node.getText());
             case LINEBREAK:
-                return printOnNL("<br/>").println();
+                return print("<br/>").println();
             case SPACE:
                 return print(node.getText());
             case SPECIAL:

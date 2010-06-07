@@ -40,7 +40,7 @@ import java.util.List;
  */
 @SuppressWarnings({"InfiniteRecursion"})
 @SkipActionsInPredicates
-public class MarkDownParser extends BaseParser<AstNode> implements AstNodeType {
+public class MarkdownParser extends BaseParser<AstNode> implements AstNodeType {
 
     static final String[] HTML_TAGS = new String[]{
             "address", "blockquote", "center", "dd", "dir", "div", "dl", "dt", "fieldset", "form", "frameset", "h1",

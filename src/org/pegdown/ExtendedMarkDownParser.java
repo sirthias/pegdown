@@ -26,11 +26,11 @@ import org.parboiled.common.ArrayBuilder;
  * Builds an Abstract Syntax Tree (AST) of {@link AstNode} objects.
  */
 @SuppressWarnings({"InfiniteRecursion"})
-public class ExtendedMarkDownParser extends MarkDownParser implements Extensions {
+public class ExtendedMarkdownParser extends MarkdownParser implements Extensions {
 
     private final int options;
     
-    public ExtendedMarkDownParser(Integer options) {
+    public ExtendedMarkdownParser(Integer options) {
         this.options = options;
     }
 
@@ -88,6 +88,13 @@ public class ExtendedMarkDownParser extends MarkDownParser implements Extensions
         return CharSet(chars);
     }
 
+    @Override
+    Rule NormalEndline() {
+        return ext(HARDWRAPS) ?
+                Sequence(super.NormalEndline(), set(new AstNode(LINEBREAK))) : // override with a real linebreak
+                super.NormalEndline();
+    }
+
     //************* SMARTS ****************
 
     Rule Apostrophe() {
@@ -137,7 +144,7 @@ public class ExtendedMarkDownParser extends MarkDownParser implements Extensions
 
     //************* HELPERS ****************
 
-    private boolean ext(int extension) {
+    boolean ext(int extension) {
         return (options & extension) > 0;
     }
 

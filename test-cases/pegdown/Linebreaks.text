@@ -1,10 +1,11 @@
 Linebreaks
 ==========
 
-This is a simple paragraph  
-that is wrapped with   
-explicits line breaks.    
+With the HARDWRAPS extension
+enabled all these linebreaks
+should be kept as is in the
+created HTML
 
-This one
-is
-not!
+These ones here
+as
+well!

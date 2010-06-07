@@ -36,7 +36,7 @@ public class CustomPegDownTest extends AbstractTest {
         test("pegdown/Parens_in_URL");
         test("pegdown/Quoted Blockquote");
         
-        test("pegdown/Extensions");
+        test("pegdown/Smartypants");
     }
 
 }
