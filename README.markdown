@@ -53,4 +53,4 @@ Any feedback is, of course, very welcome.
    [PHP Markdown Extra]: http://michelf.com/projects/php-markdown/extra/#html
    [Download Page]: http://github.com/sirthias/pegdown/downloads
    [PegDownProcessor]: http://sirthias.github.com/pegdown/api/org/pegdown/PegDownProcessor.html
-   [Github-flavoured-Markdown] http://github.github.com/github-flavored-markdown/
+   [Github-flavoured-Markdown]: http://github.github.com/github-flavored-markdown/
