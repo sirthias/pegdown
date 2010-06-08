@@ -5,14 +5,15 @@ _pegdown_ is a pure Java library for clean and lightweight [Markdown][] processi
 It's implementation is based on a [parboiled][] PEG parser and is therefore rather easy to understand and extend.
 
 _pegdown_ is nearly 100% compatible with the original Markdown specification and fully passes the original Markdown test suite.
-On top of the standard Markdown feature set _pegdown_ will implement a number of extensions similar to what [PHP Markdown Extra][] offers.
-Currently _pegdown_ offers the following extensions over standard Markdown:
+On top of the standard Markdown feature set _pegdown_ implements a number of extensions similar to what other popular Markdown processors offer.
+Currently _pegdown_ supports the following extensions over standard Markdown:
 
 * SMARTS: Beautifys apostrophes, dashes and ellipsises.
 * QUOTES: Beautifys single and double quotes.
-* SMARTYPANTS: Convenience extensions enabling both, SMARTS and QUOTES, at once
-* ABBREVIATIONS: See [PHP Markdown Extra][]
-* HARDWRAPS: Enables alternative handling of newlines, See [Github-flavoured-Markdown][]
+* SMARTYPANTS: Convenience extensions enabling both, SMARTS and QUOTES, at once.
+* ABBREVIATIONS: Support for abbreviations in the way of [PHP Markdown Extra][].
+* HARDWRAPS: Enables alternative handling of newlines, see [Github-flavoured-Markdown][]
+* AUTOLINKS: Enables plain (undelimited) autolinks the way [Github-flavoured-Markdown][] implements them.
 
 More extensions like support for tables, etc. are planned.
 
@@ -27,7 +28,7 @@ Installation
 ------------
 
 Download the JAR for latest version from the [download page][].  
-Additionally _pegdown_ requires the [parboiled][] JAR on the classpath (v0.9.7.0 or better).
+Additionally _pegdown_ requires the [parboiled][] JAR on the classpath (v0.9.7.1 or better).
 
 Documentation
 -------------
@@ -41,7 +42,7 @@ See <http://sirthias.github.com/pegdown/api> for the pegdown API documation.
 Credits
 -------
 
-The underlying PEG grammar was developed by John MacFarlane and made available with his
+Most of the underlying PEG grammar was developed by John MacFarlane and made available with his
 tool [peg-markdown](http://github.com/jgm/peg-markdown).   
 
 
