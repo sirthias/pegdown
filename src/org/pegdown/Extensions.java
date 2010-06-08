@@ -50,7 +50,15 @@ public interface Extensions {
      * Enables the parsing of hard wraps as HTML linebreaks.
      * Similar to what github does {@see http://github.github.com/github-flavored-markdown}. 
      */
-    static final int HARDWRAPS = 0x04;
+    static final int HARDWRAPS = 0x08;
+
+    /**
+     * Enables plain autolinks the way github flavoures markdown implements them.
+     * With this extension enabled pegdown will intelligently recognize URLs and email adresses
+     * without any further delimiters and mark them as the respective link type.
+     * {@see http://github.github.com/github-flavored-markdown}.
+     */
+    static final int AUTOLINKS = 0x10;
 
     /**
      * All available extensions.

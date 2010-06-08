@@ -60,7 +60,7 @@ public abstract class AbstractTest {
         // tidy up html for fair equality test
         String expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html");
         assertNotNull(expectedUntidy);
-        
+
         actualHtml = tidy(actualHtml);
         assertEqualsMultiline(actualHtml, tidy(expectedUntidy));
     }

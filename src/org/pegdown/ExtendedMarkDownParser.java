@@ -29,7 +29,7 @@ import org.parboiled.common.ArrayBuilder;
 public class ExtendedMarkdownParser extends MarkdownParser implements Extensions {
 
     private final int options;
-    
+
     public ExtendedMarkdownParser(Integer options) {
         this.options = options;
     }
@@ -56,7 +56,7 @@ public class ExtendedMarkdownParser extends MarkdownParser implements Extensions
                 abbreviations.add(value())
         );
     }
-    
+
     Rule AbbreviationText() {
         return Sequence(
                 set(new AstNode(LINK_TITLE)),
@@ -67,7 +67,7 @@ public class ExtendedMarkdownParser extends MarkdownParser implements Extensions
     @Override
     Rule Inline() {
         return FirstOf(new ArrayBuilder<Rule>()
-                .add(Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Link(), Code(), RawHtml(),
+                .add(Link(), Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Code(), RawHtml(),
                         Entity(), EscapedChar())
                 .addNonNulls(ext(QUOTES) ? new Rule[]{SingleQuoted(), DoubleQuoted()} : null)
                 .addNonNulls(ext(SMARTS) ? new Rule[]{Ellipsis(), EnDash(), EmDash(), Apostrophe()} : null)
@@ -85,14 +85,47 @@ public class ExtendedMarkdownParser extends MarkdownParser implements Extensions
         if (ext(SMARTS)) {
             chars += ".-";
         }
+        if (ext(AUTOLINKS)) {
+            chars += "(){}";
+        }
         return CharSet(chars);
     }
 
     @Override
     Rule NormalEndline() {
-        return ext(HARDWRAPS) ?
-                Sequence(super.NormalEndline(), set(new AstNode(LINEBREAK))) : // override with a real linebreak
-                super.NormalEndline();
+        if (!ext(HARDWRAPS)) return super.NormalEndline();
+        return Sequence(super.NormalEndline(), set(new AstNode(LINEBREAK))); // override with a real linebreak
+    }
+
+    @Override
+    Rule AutoLinkUrl() {
+        if (!ext(AUTOLINKS)) return super.AutoLinkUrl();
+        return Sequence(
+                Sequence(OneOrMore(Letter()), "://", AutoLinkEnd()),
+                set(new AstNode(AUTO_LINK).withText(prevText()))
+        );
+    }
+
+    @Override
+    Rule AutoLinkEmail() {
+        if (!ext(AUTOLINKS)) return super.AutoLinkEmail();
+        return Sequence(
+                Sequence(
+                        OneOrMore(FirstOf(Alphanumeric(), CharSet("-+_."))),
+                        '@', AutoLinkEnd()
+                ),
+                set(new AstNode(MAIL_LINK).withText(prevText()))
+        );
+    }
+
+    Rule AutoLinkEnd() {
+        return OneOrMore(
+                Sequence(
+                        TestNot(Newline()),
+                        TestNot(Sequence(Optional(CharSet(".,;:)}]")), FirstOf(Spacechar(), Newline()))),
+                        Any()
+                )
+        );
     }
 
     //************* SMARTS ****************

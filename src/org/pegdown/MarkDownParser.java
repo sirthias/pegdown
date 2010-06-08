@@ -387,7 +387,7 @@ public class MarkdownParser extends BaseParser<AstNode> implements AstNodeType {
     }
 
     Rule Inline() {
-        return FirstOf(Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Link(), Code(), RawHtml(),
+        return FirstOf(Link(), Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Code(), RawHtml(),
                 Entity(), EscapedChar(), Symbol());
     }
 
@@ -570,7 +570,7 @@ public class MarkdownParser extends BaseParser<AstNode> implements AstNodeType {
     Rule AutoLinkEmail() {
         return Sequence(
                 '<',
-                Sequence(OneOrMore(FirstOf(Alphanumeric(), CharSet("-+_"))), '@',
+                Sequence(OneOrMore(FirstOf(Alphanumeric(), CharSet("-+_."))), '@',
                         OneOrMore(Sequence(TestNot(Newline()), TestNot('>'), Any()))),
                 set(new AstNode(MAIL_LINK).withText(prevText())),
                 '>'
