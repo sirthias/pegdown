@@ -36,19 +36,23 @@ public interface Extensions {
     static final int QUOTES = 0x02;
 
     /**
-     * All of the smartypants prettyfications {@see http://daringfireball.net/projects/smartypants/}.
-     * Equivalent to SMARTS || QUOTES
+     * All of the smartypants prettyfications. Equivalent to SMARTS || QUOTES.
+     * 
+     * @see <a href="http://daringfireball.net/projects/smartypants/">Smartypants</a>
      */
     static final int SMARTYPANTS = 0x03;
 
     /**
-     * PHP Markdown Extra style abbreviations {@see http://michelf.com/projects/php-markdown/extra/#abbr}.
+     * PHP Markdown Extra style abbreviations.
+     *
+     * @see <a href="http://michelf.com/projects/php-markdown/extra/#abbr">PHP Markdown Extra</a>
      */
     static final int ABBREVIATIONS = 0x04;
 
     /**
-     * Enables the parsing of hard wraps as HTML linebreaks.
-     * Similar to what github does {@see http://github.github.com/github-flavored-markdown}. 
+     * Enables the parsing of hard wraps as HTML linebreaks. Similar to what github does.
+     *
+     * @see <a href="http://github.github.com/github-flavored-markdown">Github-flavored-Markdown</a>
      */
     static final int HARDWRAPS = 0x08;
 
@@ -56,7 +60,8 @@ public interface Extensions {
      * Enables plain autolinks the way github flavoures markdown implements them.
      * With this extension enabled pegdown will intelligently recognize URLs and email adresses
      * without any further delimiters and mark them as the respective link type.
-     * {@see http://github.github.com/github-flavored-markdown}.
+     *
+     * @see <a href="http://github.github.com/github-flavored-markdown">Github-flavored-Markdown</a>
      */
     static final int AUTOLINKS = 0x10;
 
