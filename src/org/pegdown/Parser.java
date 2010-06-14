@@ -62,7 +62,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     //************* BLOCKS ****************
 
-    @SuppressSubnodes
+    @SuppressSubnodes // enable parboiled parse-tree-less parsing
     Rule Doc() {
         return Sequence(
                 set(new Node()),

@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * Helper class encapsulating most output functionality (i.e. AST-to-String serialization).
+ */
 public class Printer {
 
     public final Map<String, ReferenceNode> references = new HashMap<String, ReferenceNode>();

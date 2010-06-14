@@ -1,3 +1,10 @@
+Version 0.8.5.0 (2010-06-14)
+----------------------------
+- Completely rewrote AST implementation improving maintainability and simplifying further extensions
+- Fixed different problems, mainly related to the ABBREVIATIONS extension
+- Added TABLES extension
+- Added simple benchmarking "test"
+
 Version 0.8.1.0 (2010-06-08)
 ----------------------------
 - Fixed problem with SetextHeading2

@@ -89,7 +89,7 @@ public class PegDownProcessor {
         return printer.getString();
     }
 
-    // perform tabstop expansion and adds two trailing newlines
+    // perform tabstop expansion and add two trailing newlines
     static String prepare(String markDownSource) {
         StringBuilder sb = new StringBuilder(markDownSource.length() + 2);
         int charsToTab = TABSTOP;
