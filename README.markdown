@@ -10,7 +10,7 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 
 * SMARTS: Beautifys apostrophes, dashes and ellipsises.
 * QUOTES: Beautifys single and double quotes.
-* SMARTYPANTS: Convenience extensions enabling both, SMARTS and QUOTES, at once.
+* SMARTYPANTS: Convenience extension enabling both, SMARTS and QUOTES, at once.
 * ABBREVIATIONS: Support for abbreviations in the way of [PHP Markdown Extra][].
 * HARDWRAPS: Enables alternative handling of newlines, see [Github-flavoured-Markdown][]
 * AUTOLINKS: Enables plain (undelimited) autolinks the way [Github-flavoured-Markdown][] implements them.

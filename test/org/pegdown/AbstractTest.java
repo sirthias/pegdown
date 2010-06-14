@@ -19,6 +19,8 @@
 package org.pegdown;
 
 import org.parboiled.support.ParsingResult;
+import org.parboiled.support.ToStringFormatter;
+import org.pegdown.ast.Node;
 import org.testng.annotations.BeforeClass;
 import org.w3c.tidy.Tidy;
 
@@ -27,6 +29,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 
+import static org.parboiled.trees.GraphUtils.printTree;
 import static org.pegdown.PegDownProcessor.prepare;
 import static org.pegdown.TestUtils.assertEqualsMultiline;
 import static org.testng.Assert.assertNotNull;
@@ -52,7 +55,7 @@ public abstract class AbstractTest {
         // assertEqualsMultiline(actualHtml, "");
 
         // debugging II: check the AST
-        // assertEqualsMultiline(printTree(getAstRoot(markdown), new ToStringFormatter<AstNode>()), "");
+        // assertEqualsMultiline(printTree(getAstRoot(markdown), new ToStringFormatter<Node>()), "");
 
         // debugging III: check the parse tree
         // assertEqualsMultiline(printNodeTree(result), "");
@@ -65,8 +68,8 @@ public abstract class AbstractTest {
         assertEqualsMultiline(actualHtml, tidy(expectedUntidy));
     }
 
-    private AstNode getAstRoot(String markdown) {
-        ParsingResult<AstNode> result = getProcessor().getParser().parseRawBlock(prepare(markdown));
+    private Node getAstRoot(String markdown) {
+        ParsingResult<Node> result = getProcessor().getParser().parseRawBlock(prepare(markdown));
         return result.parseTreeRoot.getValue();
     }
 

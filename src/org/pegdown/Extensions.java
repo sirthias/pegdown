@@ -66,6 +66,13 @@ public interface Extensions {
     static final int AUTOLINKS = 0x10;
 
     /**
+     * Enables table support similar to what Multimarkdown offers.
+     *
+     * @see <a href="http://fletcherpenney.net/multimarkdown/users_guide/multimarkdown_syntax_guide/">MultiMarkdown</a>
+     */
+    static final int TABLES = 0x20;
+
+    /**
      * All available extensions.
      */
     static final int ALL = 0xFF;
