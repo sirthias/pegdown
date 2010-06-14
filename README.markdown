@@ -14,8 +14,7 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * ABBREVIATIONS: Support for abbreviations in the way of [PHP Markdown Extra][].
 * HARDWRAPS: Enables alternative handling of newlines, see [Github-flavoured-Markdown][]
 * AUTOLINKS: Enables plain (undelimited) autolinks the way [Github-flavoured-Markdown][] implements them.
-
-More extensions like support for tables, etc. are planned.
+* TABLES: Enables support for tables similar to [MultiMarkdown][] (which is in turn like the [PHP Markdown Extra][] tables, but with colspan support).
 
 Note: _pegdown_ differs from the original Markdown in that it ignores in-word emphasis as in
 
@@ -54,3 +53,4 @@ Any feedback is, of course, very welcome.
    [Download Page]: http://github.com/sirthias/pegdown/downloads
    [PegDownProcessor]: http://sirthias.github.com/pegdown/api/org/pegdown/PegDownProcessor.html
    [Github-flavoured-Markdown]: http://github.github.com/github-flavored-markdown/
+   [MultiMarkdown]: http://fletcherpenney.net/multimarkdown/users_guide/multimarkdown_syntax_guide/

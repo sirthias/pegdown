@@ -78,7 +78,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                 FirstOf(new ArrayBuilder<Rule>()
                         .add(BlockQuote(), Verbatim())
                         .addNonNulls(ext(ABBREVIATIONS) ? Abbreviation() : null)
-                                //.addNonNulls(ext(TABLES) ? Table() : null)
+                        .addNonNulls(ext(TABLES) ? Table() : null)
                         .add(Reference(), HorizontalRule(), Heading(), OrderedList(), BulletList(), HtmlBlock(), Para(),
                                 Inlines())
                         .get()
@@ -510,8 +510,8 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule Image() {
         return Sequence('!',
                 FirstOf(
-                        Sequence(ExplicitLink(), set(((ExpLinkNode)prevValue()).asImage())),
-                        Sequence(ReferenceLink(), set(((RefLinkNode)prevValue()).asImage()))
+                        Sequence(ExplicitLink(), set(((ExpLinkNode) prevValue()).asImage())),
+                        Sequence(ReferenceLink(), set(((RefLinkNode) prevValue()).asImage()))
                 )
         );
     }
@@ -861,7 +861,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         Var<AbbreviationNode> node = new Var<AbbreviationNode>();
         return Sequence(
                 NonindentSpace(), '*', Label(), set(node.setAndGet(new AbbreviationNode(prevValue()))),
-                ':', Sp(), AbbreviationText(node),
+                Sp(), ':', Sp(), AbbreviationText(node),
                 ZeroOrMore(BlankLine()),
                 abbreviations.add(node.get())
         );
@@ -876,41 +876,64 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     //************* TABLES ****************
 
-    /*Rule Table() {
+    Rule Table() {
+        Var<TableNode> node = new Var<TableNode>();
         return Sequence(
-                TableHeader(),
-                TableDivider(),
-                TableBody()
+                set(node.setAndGet(new TableNode())),
+                ZeroOrMore(Sequence(TableRow(), node.get().addChild(((TableRowNode) prevValue()).asHeader()))),
+                TableDivider(node),
+                ZeroOrMore(Sequence(TableRow(), node.get().addChild(prevValue())))
         );
     }
 
-    Rule TableHeader() {
-        return ZeroOrMore(TableRow());
+    Rule TableDivider(Var<TableNode> tableNode) {
+        Var<Boolean> pipeSeen = new Var<Boolean>(Boolean.FALSE);
+        return Sequence(
+                Optional(Sequence('|', pipeSeen.set(Boolean.TRUE))),
+                OneOrMore(TableColumn(tableNode, pipeSeen)),
+                pipeSeen.get() || tableNode.get().hasTwoOrMoreDividers(),
+                Sp(), Newline()
+        );
     }
 
-    Rule TableDivider() {
-        return FirstOf(
-                Sequence('|', TableCellTrailing),
-                Sequence(),
-                );
+    Rule TableColumn(Var<TableNode> tableNode, Var<Boolean> pipeSeen) {
+        Var<TableColumnNode> node = new Var<TableColumnNode>(new TableColumnNode());
+        return Sequence(
+                Sp(),
+                Optional(Sequence(':', node.get().markLeftAligned())),
+                Sp(), OneOrMore('-'), Sp(),
+                Optional(Sequence(':', node.get().markRightAligned())),
+                Sp(),
+                Optional(Sequence('|', pipeSeen.set(Boolean.TRUE))),
+                tableNode.get().addColumn(node.get())
+        );
     }
 
     Rule TableRow() {
         Var<Boolean> leadingPipe = new Var<Boolean>(Boolean.FALSE);
         return Sequence(
+                set(new TableRowNode()),
                 Optional(Sequence('|', leadingPipe.set(Boolean.TRUE))),
-                OneOrMore(TableCell()),
-                leadingPipe.get() || prevText().endsWith("|"),
+                OneOrMore(Sequence(TableCell(), UP2(value()).addChild(prevValue()))),
+                leadingPipe.get() || value().getChildren().size() > 1 || prevText().endsWith("|"),
                 Sp(), Newline()
         );
     }
 
     Rule TableCell() {
         return Sequence(
-                OneOrMore(Sequence(TestNot('|'), Inline())),
-                ZeroOrMore('|')
+                set(new TableCellNode()),
+                TestNot(Sequence(Sp(), Optional(':'), Sp(), OneOrMore('-'), Sp(), Optional(':'), Sp(),
+                        FirstOf('|', Newline()))),
+                Optional(Sequence(Sp(), TestNot('|'), TestNot(Newline()))),
+                OneOrMore(Sequence(
+                        TestNot('|'), TestNot(Sequence(Sp(), Newline())), Inline(),
+                        UP2(value()).addChild(prevValue()),
+                        Optional(Sequence(Sp(), Test('|'), Test(Newline())))
+                )),
+                ZeroOrMore('|'), ((TableCellNode) value()).setColSpan(Math.max(1, prevText().length()))
         );
-    }*/
+    }
 
     //************* SMARTS ****************
 

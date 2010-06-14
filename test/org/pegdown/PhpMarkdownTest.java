@@ -30,7 +30,7 @@ public class PhpMarkdownTest extends AbstractTest {
     }
 
     @Test
-    public void customPegDownTests() throws Exception {
+    public void phpMarkdownTests() throws Exception {
         test("PhpMarkdown/Backslash_escapes");
         test("PhpMarkdown/Code_block_in_a_list_item");
         test("PhpMarkdown/Code_Spans");

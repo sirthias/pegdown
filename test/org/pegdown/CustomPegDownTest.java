@@ -31,13 +31,14 @@ public class CustomPegDownTest extends AbstractTest {
 
     @Test
     public void customPegDownTests() throws Exception {
-        test("pegdown/Abbreviations");
+        /*test("pegdown/Abbreviations");
         test("pegdown/Autolinks");
         test("pegdown/Linebreaks");
         test("pegdown/Parens_in_URL");
         test("pegdown/Quoted Blockquote");
-        
-        test("pegdown/Smartypants");
+
+        test("pegdown/Smartypants");*/
+        test("pegdown/Tables");
     }
 
 }

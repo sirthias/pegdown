@@ -16,24 +16,23 @@
  * limitations under the License.
  */
 
-package org.pegdown.ast;
+package org.pegdown;
 
-import org.pegdown.Printer;
+import org.testng.annotations.Test;
 
-public class AutoLinkNode extends Node {
+public class PhpMarkdownExtraTest extends AbstractTest {
 
-    public AutoLinkNode(String text) {
-        super(text);
-    }
+    private final PegDownProcessor processor = new PegDownProcessor(Extensions.ALL & ~Extensions.SMARTYPANTS);
 
     @Override
-    public void print(Printer printer) {
-        printer
-                .print("<a href=\"")
-                .printEncoded(getText())
-                .print("\">")
-                .printEncoded(getText())
-                .print("</a>");
+    public PegDownProcessor getProcessor() {
+        return processor;
+    }
+
+    @Test
+    public void phpMarkdownExtraTests() throws Exception {
+        test("PhpMarkdownExtra/Abbr");
+        test("PhpMarkdownExtra/Tables");
     }
 
 }

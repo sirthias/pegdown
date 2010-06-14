@@ -22,10 +22,12 @@ import org.parboiled.common.StringUtils;
 import org.pegdown.ast.AbbreviationNode;
 import org.pegdown.ast.Node;
 import org.pegdown.ast.ReferenceNode;
+import org.pegdown.ast.TextNode;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Printer {
 
@@ -38,9 +40,13 @@ public class Printer {
         for (ReferenceNode node : references) {
             this.references.put(printToString(node), node);
         }
+
+        // only fill the abbreviation map after having build all keys, so we do not expand abbreviations too early
+        Map<String, String> abbrevs = new HashMap<String, String>();
         for (AbbreviationNode node : abbreviations) {
-            this.abbreviations.put(printToString(node), encode(printToString(node.getExpansion())));
+            abbrevs.put(printToString(node), encode(printToString(node.getExpansion())));
         }
+        this.abbreviations.putAll(abbrevs);
     }
 
     public Printer indent(int delta) {
@@ -49,8 +55,63 @@ public class Printer {
     }
 
     public Printer print(String string) {
-        if (StringUtils.isNotEmpty(string)) sb.append(string);
+        if (StringUtils.isNotEmpty(string)) {
+            sb.append(string);
+        }
         return this;
+    }
+
+    public Printer printWithAbbreviations(String string) {
+        if (abbreviations.isEmpty()) return print(string);
+        Map<Integer, Map.Entry<String, String>> expansions = null;
+
+        for (Map.Entry<String, String> entry : abbreviations.entrySet()) {
+            // first check, whether we have a legal match
+            String abbr = entry.getKey();
+
+            int ix = 0;
+            while (true) {
+                int sx = string.indexOf(abbr, ix);
+                if (sx == -1) break;
+
+                // only allow whole word matches
+                ix = sx + abbr.length();
+
+                if (sx > 0 && Character.isLetterOrDigit(string.charAt(sx - 1))) continue;
+                if (ix < string.length() && Character.isLetterOrDigit(string.charAt(ix))) {
+                    continue;
+                }
+
+                // ok, legal match so save an expansions "task" for all matches
+                if (expansions == null) {
+                    expansions = new TreeMap<Integer, Map.Entry<String, String>>();
+                }
+                expansions.put(sx, entry);
+            }
+        }
+
+        if (expansions != null) {
+            StringBuilder sb = new StringBuilder();
+            int ix = 0;
+            for (Map.Entry<Integer, Map.Entry<String, String>> entry : expansions.entrySet()) {
+                int sx = entry.getKey();
+                String abbr = entry.getValue().getKey();
+                String expansion = entry.getValue().getValue();
+
+                sb.append(string.substring(ix, sx));
+
+                StringBuilder replaceSB = new StringBuilder("<abbr");
+                if (StringUtils.isNotEmpty(expansion)) replaceSB.append(" title=\"").append(expansion).append('"');
+                replaceSB.append('>').append(abbr).append("</abbr>");
+                String replace = replaceSB.toString();
+
+                sb.append(replace);
+                ix = sx + abbr.length();
+            }
+            sb.append(string.substring(ix));
+            string = sb.toString();
+        }
+        return print(string);
     }
 
     public Printer print(char c) {
@@ -72,33 +133,6 @@ public class Printer {
         return this;
     }
 
-    public Printer printChildrenWithAbbreviations(Node node) {
-        if (abbreviations.isEmpty()) return printChildren(node);
-
-        String string = printToString(node);
-        for (Map.Entry<String, String> entry : abbreviations.entrySet()) {
-            String abbr = entry.getKey();
-            int ix = string.indexOf(abbr);
-            if (ix == -1) continue;
-            StringBuilder sb = new StringBuilder();
-            int start = 0;
-            String text = entry.getValue();
-            while (ix >= 0) {
-                sb.append(string.substring(start, ix));
-                sb.append("<abbr");
-                if (StringUtils.isNotEmpty(text)) sb.append(" title=\"").append(text).append('"');
-                sb.append('>');
-                sb.append(abbr);
-                sb.append("</abbr>");
-                start = ix + abbr.length();
-                ix = string.indexOf(abbr, start);
-            }
-            sb.append(string.substring(start));
-            string = sb.toString();
-        }
-        return print(string);
-    }
-
     public Printer printOnNL(String string) {
         println();
         printIndent();
@@ -111,11 +145,21 @@ public class Printer {
     }
 
     public Printer printChildren(Node node) {
+        StringBuilder sb = new StringBuilder();
         List<Node> children = node.getChildren();
         for (int i = 0, childrenSize = children.size(); i < childrenSize; i++) {
             Node child = children.get(i);
-            child.print(this);
+            if (child instanceof TextNode) {
+                sb.append(child.getText());
+            } else {
+                if (sb.length() > 0) {
+                    printWithAbbreviations(sb.toString());
+                    sb.setLength(0);
+                }
+                child.print(this);
+            }
         }
+        if (sb.length() > 0) printWithAbbreviations(sb.toString());
         return this;
     }
 

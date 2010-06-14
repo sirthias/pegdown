@@ -27,6 +27,9 @@ public class BlockQuoteNode extends Node {
     }
     @Override
     public void print(Printer printer) {
-        printer.printOnNL("<blockquote>").indent(+2).printChildren(this).indent(-2).printOnNL("</blockquote>");
+        printer
+                .printOnNL("<blockquote>")
+                .indent(+2).printChildren(this).indent(-2)
+                .printOnNL("</blockquote>");
     }
 }
