@@ -68,8 +68,11 @@
 
     <target name="javadoc" description="Builds javadoc">
         <mkdir dir="build/javadoc"/>
-        <javadoc destdir="build/javadoc" sourcepath="src" defaultexcludes="yes"
-                 windowtitle="pegdown ${version} API">
+        <javadoc destdir="build/javadoc" windowtitle="pegdown ${version} API">
+            <packageset dir="src" defaultexcludes="yes">
+                <include name="org/pegdown/**"/>
+                <exclude name="org/pegdown/ast/**"/>
+            </packageset>
             <classpath refid="compile.classpath"/>
             <link href="http://java.sun.com/javase/6/docs/api"/>
         </javadoc>
