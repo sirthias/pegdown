@@ -1,3 +1,9 @@
+Version 0.8.5.1 (2010-06-19)
+----------------------------
+- Fixed several problems, especially with regard to image links (thanks to Nick Ewing for the report)
+- Added support for double angle quotes to the QUOTES extension
+- Further increased test coverage
+
 Version 0.8.5.0 (2010-06-14)
 ----------------------------
 - Completely rewrote AST implementation improving maintainability and simplifying further extensions
