@@ -49,6 +49,9 @@ public class SimpleNode extends Node implements SimpleNodeTypes {
             case LINEBREAK:
                 p.print("<br/>").println();
                 return;
+            case NBSP:
+                p.print("&nbsp;");
+                return;
         }
 
         throw new IllegalStateException();

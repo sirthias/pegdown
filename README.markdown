@@ -8,8 +8,8 @@ _pegdown_ is nearly 100% compatible with the original Markdown specification and
 On top of the standard Markdown feature set _pegdown_ implements a number of extensions similar to what other popular Markdown processors offer.
 Currently _pegdown_ supports the following extensions over standard Markdown:
 
-* SMARTS: Beautifys apostrophes, dashes and ellipsises.
-* QUOTES: Beautifys single and double quotes.
+* SMARTS: Beautifys apostrophes, ellipsises ("..." and ". . .") and dashes ("--" and "---")
+* QUOTES: Beautifys single quotes, double quotes and double angle quotes (&laquo; and &raquo;)
 * SMARTYPANTS: Convenience extension enabling both, SMARTS and QUOTES, at once.
 * ABBREVIATIONS: Support for abbreviations in the way of [PHP Markdown Extra][].
 * HARDWRAPS: Enables alternative handling of newlines, see [Github-flavoured-Markdown][]

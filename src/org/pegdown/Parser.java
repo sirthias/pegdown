@@ -62,7 +62,8 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     //************* BLOCKS ****************
 
-    @SuppressSubnodes // enable parboiled parse-tree-less parsing
+    @SuppressSubnodes
+        // enable parboiled parse-tree-less parsing
     Rule Doc() {
         return Sequence(
                 set(new Node()),
@@ -284,6 +285,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     // special action running the inner parse for list node source
     // the innerSource can contain \u0001 boundary markers, which indicate, where to split the innerSource
     // and run independent inner parsing runs
+
     boolean setListItemNode(boolean tight, String innerSource) {
         int start = 0;
         int end = innerSource.indexOf('\u0001', start); // look for boundary markers
@@ -407,8 +409,8 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         return FirstOf(new ArrayBuilder<Rule>()
                 .add(Link(), Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Code(), RawHtml(),
                         Entity(), EscapedChar())
-                .addNonNulls(ext(QUOTES) ? new Rule[] {SingleQuoted(), DoubleQuoted()} : null)
-                .addNonNulls(ext(SMARTS) ? new Rule[] {Ellipsis(), EnDash(), EmDash(), Apostrophe()} : null)
+                .addNonNulls(ext(QUOTES) ? new Rule[] {SingleQuoted(), DoubleQuoted(), DoubleAngleQuoted()} : null)
+                .addNonNulls(ext(SMARTS) ? new Rule[] {Smarts()} : null)
                 .add(Symbol())
                 .get()
         );
@@ -445,6 +447,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     // This keeps the parser from getting bogged down on long strings of '*' or '_',
     // or strings of '*' or '_' with space on each side:
+
     Rule UlOrStarLine() {
         return Sequence(
                 FirstOf(CharLine('_'), CharLine('*')),
@@ -470,17 +473,22 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         );
     }
 
+    boolean debug(Context context, String chars) {
+        return true;
+    }
+
     Rule EmphOrStrong(String chars) {
         return Sequence(
                 EmphOrStrongOpen(chars),
                 set(new Node()),
-                ZeroOrMore(
+                debug(getContext(), chars),
+                OneOrMore(
                         Sequence(
                                 TestNot(EmphOrStrongClose(chars)), TestNot(Newline()),
                                 Inline(), UP2(value().addChild(prevValue()))
                         )
                 ),
-                EmphOrStrongClose(chars), value().addChild(prevValue())
+                EmphOrStrongClose(chars)
         );
     }
 
@@ -498,7 +506,6 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         return Sequence(
                 TestNot(Spacechar()),
                 TestNot(Newline()),
-                Inline(), set(),
                 chars.length() == 1 ? TestNot(EmphOrStrong(chars + chars)) : Empty(),
                 chars,
                 TestNot(Alphanumeric())
@@ -605,7 +612,12 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                 Sequence(
                         TestNot(Newline()),
                         ext(AUTOLINKS) ?
-                                TestNot(Sequence(Optional(CharSet(".,;:)}]")), FirstOf(Spacechar(), Newline()))) :
+                                TestNot(
+                                        FirstOf(
+                                                '>',
+                                                Sequence(Optional(CharSet(".,;:)}]")), FirstOf(Spacechar(), Newline()))
+                                        )
+                                ) :
                                 TestNot('>'),
                         Any()
                 )
@@ -618,8 +630,9 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         Var<ReferenceNode> ref = new Var<ReferenceNode>();
         return Sequence(
                 NonindentSpace(), Label(), set(ref.setAndGet(new ReferenceNode(prevValue()))),
-                ':', Sp(), RefSrc(ref),
-                Spn1(), Optional(RefTitle(ref)),
+                ':', Spn1(), RefSrc(ref),
+                Sp(), Optional(RefTitle(ref)),
+                Sp(), Newline(),
                 ZeroOrMore(BlankLine()),
                 references.add(ref.get())
         );
@@ -652,9 +665,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule RefTitle(char open, char close, Var<ReferenceNode> ref) {
         return Sequence(
                 open,
-                ZeroOrMore(
-                        Sequence(TestNot(Sequence(close, Sp(), FirstOf(Newline(), Eoi()))), TestNot(Newline()), Any())
-                ),
+                ZeroOrMore(Sequence(TestNot(Sequence(close, Sp(), Newline())), TestNot(Newline()), Any())),
                 ref.get().setTitle(prevText()),
                 close
         );
@@ -744,13 +755,8 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule Line() {
         StringVar line = new StringVar();
         return Sequence(
-                FirstOf(
-                        Sequence(
-                                ZeroOrMore(Sequence(TestNot('\r'), TestNot('\n'), Any())), line.set(prevText() + '\n'),
-                                Newline()
-                        ),
-                        Sequence(OneOrMore(Any()), line.set(prevText()), Eoi())
-                ),
+                ZeroOrMore(Sequence(TestNot('\r'), TestNot('\n'), Any())), line.set(prevText() + '\n'),
+                Newline(),
                 set(new Node(line.get()))
         );
     }
@@ -776,10 +782,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     //************* BASICS ****************
 
     Rule Str() {
-        return Sequence(
-                Sequence(NormalChar(), ZeroOrMore(Sequence(ZeroOrMore('_'), NormalChar()))),
-                set(new TextNode(prevText()))
-        );
+        return Sequence(OneOrMore(NormalChar()), set(new TextNode(prevText())));
     }
 
     Rule Space() {
@@ -815,7 +818,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     }
 
     Rule SpecialChar() {
-        String chars = "*_`&[]<!\\";
+        String chars = "*_`&[]<>!\\";
         if (ext(QUOTES)) {
             chars += "'\"";
         }
@@ -848,7 +851,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     }
 
     Rule Letter() {
-        return FirstOf(CharRange('A', 'Z'), CharRange('a', 'z'));
+        return FirstOf(CharRange('a', 'z'), CharRange('A', 'Z'));
     }
 
     Rule Digit() {
@@ -878,11 +881,19 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     Rule Table() {
         Var<TableNode> node = new Var<TableNode>();
+        Var<Boolean> header = new Var<Boolean>(false);
+        Var<Boolean> body = new Var<Boolean>(false);
         return Sequence(
                 set(node.setAndGet(new TableNode())),
-                ZeroOrMore(Sequence(TableRow(), node.get().addChild(((TableRowNode) prevValue()).asHeader()))),
+                ZeroOrMore(
+                        Sequence(
+                                TableRow(),
+                                node.get().addChild(((TableRowNode) prevValue()).asHeader()) && header.set(true)
+                        )
+                ),
                 TableDivider(node),
-                ZeroOrMore(Sequence(TableRow(), node.get().addChild(prevValue())))
+                ZeroOrMore(Sequence(TableRow(), node.get().addChild(prevValue()) && body.set(true))),
+                header.get() || body.get() // only accept as table if we have at least one header or at least one body
         );
     }
 
@@ -937,20 +948,13 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     //************* SMARTS ****************
 
-    Rule Apostrophe() {
-        return Sequence('\'', set(new SimpleNode(APOSTROPHE)));
-    }
-
-    Rule Ellipsis() {
-        return Sequence(FirstOf("...", ". . ."), set(new SimpleNode(ELLIPSIS)));
-    }
-
-    Rule EnDash() {
-        return Sequence('-', Test(Digit()), set(new SimpleNode(ENDASH)));
-    }
-
-    Rule EmDash() {
-        return Sequence(FirstOf("---", "--"), set(new SimpleNode(EMDASH)));
+    Rule Smarts() {
+        return FirstOf(
+                Sequence(FirstOf("...", ". . ."), set(new SimpleNode(ELLIPSIS))),
+                Sequence("---", set(new SimpleNode(EMDASH))),
+                Sequence("--", set(new SimpleNode(ENDASH))),
+                Sequence('\'', set(new SimpleNode(APOSTROPHE)))
+        );
     }
 
     //************* QUOTES ****************
@@ -958,7 +962,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule SingleQuoted() {
         return Sequence(
                 SingleQuoteStart(),
-                set(new SinqleQuotedNode()),
+                set(new QuotedNode("&lsquo;", "&rsquo;")),
                 OneOrMore(Sequence(TestNot(SingleQuoteEnd()), Inline(), UP2(value().addChild(prevValue())))),
                 SingleQuoteEnd()
         );
@@ -985,9 +989,24 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule DoubleQuoted() {
         return Sequence(
                 '"',
-                set(new DoubleQuotedNode()),
+                set(new QuotedNode("&ldquo;", "&rdquo;")),
                 OneOrMore(Sequence(TestNot('"'), Inline(), UP2(value().addChild(prevValue())))),
                 '"'
+        );
+    }
+
+    Rule DoubleAngleQuoted() {
+        return Sequence(
+                "<<",
+                set(new QuotedNode("&laquo;", "&raquo;")),
+                Optional(Sequence(Spacechar(), UP2(value().addChild(new SimpleNode(NBSP))))),
+                OneOrMore(
+                        FirstOf(
+                                Sequence(Space(), Test(">>"), UP3(value().addChild(new SimpleNode(NBSP)))),
+                                Sequence(TestNot(">>"), Inline(), UP3(value().addChild(prevValue())))
+                        )
+                ),
+                ">>"
         );
     }
 

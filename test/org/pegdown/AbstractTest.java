@@ -18,6 +18,7 @@
 
 package org.pegdown;
 
+import org.parboiled.google.base.Preconditions;
 import org.parboiled.support.ParsingResult;
 import org.parboiled.support.ToStringFormatter;
 import org.pegdown.ast.Node;
@@ -50,6 +51,7 @@ public abstract class AbstractTest {
     protected void test(String testName) {
         String markdown = FileUtils.readAllTextFromResource(testName + ".text");
         String actualHtml = getProcessor().markdownToHtml(markdown);
+        Preconditions.checkState(actualHtml != null, "Test not found");
 
         // debugging I: check the actual (untidied) HTML
         // assertEqualsMultiline(actualHtml, "");

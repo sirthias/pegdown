@@ -26,5 +26,6 @@ public interface SimpleNodeTypes {
     static int ENDASH = 4;
     static int HRULE = 5;
     static int LINEBREAK = 7;
+    static int NBSP = 8;
 
 }

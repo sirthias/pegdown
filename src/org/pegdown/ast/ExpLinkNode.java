@@ -29,7 +29,7 @@ public class ExpLinkNode extends Node {
     public ExpLinkNode(Node firstChild) {
         super(firstChild);
     }
-    
+
     public boolean setUrl(String url) {
         this.url = url;
         return true;
@@ -47,24 +47,28 @@ public class ExpLinkNode extends Node {
 
     @Override
     public void print(Printer printer) {
-        printer
-                .print('<')
-                .print(image ? "img src" : "a href")
-                .print("=\"")
-                .printEncoded(url)
-                .print('"');
-        if (title != null) {
+        if (image) {
             printer
-                    .print(' ')
-                    .print(image ? "alt" : "title")
-                    .print("=\"")
-                    .printEncoded(title)
+                    .print("<img src=\"")
+                    .printEncoded(url)
+                    .print("\"  alt=\"")
+                    .printEncoded(printer.printToString(this))
+                    .print("\"/>");
+        } else {
+            printer
+                    .print("<a href=\"")
+                    .printEncoded(url)
                     .print('"');
+            if (title != null) {
+                printer
+                        .print(" title=\"")
+                        .printEncoded(title)
+                        .print('"');
+            }
+            printer
+                    .print('>')
+                    .printChildren(this)
+                    .print("</a>");
         }
-        printer.print('>');
-
-        printer.printChildren(this);
-
-        printer.print("</").print(image ? "img" : "a").print('>');
     }
 }

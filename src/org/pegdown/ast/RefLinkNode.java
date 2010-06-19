@@ -49,7 +49,7 @@ public class RefLinkNode extends Node {
     @Override
     public void print(Printer printer) {
         String key = printer.printToString(referenceKey != null ? referenceKey : this);
-        ReferenceNode refNode = key != null ? printer.references.get(key) : null;
+        ReferenceNode refNode = key != null ? printer.references.get(key.toLowerCase()) : null;
         if (refNode == null) {
             // "fake" reference link
             printer.print('[').printChildren(this).print(']');
@@ -60,24 +60,29 @@ public class RefLinkNode extends Node {
             }
             return;
         }
-        printer
-                .print('<')
-                .print(image ? "img src" : "a href")
-                .print("=\"")
-                .printEncoded(refNode.getUrl())
-                .print('"');
-        if (refNode.getTitle() != null) {
+
+        if (image) {
             printer
-                    .print(' ')
-                    .print(image ? "alt" : "title")
-                    .print("=\"")
-                    .printEncoded(refNode.getTitle())
+                    .print("<img src=\"")
+                    .printEncoded(refNode.getUrl())
+                    .print("\"  alt=\"")
+                    .printEncoded(printer.printToString(this))
+                    .print("\"/>");
+        } else {
+            printer
+                    .print("<a href=\"")
+                    .printEncoded(refNode.getUrl())
                     .print('"');
+            if (refNode.getTitle() != null) {
+                printer
+                        .print(" title=\"")
+                        .printEncoded(refNode.getTitle())
+                        .print('"');
+            }
+            printer
+                    .print('>')
+                    .printChildren(this)
+                    .print("</a>");
         }
-        printer.print('>');
-
-        printer.printChildren(this);
-
-        printer.print("</").print(image ? "img" : "a").print('>');
     }
 }

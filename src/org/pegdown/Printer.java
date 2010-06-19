@@ -41,7 +41,7 @@ public class Printer {
 
     public Printer(List<ReferenceNode> references, List<AbbreviationNode> abbreviations) {
         for (ReferenceNode node : references) {
-            this.references.put(printToString(node), node);
+            this.references.put(printToString(node).toLowerCase(), node);
         }
 
         // only fill the abbreviation map after having build all keys, so we do not expand abbreviations too early

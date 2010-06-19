@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 
 public class Markdown103Test extends AbstractTest {
 
-    private final PegDownProcessor processor = new PegDownProcessor();
+    private PegDownProcessor processor;
 
     @Override
     protected PegDownProcessor getProcessor() {
@@ -30,7 +30,18 @@ public class Markdown103Test extends AbstractTest {
     }
 
     @Test
-    public void markdownTestSuite103() throws Exception {
+    public void testWithoutExtensions() throws Exception {
+        processor = new PegDownProcessor();
+        runTestSuite();
+    }
+
+    @Test(dependsOnMethods = "testWithoutExtensions")
+    public void testWithMostExtensions() throws Exception {
+        processor = new PegDownProcessor(Extensions.ALL & ~Extensions.SMARTYPANTS & ~Extensions.HARDWRAPS);
+        runTestSuite();
+    }
+
+    private void runTestSuite() {
         test("MarkdownTest103/Amps and angle encoding");
         test("MarkdownTest103/Auto links");
         test("MarkdownTest103/Backslash escapes");
@@ -55,5 +66,5 @@ public class Markdown103Test extends AbstractTest {
         test("MarkdownTest103/Markdown Documentation - Basics");
         test("MarkdownTest103/Markdown Documentation - Syntax");
     }
-    
+
 }

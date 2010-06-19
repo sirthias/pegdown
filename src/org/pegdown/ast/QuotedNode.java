@@ -20,11 +20,19 @@ package org.pegdown.ast;
 
 import org.pegdown.Printer;
 
-public class DoubleQuotedNode extends Node {
+public class QuotedNode extends Node {
+
+    private final String open;
+    private final String close;
+
+    public QuotedNode(String open, String close) {
+        this.open = open;
+        this.close = close;
+    }
 
     @Override
     public void print(Printer printer) {
-        printer.print("&ldquo;").printChildren(this).print("&rdquo;");
+        printer.print(open).printChildren(this).print(close);
     }
 
 }
