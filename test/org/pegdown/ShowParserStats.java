@@ -30,7 +30,7 @@ public class ShowParserStats {
         time(start);
 
         Rule rule = processor.getParser().Doc();
-        ParserStatistics<Object> stats = ParserStatistics.<Object>generateFor(rule);
+        ParserStatistics stats = ParserStatistics.generateFor(rule);
         System.out.println(stats);
         System.out.println(stats.printActionClassInstances());
     }

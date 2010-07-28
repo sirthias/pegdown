@@ -18,7 +18,11 @@
 
 package org.pegdown;
 
+import org.parboiled.ParseRunner;
+import org.parboiled.ProfilingParseRunner;
+import org.parboiled.common.Factory;
 import org.parboiled.google.base.Preconditions;
+import org.pegdown.ast.Node;
 
 public class Benchmark {
 
@@ -35,7 +39,7 @@ public class Benchmark {
         System.out.print("Creating 100 more parser instances... :");
         start = System.currentTimeMillis();
         for (int i = 0; i < 100; i++) {
-            processor = new PegDownProcessor();
+            new PegDownProcessor();
         }
         time(start);
 
@@ -47,6 +51,19 @@ public class Benchmark {
             processor.markdownToHtml(markdown);
         }
         time(start);
+
+        System.out.println();
+        System.out.println("Parsing benchmark once more with ProfileParseRunner...");
+        final ProfilingParseRunner<Node> profilingRunner = new ProfilingParseRunner<Node>(processor.getParser().Doc());
+        processor.getParser().parseRunnerFactory = new Factory<ParseRunner<Node>>() {
+            public ParseRunner<Node> create() {
+                return profilingRunner;
+            }
+        };
+        processor.markdownToHtml(markdown);
+        ProfilingParseRunner.Report report = profilingRunner.getReport();
+        System.out.println();
+        System.out.println(report.print());
     }
 
     private static long time(long start) {

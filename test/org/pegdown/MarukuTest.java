@@ -31,7 +31,7 @@ public class MarukuTest extends AbstractTest {
     }
 
     @Test
-    public void phpMarkdownExtraTests() throws Exception {
+    public void marukuTests() throws Exception {
         test("Maruku/abbreviations");
         test("Maruku/alt");
         test("Maruku/blank");

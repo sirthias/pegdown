@@ -82,7 +82,7 @@ public class PegDownProcessor {
 
         Printer printer = new Printer(parser.references, parser.abbreviations);
 
-        Node rootNode = result.parseTreeRoot.getValue();
+        Node rootNode = result.resultValue;
         rootNode.print(printer);
         printer.println();
 

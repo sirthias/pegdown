@@ -18,6 +18,7 @@
 
 package org.pegdown.ast;
 
+import org.parboiled.common.StringUtils;
 import org.parboiled.trees.MutableTreeNodeImpl;
 import org.parboiled.trees.TreeUtils;
 import org.pegdown.Printer;
@@ -61,7 +62,7 @@ public class Node extends MutableTreeNodeImpl<Node> {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(getClass().getSimpleName());
-        if (text != null) sb.append(" '").append(text).append('\'');
+        if (text != null) sb.append(" '").append(StringUtils.escape(text)).append('\'');
         return sb.toString();
     }
 

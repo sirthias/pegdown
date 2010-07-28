@@ -30,6 +30,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 
+import static org.parboiled.support.ParseTreeUtils.printNodeTree;
 import static org.parboiled.trees.GraphUtils.printTree;
 import static org.pegdown.PegDownProcessor.prepare;
 import static org.pegdown.TestUtils.assertEqualsMultiline;
@@ -60,7 +61,7 @@ public abstract class AbstractTest {
         // assertEqualsMultiline(printTree(getAstRoot(markdown), new ToStringFormatter<Node>()), "");
 
         // debugging III: check the parse tree
-        // assertEqualsMultiline(printNodeTree(result), "");
+        // assertEqualsMultiline(printNodeTree(getProcessor().getParser().parseRawBlock(prepare(markdown))), "");
 
         // tidy up html for fair equality test
         String expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html");
@@ -72,7 +73,7 @@ public abstract class AbstractTest {
 
     private Node getAstRoot(String markdown) {
         ParsingResult<Node> result = getProcessor().getParser().parseRawBlock(prepare(markdown));
-        return result.parseTreeRoot.getValue();
+        return result.resultValue;
     }
 
     private String tidy(String html) {
