@@ -1,3 +1,7 @@
+Version 0.8.5.2 (2010-08-12)
+----------------------------
+- Upgraded to parboiled 0.9.8.1 (~ 10% performance increase, slightly simplified parser)
+
 Version 0.8.5.1 (2010-06-19)
 ----------------------------
 - Fixed several problems, especially with regard to image links (thanks to Nick Ewing for the report)
