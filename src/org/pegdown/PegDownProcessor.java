@@ -27,6 +27,10 @@ import org.pegdown.ast.Node;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.parboiled.errors.ErrorUtils.printParseErrors;
+import static org.parboiled.support.ParseTreeUtils.printNodeTree;
+import static org.testng.Assert.fail;
+
 /**
  * A clean and lightweight Markdown-to-HTML filter based on a PEG parser implemented with parboiled.
  *
@@ -41,6 +45,7 @@ public class PegDownProcessor {
     public static int TABSTOP = 4;
 
     private final Parser parser;
+    private ParsingResult<Node> lastParsingResult;
 
     /**
      * Creates a new processor instance without any enabled extensions.
@@ -68,6 +73,10 @@ public class PegDownProcessor {
         return parser;
     }
 
+    ParsingResult<Node> getLastParsingResult() {
+        return lastParsingResult;
+    }
+
     /**
      * Converts the given markdown source to HTML.
      *
@@ -78,12 +87,18 @@ public class PegDownProcessor {
         parser.references.clear();
         parser.abbreviations.clear();
 
-        ParsingResult<Node> result = parser.parseRawBlock(prepare(markdownSource));
+        lastParsingResult = parser.parseRawBlock(prepare(markdownSource));
+        if (lastParsingResult.hasErrors()) {
+            throw new RuntimeException("Internal error during markdown parsing:\n--- ParseErrors ---\n" +
+                    printParseErrors(lastParsingResult)/* +
+                    "\n--- ParseTree ---\n" +
+                    printNodeTree(result)*/
+            );
+        }
 
         Printer printer = new Printer(parser.references, parser.abbreviations);
 
-        Node rootNode = result.resultValue;
-        rootNode.print(printer);
+        lastParsingResult.resultValue.print(printer);
         printer.println();
 
         return printer.getString();

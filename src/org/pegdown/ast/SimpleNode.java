@@ -32,16 +32,11 @@ public class SimpleNode extends Node implements SimpleNodeTypes {
     public void print(Printer p) {
         switch (type) {
             case APOSTROPHE:
-                p.print("&rsquo;");
-                return;
             case ELLIPSIS:
-                p.print("&hellip;");
-                return;
             case EMDASH:
-                p.print("&mdash;");
-                return;
             case ENDASH:
-                p.print("&ndash;");
+            case NBSP:
+                p.print(getText());
                 return;
             case HRULE:
                 p.printOnNL("<hr/>");
@@ -49,11 +44,29 @@ public class SimpleNode extends Node implements SimpleNodeTypes {
             case LINEBREAK:
                 p.print("<br/>").println();
                 return;
-            case NBSP:
-                p.print("&nbsp;");
-                return;
         }
 
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public String getText() {
+        switch (type) {
+            case APOSTROPHE:
+                return "&rsquo;";
+            case ELLIPSIS:
+                return "&hellip;";
+            case EMDASH:
+                return "&mdash;";
+            case ENDASH:
+                return "&ndash;";
+            case HRULE:
+                return "<hr/>";
+            case LINEBREAK:
+                return "<br/>";
+            case NBSP:
+                return "&nbsp;";
+        }
         throw new IllegalStateException();
     }
 

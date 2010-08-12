@@ -62,6 +62,7 @@ public class Node extends MutableTreeNodeImpl<Node> {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(getClass().getSimpleName());
+        String text = getText();
         if (text != null) sb.append(" '").append(StringUtils.escape(text)).append('\'');
         return sb.toString();
     }

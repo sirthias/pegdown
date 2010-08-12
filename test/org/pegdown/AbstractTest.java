@@ -34,6 +34,7 @@ import static org.parboiled.support.ParseTreeUtils.printNodeTree;
 import static org.parboiled.trees.GraphUtils.printTree;
 import static org.pegdown.PegDownProcessor.prepare;
 import static org.pegdown.TestUtils.assertEqualsMultiline;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public abstract class AbstractTest {
@@ -54,14 +55,14 @@ public abstract class AbstractTest {
         String actualHtml = getProcessor().markdownToHtml(markdown);
         Preconditions.checkState(actualHtml != null, "Test not found");
 
-        // debugging I: check the actual (untidied) HTML
-        // assertEqualsMultiline(actualHtml, "");
+        // debugging I: check the parse tree
+        // assertEquals(printNodeTree(getProcessor().getLastParsingResult()), "");
 
         // debugging II: check the AST
-        // assertEqualsMultiline(printTree(getAstRoot(markdown), new ToStringFormatter<Node>()), "");
-
-        // debugging III: check the parse tree
-        // assertEqualsMultiline(printNodeTree(getProcessor().getParser().parseRawBlock(prepare(markdown))), "");
+        // assertEquals(printTree(getProcessor().getLastParsingResult().resultValue, new ToStringFormatter<Node>()), "");
+        
+        // debugging III: check the actual (untidied) HTML
+        // assertEquals(actualHtml, "");
 
         // tidy up html for fair equality test
         String expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html");
@@ -69,11 +70,6 @@ public abstract class AbstractTest {
 
         actualHtml = tidy(actualHtml);
         assertEqualsMultiline(actualHtml, tidy(expectedUntidy));
-    }
-
-    private Node getAstRoot(String markdown) {
-        ParsingResult<Node> result = getProcessor().getParser().parseRawBlock(prepare(markdown));
-        return result.resultValue;
     }
 
     private String tidy(String html) {

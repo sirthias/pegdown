@@ -19,10 +19,7 @@
 package org.pegdown;
 
 import org.parboiled.*;
-import org.parboiled.annotations.BuildParseTree;
-import org.parboiled.annotations.Cached;
-import org.parboiled.annotations.DontSkipActionsInPredicates;
-import org.parboiled.annotations.SkipActionsInPredicates;
+import org.parboiled.annotations.*;
 import org.parboiled.common.ArrayBuilder;
 import org.parboiled.common.Factory;
 import org.parboiled.common.StringUtils;
