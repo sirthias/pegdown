@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 
 public class CustomPegDownTest extends AbstractTest {
 
-    private final PegDownProcessor processor = new PegDownProcessor(Extensions.ALL);
+    private PegDownProcessor processor = new PegDownProcessor(Extensions.ALL);
 
     @Override
     public PegDownProcessor getProcessor() {
@@ -40,6 +40,42 @@ public class CustomPegDownTest extends AbstractTest {
 
         test("pegdown/Smartypants");
         test("pegdown/Tables");
+    }
+
+    @Test(dependsOnMethods = "customPegDownTests")
+    public void testHTMLSuppression() throws Exception {
+        test("pegdown/HTML suppression", "" +
+                "<h1>HTML <b>SUPPRESSION</b></h1>\n" +
+                "<p>This is a paragraph containing a <strong>strong</strong> inline\n" +
+                "HTML element and:</p>\n" +
+                "<div>\n" +
+                "<p>an actual block of HTML!</p>\n" +
+                "</div>\n" +
+                "\n");
+
+        processor = new PegDownProcessor(Extensions.SUPPRESS_INLINE_HTML);
+        test("pegdown/HTML suppression", "" +
+                "<h1>HTML SUPPRESSION</h1>\n" +
+                "<p>This is a paragraph containing a strong inline HTML element\n" +
+                "and:</p>\n" +
+                "<div>\n" +
+                "<p>an actual block of HTML!</p>\n" +
+                "</div>\n" +
+                "\n");
+
+        processor = new PegDownProcessor(Extensions.SUPPRESS_HTML_BLOCKS);
+        test("pegdown/HTML suppression", "" +
+                "<h1>HTML <b>SUPPRESSION</b></h1>\n" +
+                "<p>This is a paragraph containing a <strong>strong</strong> inline\n" +
+                "HTML element and:</p>\n" +
+                "\n");
+
+        processor = new PegDownProcessor(Extensions.SUPPRESS_ALL_HTML);
+        test("pegdown/HTML suppression", "" +
+                "<h1>HTML SUPPRESSION</h1>\n" +
+                "<p>This is a paragraph containing a strong inline HTML element\n" +
+                "and:</p>\n" +
+                "\n");
     }
 
 }

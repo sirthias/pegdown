@@ -73,8 +73,23 @@ public interface Extensions {
     static final int TABLES = 0x20;
 
     /**
-     * All available extensions.
+     * All available extensions not including the HTML SUPPRESSION options.
      */
-    static final int ALL = 0xFF;
+    static final int ALL = 0x0000FFFF;
+
+    /**
+     * Suppresses HTML blocks. They will be accepted in the input but not be contained in the output.
+     */
+    static final int SUPPRESS_HTML_BLOCKS = 0x00010000;
+
+    /**
+     * Suppresses inline HTML tags. They will be accepted in the input but not be contained in the output.
+     */
+    static final int SUPPRESS_INLINE_HTML = 0x00020000;
+
+    /**
+     * Suppresses HTML blocks as well as inline HTML tags. Both will be accepted in the input but not be contained in the output.
+     */
+    static final int SUPPRESS_ALL_HTML = 0x00030000;
 
 }

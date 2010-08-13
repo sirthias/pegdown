@@ -51,6 +51,13 @@ public abstract class AbstractTest {
     protected abstract PegDownProcessor getProcessor();
 
     protected void test(String testName) {
+        String expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html");
+        assertNotNull(expectedUntidy);
+        
+        test(testName, tidy(expectedUntidy));
+    }
+
+    protected void test(String testName, String expectedOutput) {
         String markdown = FileUtils.readAllTextFromResource(testName + ".text");
         String actualHtml = getProcessor().markdownToHtml(markdown);
         Preconditions.checkState(actualHtml != null, "Test not found");
@@ -60,16 +67,13 @@ public abstract class AbstractTest {
 
         // debugging II: check the AST
         // assertEquals(printTree(getProcessor().getLastParsingResult().resultValue, new ToStringFormatter<Node>()), "");
-        
+
         // debugging III: check the actual (untidied) HTML
         // assertEquals(actualHtml, "");
 
         // tidy up html for fair equality test
-        String expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html");
-        assertNotNull(expectedUntidy);
-
         actualHtml = tidy(actualHtml);
-        assertEqualsMultiline(actualHtml, tidy(expectedUntidy));
+        assertEqualsMultiline(actualHtml, expectedOutput);
     }
 
     private String tidy(String html) {

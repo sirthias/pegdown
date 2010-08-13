@@ -19,17 +19,10 @@
 package org.pegdown;
 
 import org.parboiled.Parboiled;
-import org.parboiled.common.StringUtils;
-import org.parboiled.google.base.Preconditions;
 import org.parboiled.support.ParsingResult;
 import org.pegdown.ast.Node;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.parboiled.errors.ErrorUtils.printParseErrors;
-import static org.parboiled.support.ParseTreeUtils.printNodeTree;
-import static org.testng.Assert.fail;
 
 /**
  * A clean and lightweight Markdown-to-HTML filter based on a PEG parser implemented with parboiled.
@@ -105,6 +98,7 @@ public class PegDownProcessor {
     }
 
     // perform tabstop expansion and add two trailing newlines
+
     static String prepare(String markDownSource) {
         StringBuilder sb = new StringBuilder(markDownSource.length() + 2);
         int charsToTab = TABSTOP;

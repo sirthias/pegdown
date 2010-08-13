@@ -326,7 +326,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule HtmlBlock() {
         return Sequence(
                 FirstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()),
-                push(new HtmlBlockNode(match())),
+                push(new HtmlBlockNode(ext(SUPPRESS_HTML_BLOCKS) ? "" : match())),
                 OneOrMore(BlankLine())
         );
     }
@@ -384,7 +384,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     @MemoMismatches
     Rule Inline() {
         return FirstOf(new ArrayBuilder<Rule>()
-                .add(Link(), Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Code(), RawHtml(),
+                .add(Link(), Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Code(), InlineHtml(),
                         Entity(), EscapedChar())
                 .addNonNulls(ext(QUOTES) ? new Rule[] {SingleQuoted(), DoubleQuoted(), DoubleAngleQuoted()} : null)
                 .addNonNulls(ext(SMARTS) ? new Rule[] {Smarts()} : null)
@@ -673,8 +673,11 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     //************* RAW HTML ****************
 
-    Rule RawHtml() {
-        return Sequence(FirstOf(HtmlComment(), HtmlTag()), push(new TextNode(match())));
+    Rule InlineHtml() {
+        return Sequence(
+                FirstOf(HtmlComment(), HtmlTag()),
+                push(new TextNode(ext(SUPPRESS_INLINE_HTML) ? "" : match()))
+        );
     }
 
     Rule HtmlComment() {
