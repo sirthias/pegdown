@@ -318,7 +318,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     }
 
     Rule Bullet() {
-        return Sequence(TestNot(HorizontalRule()), NonindentSpace(), FirstOf("+*-"), OneOrMore(Spacechar()));
+        return Sequence(TestNot(HorizontalRule()), NonindentSpace(), AnyOf("+*-"), OneOrMore(Spacechar()));
     }
 
     //************* HTML BLOCK ****************
@@ -381,6 +381,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         );
     }
 
+    @MemoMismatches
     Rule Inline() {
         return FirstOf(new ArrayBuilder<Rule>()
                 .add(Link(), Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Code(), RawHtml(),
@@ -392,6 +393,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         );
     }
 
+    @MemoMismatches
     Rule Endline() {
         return FirstOf(LineBreak(), TerminalEndline(), NormalEndline());
     }
@@ -423,7 +425,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     // This keeps the parser from getting bogged down on long strings of '*' or '_',
     // or strings of '*' or '_' with space on each side:
-
+    @MemoMismatches
     Rule UlOrStarLine() {
         return Sequence(
                 FirstOf(CharLine('_'), CharLine('*')),
@@ -492,6 +494,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         );
     }
 
+    @MemoMismatches
     Rule Link() {
         return FirstOf(ExplicitLink(), ReferenceLink(), AutoLinkUrl(), AutoLinkEmail());
     }
@@ -533,8 +536,8 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                 Sequence(
                         OneOrMore(
                                 FirstOf(
-                                        Sequence('\\', FirstOf("()"), url.append(matchedChar())),
-                                        Sequence(TestNot(FirstOf("()>")), Nonspacechar(), url.append(matchedChar()))
+                                        Sequence('\\', AnyOf("()"), url.append(matchedChar())),
+                                        Sequence(TestNot(AnyOf("()>")), Nonspacechar(), url.append(matchedChar()))
                                 )
                         ),
                         node.get().setUrl(url.get())
@@ -568,7 +571,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule AutoLinkEmail() {
         return Sequence(
                 ext(AUTOLINKS) ? Optional('<') : Ch('<'),
-                Sequence(OneOrMore(FirstOf(Alphanumeric(), FirstOf("-+_."))), '@', AutoLinkEnd()),
+                Sequence(OneOrMore(FirstOf(Alphanumeric(), AnyOf("-+_."))), '@', AutoLinkEnd()),
                 push(new MailLinkNode(match())),
                 ext(AUTOLINKS) ? Optional('>') : Ch('>')
         );
@@ -581,7 +584,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                         TestNot(
                                 FirstOf(
                                         '>',
-                                        Sequence(Optional(FirstOf(".,;:)}]")), FirstOf(Spacechar(), Newline()))
+                                        Sequence(Optional(AnyOf(".,;:)}]")), FirstOf(Spacechar(), Newline()))
                                 )
                         ) :
                         TestNot('>'),
@@ -764,13 +767,14 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     }
 
     Rule Spacechar() {
-        return FirstOf(" \t");
+        return AnyOf(" \t");
     }
 
     Rule Nonspacechar() {
         return Sequence(TestNot(Spacechar()), TestNot(Newline()), ANY);
     }
 
+    @MemoMismatches
     Rule NormalChar() {
         return Sequence(TestNot(FirstOf(SpecialChar(), Spacechar(), Newline())), ANY);
     }
@@ -797,9 +801,10 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         if (ext(TABLES)) {
             chars += '|';
         }
-        return FirstOf(chars);
+        return AnyOf(chars);
     }
 
+    @MemoMismatches
     Rule Newline() {
         return FirstOf('\n', Sequence('\r', Optional('\n')));
     }
@@ -934,7 +939,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule SingleQuoteStart() {
         return Sequence(
                 '\'',
-                TestNot(FirstOf(")!],.;:-? \t\n")),
+                TestNot(AnyOf(")!],.;:-? \t\n")),
                 TestNot(
                         // do not convert the English apostrophes as in it's, I've, I'll, etc...
                         FirstOf('s', 't', "m", "ve", "ll", "re"),
