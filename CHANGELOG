@@ -1,3 +1,8 @@
+Version 0.8.5.3 (2010-08-13)
+----------------------------
+- Added HTML suppression options
+- Upgraded to parboiled 0.9.8.2 (another ~ 5% performance increase by using a few @MemoMismatches annotations)
+
 Version 0.8.5.2 (2010-08-12)
 ----------------------------
 - Upgraded to parboiled 0.9.8.1 (~ 10% performance increase, slightly simplified parser)

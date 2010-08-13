@@ -15,6 +15,8 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * HARDWRAPS: Enables alternative handling of newlines, see [Github-flavoured-Markdown][]
 * AUTOLINKS: Enables plain (undelimited) autolinks the way [Github-flavoured-Markdown][] implements them.
 * TABLES: Enables support for tables similar to [MultiMarkdown][] (which is in turn like the [PHP Markdown Extra][] tables, but with colspan support).
+* HTML BLOCK SUPPRESSION: Suppresses the output of HTML blocks.
+* INLINE HTML SUPPRESSION: Suppresses the output of inline HTML elements.
 
 Note: _pegdown_ differs from the original Markdown in that it ignores in-word emphasis as in
 
@@ -27,7 +29,7 @@ Installation
 ------------
 
 Download the JAR for latest version from the [download page][].  
-Additionally _pegdown_ requires the [parboiled][] JAR on the classpath (v0.9.8.1 or better).
+Additionally _pegdown_ requires the [parboiled][] JAR on the classpath (v0.9.8.2 or better).
 
 Documentation
 -------------
