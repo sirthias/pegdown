@@ -39,7 +39,6 @@ import java.util.List;
  */
 @SuppressWarnings({"InfiniteRecursion"})
 @SkipActionsInPredicates
-@BuildParseTree
 public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensions {
 
     static final String[] HTML_TAGS = new String[] {
