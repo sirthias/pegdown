@@ -19,10 +19,13 @@
 package org.pegdown;
 
 import org.parboiled.*;
+import org.parboiled.BaseParser;
 import org.parboiled.annotations.*;
 import org.parboiled.common.ArrayBuilder;
 import org.parboiled.common.Factory;
 import org.parboiled.common.StringUtils;
+import org.parboiled.parserunners.ParseRunner;
+import org.parboiled.parserunners.ReportingParseRunner;
 import org.parboiled.support.ParsingResult;
 import org.parboiled.support.StringVar;
 import org.parboiled.support.Var;
@@ -416,7 +419,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                                 Sequence(Line(), FirstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline())
                         )
                 ),
-                ext(HARDWRAPS) ? ToRule(push(new SimpleNode(LINEBREAK))) : ToRule(push(new TextNode("\n")))
+                ext(HARDWRAPS) ? toRule(push(new SimpleNode(LINEBREAK))) : toRule(push(new TextNode("\n")))
         );
     }
 

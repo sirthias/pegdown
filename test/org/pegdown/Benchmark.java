@@ -18,10 +18,10 @@
 
 package org.pegdown;
 
-import org.parboiled.ParseRunner;
-import org.parboiled.ProfilingParseRunner;
 import org.parboiled.common.Factory;
 import org.parboiled.google.base.Preconditions;
+import org.parboiled.parserunners.ParseRunner;
+import org.parboiled.parserunners.ProfilingParseRunner;
 import org.pegdown.ast.Node;
 
 public class Benchmark {
