@@ -1,3 +1,8 @@
+Version 0.8.5.4 (2010-10-04)
+----------------------------
+- Switched off superfluous parse tree building resulting in nearly doubled parsing performance
+- Upgraded to parboiled 0.9.9.0
+
 Version 0.8.5.3 (2010-08-13)
 ----------------------------
 - Added HTML suppression options
