@@ -18,8 +18,9 @@
 
 package org.pegdown;
 
-import org.parboiled.*;
 import org.parboiled.BaseParser;
+import org.parboiled.Context;
+import org.parboiled.Rule;
 import org.parboiled.annotations.*;
 import org.parboiled.common.ArrayBuilder;
 import org.parboiled.common.Factory;
@@ -30,7 +31,6 @@ import org.parboiled.support.ParsingResult;
 import org.parboiled.support.StringVar;
 import org.parboiled.support.Var;
 import org.pegdown.ast.*;
-import org.pegdown.ast.Node;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +42,7 @@ import java.util.List;
  */
 @SuppressWarnings({"InfiniteRecursion"})
 @SkipActionsInPredicates
+@BuildParseTree
 public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensions {
 
     static final String[] HTML_TAGS = new String[] {
@@ -289,7 +290,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
             Context<Node> context = getContext();
             Node node = parseRawBlock(sourcePart).resultValue;
             setContext(context);
-            peek().addChild(node.getChildren().get(0)); // skip one superfluous level
+            while(!node.getChildren().isEmpty()) peek().addChild(node.getChildren().get(0)); // skip one superfluous level
 
             if (end == innerSource.length()) return true;
             start = end + 1;
@@ -427,6 +428,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     // This keeps the parser from getting bogged down on long strings of '*' or '_',
     // or strings of '*' or '_' with space on each side:
+
     @MemoMismatches
     Rule UlOrStarLine() {
         return Sequence(

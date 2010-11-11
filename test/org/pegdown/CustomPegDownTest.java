@@ -34,6 +34,7 @@ public class CustomPegDownTest extends AbstractTest {
         test("pegdown/Abbreviations");
         test("pegdown/Autolinks");
         test("pegdown/Bug_in_0.8.5.1");
+        test("pegdown/Bug_in_0.8.5.4");
         test("pegdown/Linebreaks");
         test("pegdown/Parens_in_URL");
         test("pegdown/Quoted Blockquote");
