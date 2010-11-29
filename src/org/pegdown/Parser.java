@@ -42,7 +42,6 @@ import java.util.List;
  */
 @SuppressWarnings({"InfiniteRecursion"})
 @SkipActionsInPredicates
-@BuildParseTree
 public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensions {
 
     static final String[] HTML_TAGS = new String[] {
@@ -167,7 +166,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule SetextHeading() {
         return Sequence(
                 // test for successful setext heading before actually building it to save unnecessary node building
-                Test(OneOrMore(SetextInline()), Newline(), FirstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline()),
+                Test(OneOrMore(TestNot(Newline()), ANY), Newline(), FirstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline()),
                 FirstOf(SetextHeading1(), SetextHeading2())
         );
     }
