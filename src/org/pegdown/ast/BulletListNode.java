@@ -18,16 +18,10 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class BulletListNode extends Node {
 
     public BulletListNode(Node firstChild) {
         super(firstChild);
     }
-    @Override
-    public void print(Printer printer) {
-        printer.printOnNL("<ul>").indent(+2).printChildren(this).indent(-2).printOnNL("</ul>");
-    }
-
 }

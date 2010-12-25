@@ -18,8 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.parboiled.common.StringUtils;
-import org.pegdown.Printer;
 
 public class RefLinkNode extends Node {
 
@@ -31,7 +29,19 @@ public class RefLinkNode extends Node {
         super(firstChild);
     }
 
-    public boolean setSeparatorSpace(String separatorSpace) {
+    public boolean getImage() {
+		return image;
+	}
+
+	public String getSeparatorSpace() {
+		return separatorSpace;
+	}
+
+	public Node getReferenceKey() {
+		return referenceKey;
+	}
+
+	public boolean setSeparatorSpace(String separatorSpace) {
         this.separatorSpace = separatorSpace;
         return true;
     }
@@ -44,45 +54,5 @@ public class RefLinkNode extends Node {
     public RefLinkNode asImage() {
         image = true;
         return this;
-    }
-
-    @Override
-    public void print(Printer printer) {
-        String key = printer.printToString(referenceKey != null ? referenceKey : this);
-        ReferenceNode refNode = key != null ? printer.references.get(key.toLowerCase()) : null;
-        if (refNode == null) {
-            // "fake" reference link
-            printer.print('[').printChildren(this).print(']');
-            if (separatorSpace != null) {
-                printer.print(separatorSpace).print('[');
-                if (referenceKey != null) referenceKey.print(printer);
-                printer.print(']');
-            }
-            return;
-        }
-
-        if (image) {
-            printer
-                    .print("<img src=\"")
-                    .printEncoded(refNode.getUrl())
-                    .print("\"  alt=\"")
-                    .printEncoded(printer.printToString(this))
-                    .print("\"/>");
-        } else {
-            printer
-                    .print("<a href=\"")
-                    .printEncoded(refNode.getUrl())
-                    .print('"');
-            if (refNode.getTitle() != null) {
-                printer
-                        .print(" title=\"")
-                        .printEncoded(refNode.getTitle())
-                        .print('"');
-            }
-            printer
-                    .print('>')
-                    .printChildren(this)
-                    .print("</a>");
-        }
     }
 }

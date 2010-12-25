@@ -18,22 +18,10 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class AutoLinkNode extends Node {
 
     public AutoLinkNode(String text) {
         super(text);
     }
-
-    @Override
-    public void print(Printer printer) {
-        printer
-                .print("<a href=\"")
-                .printEncoded(getText())
-                .print("\">")
-                .printEncoded(getText())
-                .print("</a>");
-    }
-
 }

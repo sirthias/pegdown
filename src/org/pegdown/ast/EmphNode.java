@@ -18,17 +18,10 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class EmphNode extends Node {
 
     public EmphNode(Node firstChild) {
         super(firstChild);
     }
-
-    @Override
-    public void print(Printer printer) {
-        printer.print("<em>").printChildren(this).print("</em>");
-    }
-
 }

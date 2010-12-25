@@ -18,16 +18,10 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class MailLinkNode extends Node {
 
     public MailLinkNode(String text) {
         super(text);
-    }
-
-    @Override
-    public void print(Printer printer) {
-        printer.print("<a href=\"mailto:").printEncoded(getText()).print("\">").printEncoded(getText()).print("</a>");
     }
 }

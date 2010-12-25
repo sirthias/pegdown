@@ -18,18 +18,10 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class BlockQuoteNode extends Node {
 
     public BlockQuoteNode(Node firstChild) {
         super(firstChild);
-    }
-    @Override
-    public void print(Printer printer) {
-        printer
-                .printOnNL("<blockquote>")
-                .indent(+2).printChildren(this).indent(-2)
-                .printOnNL("</blockquote>");
     }
 }

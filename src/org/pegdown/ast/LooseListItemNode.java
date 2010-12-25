@@ -18,7 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class LooseListItemNode extends Node {
 
@@ -27,10 +26,5 @@ public class LooseListItemNode extends Node {
 
     public LooseListItemNode(Node firstChild) {
         super(firstChild);
-    }
-    
-    @Override
-    public void print(Printer printer) {
-        printer.printOnNL("<li>").indent(+2).printChildren(this).indent(-2).printOnNL("</li>");
     }
 }

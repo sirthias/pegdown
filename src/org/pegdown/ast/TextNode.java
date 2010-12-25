@@ -18,17 +18,10 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class TextNode extends Node {
 
     public TextNode(String text) {
         super(text);
     }
-
-    @Override
-    public void print(Printer printer) {
-        printer.print(getText());
-    }
-
 }

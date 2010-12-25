@@ -18,9 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
-
-import java.util.List;
 
 public class TableRowNode extends Node {
 
@@ -34,19 +31,4 @@ public class TableRowNode extends Node {
         header = true;
         return this;
     }
-
-    public void print(Printer printer, List<TableColumnNode> columns) {
-        printer.printOnNL("<tr>").indent(+2);
-        List<Node> children = getChildren();
-
-        int col = 0;
-        for (int i = 0, childrenSize = children.size(); i < childrenSize; i++) {
-            TableCellNode cell = (TableCellNode) children.get(i);
-            cell.print(printer, col < columns.size() ? columns.get(col) : null, header);
-            col += cell.getColSpan();
-        }
-
-        printer.indent(-2).printOnNL("</tr>");
-    }
-
 }

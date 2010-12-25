@@ -18,7 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class AbbreviationNode extends Node {
 
@@ -35,11 +34,6 @@ public class AbbreviationNode extends Node {
     public boolean setExpansion(Node expansion) {
         this.expansion = expansion;
         return true;
-    }
-
-    @Override
-    public void print(Printer printer) {
-        // abreviations are not printed
     }
 
 }

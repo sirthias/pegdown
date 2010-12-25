@@ -18,16 +18,10 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class HtmlBlockNode extends Node {
 
     public HtmlBlockNode(String text) {
         super(text);
-    }
-
-    @Override
-    public void print(Printer printer) {
-        printer.printOnNL(getText());
     }
 }

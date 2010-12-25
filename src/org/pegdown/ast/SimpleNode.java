@@ -18,7 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class SimpleNode extends Node implements SimpleNodeTypes {
 
@@ -28,26 +27,9 @@ public class SimpleNode extends Node implements SimpleNodeTypes {
         this.type = type;
     }
 
-    @Override
-    public void print(Printer p) {
-        switch (type) {
-            case APOSTROPHE:
-            case ELLIPSIS:
-            case EMDASH:
-            case ENDASH:
-            case NBSP:
-                p.print(getText());
-                return;
-            case HRULE:
-                p.printOnNL("<hr/>");
-                return;
-            case LINEBREAK:
-                p.print("<br/>").println();
-                return;
-        }
-
-        throw new IllegalStateException();
-    }
+    public int getType() {
+		return type;
+	}
 
     @Override
     public String getText() {

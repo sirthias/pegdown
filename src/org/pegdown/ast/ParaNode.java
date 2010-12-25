@@ -18,18 +18,10 @@
 
 package org.pegdown.ast;
 
-import org.parboiled.google.base.Preconditions;
-import org.pegdown.Printer;
-
-import java.util.List;
 
 public class ParaNode extends Node {
 
     public ParaNode(Node firstChild) {
         super(firstChild);
-    }
-    @Override
-    public void print(Printer printer) {
-        printer.printOnNL("<p>").printChildren(this).print("</p>");
     }
 }

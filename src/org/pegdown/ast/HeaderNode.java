@@ -19,7 +19,6 @@
 package org.pegdown.ast;
 
 import org.parboiled.google.base.Preconditions;
-import org.pegdown.Printer;
 
 public class HeaderNode extends Node {
 
@@ -35,10 +34,7 @@ public class HeaderNode extends Node {
         this.level = level;
     }
 
-    @Override
-    public void print(Printer printer) {
-        char c = (char) ((int)'0' + level);
-        printer.print("<h").print(c).print('>').printChildren(this).print("</h").print(c).print('>');
-    }
-
+    public int getLevel() {
+		return level;
+	}
 }
