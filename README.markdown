@@ -29,7 +29,7 @@ Installation
 ------------
 
 Download the JAR for latest version from the [download page][].  
-Additionally _pegdown_ requires the [parboiled][] JAR on the classpath (v0.9.9.0 or better).
+Additionally _pegdown_ requires the [parboiled][] JAR on the classpath (currently v0.9.9.0, upgrade to 0.10.0 pending).
 
 Documentation
 -------------
