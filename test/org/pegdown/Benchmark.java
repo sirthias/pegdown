@@ -19,7 +19,7 @@
 package org.pegdown;
 
 import org.parboiled.common.Factory;
-import org.parboiled.google.base.Preconditions;
+import org.parboiled.common.Preconditions;
 import org.parboiled.parserunners.ParseRunner;
 import org.parboiled.parserunners.ProfilingParseRunner;
 import org.pegdown.ast.Node;

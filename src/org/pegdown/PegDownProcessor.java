@@ -77,6 +77,17 @@ public class PegDownProcessor {
      * @return the HTML
      */
     public String markdownToHtml(String markdownSource) {
+        return markdownToHtml(markdownSource.toCharArray());
+    }
+        
+    
+    /**
+     * Converts the given markdown source to HTML.
+     *
+     * @param markdownSource the markdown source to convert
+     * @return the HTML
+     */
+    public String markdownToHtml(char[] markdownSource) {
         parser.references.clear();
         parser.abbreviations.clear();
 
@@ -90,19 +101,15 @@ public class PegDownProcessor {
         }
 
         Printer htmlVisitor = new Printer(parser.references, parser.abbreviations);
-
         htmlVisitor.visit(lastParsingResult.resultValue);
-
         return htmlVisitor.getString();
     }
 
     // perform tabstop expansion and add two trailing newlines
-
-    static String prepare(String markDownSource) {
-        StringBuilder sb = new StringBuilder(markDownSource.length() + 2);
+    static char[] prepare(char[] markDownSource) {
+        StringBuilder sb = new StringBuilder(markDownSource.length + 2);
         int charsToTab = TABSTOP;
-        for (int i = 0; i < markDownSource.length(); i++) {
-            char c = markDownSource.charAt(i);
+        for (char c : markDownSource) {
             switch (c) {
                 case '\t':
                     while (charsToTab > 0) {
@@ -122,7 +129,9 @@ public class PegDownProcessor {
         }
         sb.append('\n');
         sb.append('\n');
-        return sb.toString();
+        char[] buf = new char[sb.length()];
+        sb.getChars(0, buf.length, buf, 0);
+        return buf; 
     }
 
 }

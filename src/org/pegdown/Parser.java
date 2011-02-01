@@ -21,13 +21,17 @@ package org.pegdown;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
-import org.parboiled.annotations.*;
+import org.parboiled.annotations.Cached;
+import org.parboiled.annotations.DontSkipActionsInPredicates;
+import org.parboiled.annotations.MemoMismatches;
+import org.parboiled.annotations.SkipActionsInPredicates;
 import org.parboiled.common.ArrayBuilder;
 import org.parboiled.common.Factory;
 import org.parboiled.common.StringUtils;
 import org.parboiled.parserunners.ParseRunner;
 import org.parboiled.parserunners.ReportingParseRunner;
 import org.parboiled.support.ParsingResult;
+import org.parboiled.support.StringBuilderVar;
 import org.parboiled.support.StringVar;
 import org.parboiled.support.Var;
 import org.pegdown.ast.*;
@@ -40,7 +44,7 @@ import java.util.List;
  * Parboiled parser for the standard and extended markdown syntax.
  * Builds an Abstract Syntax Tree (AST) of {@link Node} objects.
  */
-@SuppressWarnings({"InfiniteRecursion"})
+@SuppressWarnings( {"InfiniteRecursion"})
 @SkipActionsInPredicates
 public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensions {
 
@@ -94,32 +98,33 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     }
 
     Rule BlockQuote() {
-        StringVar innerSource = new StringVar("");
+        StringBuilderVar inner = new StringBuilderVar();
         return Sequence(
                 OneOrMore(
-                        '>', Optional(' '), Line(), innerSource.append(pop().getText()),
+                        '>', Optional(' '), Line(), inner.append(pop().getText()),
                         ZeroOrMore(
                                 TestNot('>'),
                                 TestNot(BlankLine()),
-                                Line(), innerSource.append(pop().getText())
+                                Line(), inner.append(pop().getText())
                         ),
-                        ZeroOrMore(BlankLine(), innerSource.append("\n"))
+                        ZeroOrMore(BlankLine(), inner.append("\n"))
                 ),
-                // trigger a recursive parsing run on the innerSource we just built
+                // trigger a recursive parsing run on the inner source we just built
                 // and attach the root of the inner parses AST
-                push(new BlockQuoteNode(parseRawBlock(innerSource.get()).resultValue))
+                push(new BlockQuoteNode(parseRawBlock(inner.getChars()).resultValue))
         );
     }
 
     Rule Verbatim() {
-        StringVar text = new StringVar("");
-        StringVar temp = new StringVar("");
+        StringBuilderVar text = new StringBuilderVar();
+        StringBuilderVar temp = new StringBuilderVar();
         return Sequence(
                 OneOrMore(
                         ZeroOrMore(BlankLine(), temp.append("\n")),
-                        NonblankIndentedLine(), text.append(temp.getAndSet(""), pop().getText())
+                        NonblankIndentedLine(),
+                        text.appended(temp.getString()).append(pop().getText()) && temp.clearContents()
                 ),
-                push(new VerbatimNode(text.get()))
+                push(new VerbatimNode(text.getString()))
         );
     }
 
@@ -166,7 +171,8 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule SetextHeading() {
         return Sequence(
                 // test for successful setext heading before actually building it to save unnecessary node building
-                Test(OneOrMore(TestNot(Newline()), ANY), Newline(), FirstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline()),
+                Test(OneOrMore(TestNot(Newline()), ANY), Newline(), FirstOf(NOrMore('=', 3), NOrMore('-', 3)),
+                        Newline()),
                 FirstOf(SetextHeading1(), SetextHeading2())
         );
     }
@@ -231,7 +237,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         // we collect the markdown source for an item, run a complete parsing cycle on this inner source and attach
         // the root of the inner parsing results AST to the outer AST tree
 
-        StringVar innerSource = new StringVar();
+        StringBuilderVar inner = new StringBuilderVar();
         StringVar blanks = new StringVar("");
         StringVar extraNLs = new StringVar("");
 
@@ -239,7 +245,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                 FirstOf(Bullet(), Enumerator()),
 
                 ListBlock(),
-                innerSource.set(pop().getText()) &&
+                inner.set(new StringBuilder(pop().getText())) &&
                         (tight || extraNLs.set("\n\n")), // append extra \n\n to loose list items
 
                 ZeroOrMore(
@@ -254,13 +260,13 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                                 Indent(), ListBlock(),
 
                                 // append potentially captured blanks and the block text
-                                innerSource.append(blanks.getAndSet(""), pop().getText())
+                                inner.appended(blanks.getAndSet("")).append(pop().getText())
                         ),
                         extraNLs.set("\n\n") // if we have several lines always add two extra newlines
                 ),
 
                 // finally, after having built the complete source we run an inner parse and attach its AST root
-                setListItemNode(tight, innerSource.get() + extraNLs.get())
+                setListItemNode(tight, inner.appended(extraNLs.get()).getChars())
         );
     }
 
@@ -268,9 +274,9 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     // the innerSource can contain \u0001 boundary markers, which indicate, where to split the innerSource
     // and run independent inner parsing runs
 
-    boolean setListItemNode(boolean tight, String innerSource) {
+    boolean setListItemNode(boolean tight, char[] innerSource) {
         int start = 0;
-        int end = innerSource.indexOf('\u0001', start); // look for boundary markers
+        int end = indexOf(innerSource, '\u0001', start); // look for boundary markers
         if (end == -1) {
             // if we have just one part simply parse and set
             Context<Node> context = getContext();
@@ -282,27 +288,30 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         // ok, we have several parts, so create the root node and attach all part roots
         push(tight ? new TightListItemNode() : new LooseListItemNode());
         while (true) {
-            end = innerSource.indexOf('\u0001', start);
-            if (end == -1) end = innerSource.length();
-            String sourcePart = innerSource.substring(start, end);
+            end = indexOf(innerSource, '\u0001', start);
+            if (end == -1) end = innerSource.length;
+            char[] sourcePart = new char[end - start];
+            System.arraycopy(innerSource, start, sourcePart, 0, end - start);
 
             Context<Node> context = getContext();
             Node node = parseRawBlock(sourcePart).resultValue;
             setContext(context);
-            while(!node.getChildren().isEmpty()) peek().addChild(node.getChildren().get(0)); // skip one superfluous level
+            while (!node.getChildren().isEmpty()) {
+                peek().addChild(node.getChildren().get(0)); // skip one superfluous level
+            }
 
-            if (end == innerSource.length()) return true;
+            if (end == innerSource.length) return true;
             start = end + 1;
         }
     }
 
     Rule ListBlock() {
-        StringVar source = new StringVar();
+        StringBuilderVar source = new StringBuilderVar();
         return Sequence(
                 Line(),
-                source.set(pop().getText()),
+                source.set(new StringBuilder(pop().getText())),
                 ZeroOrMore(ListBlockLine(), source.append(pop().getText())),
-                push(new Node(source.get()))
+                push(new Node(source.getString()))
         );
     }
 
@@ -532,7 +541,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     @Cached
     Rule Source(Var<ExpLinkNode> node) {
-        StringVar url = new StringVar("");
+        StringBuilderVar url = new StringBuilderVar();
         return FirstOf(
                 Sequence('(', Source(node), ')'),
                 Sequence('<', Source(node), '>'),
@@ -543,7 +552,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                                         Sequence(TestNot(AnyOf("()>")), Nonspacechar(), url.append(matchedChar()))
                                 )
                         ),
-                        node.get().setUrl(url.get())
+                        node.get().setUrl(url.getString())
                 ),
                 EMPTY
         );
@@ -992,7 +1001,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         return Sequence(StringUtils.repeat(c, n), ZeroOrMore(c));
     }
 
-    ParsingResult<Node> parseRawBlock(String text) {
+    ParsingResult<Node> parseRawBlock(char[] text) {
         ParsingResult<Node> result = parseRunnerFactory.create().run(text);
         if (!result.matched) {
             String errorMessage = "Internal error";
@@ -1002,4 +1011,10 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         return result;
     }
 
+    private int indexOf(char[] array, char element, int start) {
+        for (int i = start; i < array.length; i++) {
+            if (array[i] == element) return i;
+        }
+        return -1;
+    }
 }

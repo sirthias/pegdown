@@ -18,7 +18,7 @@
 
 package org.pegdown.ast;
 
-import org.parboiled.google.base.Preconditions;
+import org.parboiled.common.Preconditions;
 
 public class HeaderNode extends Node {
 

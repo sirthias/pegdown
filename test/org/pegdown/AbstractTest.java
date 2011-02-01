@@ -18,7 +18,7 @@
 
 package org.pegdown;
 
-import org.parboiled.google.base.Preconditions;
+import org.parboiled.common.Preconditions;
 import org.parboiled.support.ParsingResult;
 import org.parboiled.support.ToStringFormatter;
 import org.pegdown.ast.Node;
