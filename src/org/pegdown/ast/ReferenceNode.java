@@ -18,7 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class ReferenceNode extends Node {
 
@@ -43,10 +42,4 @@ public class ReferenceNode extends Node {
         this.title = title;
         return true;
     }
-
-    @Override
-    public void print(Printer printer) {
-        // references are not printed
-    }
-
 }

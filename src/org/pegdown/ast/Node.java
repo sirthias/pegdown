@@ -21,9 +21,7 @@ package org.pegdown.ast;
 import org.parboiled.common.StringUtils;
 import org.parboiled.trees.MutableTreeNodeImpl;
 import org.parboiled.trees.TreeUtils;
-import org.pegdown.Printer;
-
-import java.util.List;
+import org.pegdown.Visitor;
 
 /**
  * Base class of all AST nodes classes. Provides the basic infrastructure and can be used directly as a simple
@@ -55,8 +53,8 @@ public class Node extends MutableTreeNodeImpl<Node> {
         return true;
     }
 
-    public void print(Printer printer) {
-        printer.printChildren(this);
+    public void accept(Visitor<Node> visitor) {
+        visitor.visit(this);
     }
 
     @Override

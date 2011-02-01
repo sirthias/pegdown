@@ -89,12 +89,11 @@ public class PegDownProcessor {
             );
         }
 
-        Printer printer = new Printer(parser.references, parser.abbreviations);
+        Printer htmlVisitor = new Printer(parser.references, parser.abbreviations);
 
-        lastParsingResult.resultValue.print(printer);
-        printer.println();
+        htmlVisitor.visit(lastParsingResult.resultValue);
 
-        return printer.getString();
+        return htmlVisitor.getString();
     }
 
     // perform tabstop expansion and add two trailing newlines

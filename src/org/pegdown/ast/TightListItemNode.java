@@ -18,7 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class TightListItemNode extends Node {
 
@@ -28,10 +27,4 @@ public class TightListItemNode extends Node {
     public TightListItemNode(Node firstChild) {
         super(firstChild);
     }
-
-    @Override
-    public void print(Printer printer) {
-        printer.printOnNL("<li>").printChildren(this).print("</li>");
-    }
-
 }

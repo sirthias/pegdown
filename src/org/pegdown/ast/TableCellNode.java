@@ -18,7 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class TableCellNode extends Node {
     private int colSpan;
@@ -29,16 +28,5 @@ public class TableCellNode extends Node {
     public boolean setColSpan(int colSpan) {
         this.colSpan = colSpan;
         return true;
-    }
-
-    public void print(Printer printer, TableColumnNode column, boolean header) {
-        printer.printOnNL(header ? "<th" : "<td");
-        if (column != null) column.printAlignment(printer);
-        if (colSpan > 1) printer.print(" colspan=\"").print(Integer.toString(colSpan)).print('"');
-        printer.print('>');
-
-        printer.indent(+2).printChildren(this).indent(-2);
-
-        printer.print(header ? "</th>" : "</td>");
     }
 }

@@ -18,17 +18,10 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class StrongNode extends Node {
 
     public StrongNode(Node firstChild) {
         super(firstChild);
     }
-
-    @Override
-    public void print(Printer printer) {
-        printer.print("<strong>").printChildren(this).print("</strong>");
-    }
-
 }

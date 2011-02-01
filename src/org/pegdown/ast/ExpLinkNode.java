@@ -18,7 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class ExpLinkNode extends Node {
 
@@ -45,30 +44,15 @@ public class ExpLinkNode extends Node {
         return this;
     }
 
-    @Override
-    public void print(Printer printer) {
-        if (image) {
-            printer
-                    .print("<img src=\"")
-                    .printEncoded(url)
-                    .print("\"  alt=\"")
-                    .printEncoded(printer.printToString(this))
-                    .print("\"/>");
-        } else {
-            printer
-                    .print("<a href=\"")
-                    .printEncoded(url)
-                    .print('"');
-            if (title != null) {
-                printer
-                        .print(" title=\"")
-                        .printEncoded(title)
-                        .print('"');
-            }
-            printer
-                    .print('>')
-                    .printChildren(this)
-                    .print("</a>");
-        }
-    }
+    public String getUrl() {
+		return url;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public boolean getImage() {
+		return image;
+	}
 }

@@ -18,16 +18,10 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class VerbatimNode extends Node {
 
     public VerbatimNode(String text) {
         super(text);
-    }
-
-    @Override
-    public void print(Printer printer) {
-        printer.printOnNL("<pre><code>").printEncoded(getText()).print("</code></pre>");
     }
 }

@@ -18,7 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class QuotedNode extends Node {
 
@@ -30,9 +29,11 @@ public class QuotedNode extends Node {
         this.close = close;
     }
 
-    @Override
-    public void print(Printer printer) {
-        printer.print(open).printChildren(this).print(close);
-    }
+    public String getOpen() {
+		return open;
+	}
 
+	public String getClose() {
+		return close;
+	}
 }

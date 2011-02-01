@@ -18,7 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class TableColumnNode extends Node {
 
@@ -33,22 +32,8 @@ public class TableColumnNode extends Node {
         alignment |= 0x02;
         return true;
     }
-    
-    public void printAlignment(Printer printer) {
-        switch (alignment) {
-            case 0x00:
-                return;
-            case 0x01:
-                printer.print(" align=\"left\"");
-                return;
-            case 0x02:
-                printer.print(" align=\"right\"");
-                return;
-            case 0x03:
-                printer.print(" align=\"center\"");
-                return;
-        }
-        throw new IllegalStateException();
-    }
 
+	public int getAlignment() {
+		return alignment;
+	}
 }

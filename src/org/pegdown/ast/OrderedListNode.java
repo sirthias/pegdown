@@ -18,16 +18,10 @@
 
 package org.pegdown.ast;
 
-import org.pegdown.Printer;
 
 public class OrderedListNode extends Node {
 
     public OrderedListNode(Node firstChild) {
         super(firstChild);
-    }
-    
-    @Override
-    public void print(Printer printer) {
-        printer.printOnNL("<ol>").indent(+2).printChildren(this).indent(-2).printOnNL("</ol>");
     }
 }
