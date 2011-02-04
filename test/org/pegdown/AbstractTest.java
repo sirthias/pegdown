@@ -18,10 +18,11 @@
 
 package org.pegdown;
 
+import org.parboiled.common.FileUtils;
 import org.parboiled.common.Preconditions;
-import org.parboiled.support.ParsingResult;
 import org.parboiled.support.ToStringFormatter;
 import org.pegdown.ast.Node;
+import org.pegdown.ast.RootNode;
 import org.testng.annotations.BeforeClass;
 import org.w3c.tidy.Tidy;
 
@@ -30,9 +31,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import static org.parboiled.support.ParseTreeUtils.printNodeTree;
 import static org.parboiled.trees.GraphUtils.printTree;
-import static org.pegdown.PegDownProcessor.prepare;
 import static org.pegdown.TestUtils.assertEqualsMultiline;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -53,20 +52,22 @@ public abstract class AbstractTest {
     protected void test(String testName) {
         String expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html");
         assertNotNull(expectedUntidy);
-        
+
         test(testName, tidy(expectedUntidy));
     }
 
     protected void test(String testName, String expectedOutput) {
-        String markdown = FileUtils.readAllTextFromResource(testName + ".text");
-        String actualHtml = getProcessor().markdownToHtml(markdown);
-        Preconditions.checkState(actualHtml != null, "Test not found");
+        char[] markdown = FileUtils.readAllCharsFromResource(testName + ".text");
+        Preconditions.checkState(markdown != null, "Test not found");
+        
+        RootNode astRoot = getProcessor().parseMarkdown(markdown);
+        String actualHtml = new ToHtmlSerializer().toHtml(astRoot);
 
         // debugging I: check the parse tree
         // assertEquals(printNodeTree(getProcessor().getLastParsingResult()), "");
 
         // debugging II: check the AST
-        // assertEquals(printTree(getProcessor().getLastParsingResult().resultValue, new ToStringFormatter<Node>()), "");
+        // assertEquals(printTree(astRoot, new ToStringFormatter<Node>()), "");
 
         // debugging III: check the actual (untidied) HTML
         // assertEquals(actualHtml, "");

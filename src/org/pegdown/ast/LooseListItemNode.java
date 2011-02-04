@@ -18,13 +18,17 @@
 
 package org.pegdown.ast;
 
-
-public class LooseListItemNode extends Node {
+public class LooseListItemNode extends SuperNode {
 
     public LooseListItemNode() {
     }
 
-    public LooseListItemNode(Node firstChild) {
-        super(firstChild);
+    public LooseListItemNode(Node child) {
+        super(child);
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

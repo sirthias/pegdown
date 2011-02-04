@@ -18,51 +18,8 @@
 
 package org.pegdown.ast;
 
-import org.parboiled.common.StringUtils;
-import org.parboiled.trees.MutableTreeNodeImpl;
-import org.parboiled.trees.TreeUtils;
-import org.pegdown.Visitor;
+import org.parboiled.trees.GraphNode;
 
-/**
- * Base class of all AST nodes classes. Provides the basic infrastructure and can be used directly as a simple
- * intermediate AST node without any special functionality (i.e. as a basic parent node).
- */
-public class Node extends MutableTreeNodeImpl<Node> {
-
-    private String text;
-
-    public Node() {
-    }
-
-    public Node(String text) {
-        this.text = text;
-    }
-
-    public Node(Node firstChild) {
-        addChild(firstChild);
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public boolean addChild(Node child) {
-        if (child != null) {
-            TreeUtils.addChild(this, child);
-        }
-        return true;
-    }
-
-    public void accept(Visitor<Node> visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(getClass().getSimpleName());
-        String text = getText();
-        if (text != null) sb.append(" '").append(StringUtils.escape(text)).append('\'');
-        return sb.toString();
-    }
-
+public interface Node extends GraphNode<Node> {
+    void accept(Visitor visitor);
 }

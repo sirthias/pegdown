@@ -20,13 +20,12 @@ package org.pegdown.ast;
 
 import org.parboiled.common.Preconditions;
 
-public class HeaderNode extends Node {
-
+public class HeaderNode extends SuperNode {
     private final int level;
 
-    public HeaderNode(int level, Node firstChild) {
-        this(level);
-        addChild(firstChild);
+    public HeaderNode(int level, Node child) {
+        super(child);
+        this.level = level; 
     }
 
     public HeaderNode(int level) {
@@ -37,4 +36,9 @@ public class HeaderNode extends Node {
     public int getLevel() {
 		return level;
 	}
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
 }

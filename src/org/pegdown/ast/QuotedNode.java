@@ -18,22 +18,21 @@
 
 package org.pegdown.ast;
 
+public class QuotedNode extends SuperNode {
+    public enum Type { DoubleAngle, Double, Single }
+    
+    private final Type type;
 
-public class QuotedNode extends Node {
-
-    private final String open;
-    private final String close;
-
-    public QuotedNode(String open, String close) {
-        this.open = open;
-        this.close = close;
+    public QuotedNode(Type type) {
+        this.type = type;
     }
 
-    public String getOpen() {
-		return open;
-	}
+    public Type getType() {
+        return type;
+    }
 
-	public String getClose() {
-		return close;
-	}
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
 }

@@ -18,38 +18,28 @@
 
 package org.pegdown.ast;
 
+import org.parboiled.common.ImmutableList;
 
-public class SimpleNode extends Node implements SimpleNodeTypes {
+import java.util.List;
 
-    private final int type;
+public class SimpleNode implements Node {
+    public enum Type { Apostrophe, Ellipsis, Emdash, Endash, HRule, Linebreak, Nbsp }
 
-    public SimpleNode(int type) {
+    private final Type type;
+
+    public SimpleNode(Type type) {
         this.type = type;
     }
 
-    public int getType() {
-		return type;
-	}
-
-    @Override
-    public String getText() {
-        switch (type) {
-            case APOSTROPHE:
-                return "&rsquo;";
-            case ELLIPSIS:
-                return "&hellip;";
-            case EMDASH:
-                return "&mdash;";
-            case ENDASH:
-                return "&ndash;";
-            case HRULE:
-                return "<hr/>";
-            case LINEBREAK:
-                return "<br/>";
-            case NBSP:
-                return "&nbsp;";
-        }
-        throw new IllegalStateException();
+    public Type getType() {
+        return type;
     }
 
+    public List<Node> getChildren() {
+        return ImmutableList.of();
+    }
+
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
 }

@@ -18,12 +18,8 @@
 
 package org.pegdown.ast;
 
-public class ParaNode extends SuperNode {
-
-    public ParaNode(Node child) {
-        super(child);
-    }
-
+public class TableBodyNode extends SuperNode {
+    
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

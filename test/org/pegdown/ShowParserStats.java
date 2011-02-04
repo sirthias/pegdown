@@ -18,6 +18,7 @@
 
 package org.pegdown;
 
+import org.parboiled.Parboiled;
 import org.parboiled.ParserStatistics;
 import org.parboiled.Rule;
 
@@ -29,8 +30,8 @@ public class ShowParserStats {
         PegDownProcessor processor = new PegDownProcessor();
         time(start);
 
-        Rule rule = processor.getParser().Doc();
-        ParserStatistics stats = ParserStatistics.generateFor(rule);
+        Parser parser = Parboiled.createParser(Parser.class, Extensions.NONE);
+        ParserStatistics stats = ParserStatistics.generateFor(parser.Root());
         System.out.println(stats);
         System.out.println(stats.printActionClassInstances());
     }

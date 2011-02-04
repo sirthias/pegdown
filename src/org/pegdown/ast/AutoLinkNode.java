@@ -18,10 +18,14 @@
 
 package org.pegdown.ast;
 
-
-public class AutoLinkNode extends Node {
+public class AutoLinkNode extends TextNode {
 
     public AutoLinkNode(String text) {
         super(text);
+    }
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

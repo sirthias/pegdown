@@ -18,10 +18,14 @@
 
 package org.pegdown.ast;
 
-
-public class CodeNode extends Node {
+public class CodeNode extends TextNode {
 
     public CodeNode(String text) {
         super(text);
+    }
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

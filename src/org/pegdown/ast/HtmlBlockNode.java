@@ -18,10 +18,14 @@
 
 package org.pegdown.ast;
 
-
-public class HtmlBlockNode extends Node {
+public class HtmlBlockNode extends TextNode {
 
     public HtmlBlockNode(String text) {
         super(text);
+    }
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

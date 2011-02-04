@@ -18,22 +18,24 @@
 
 package org.pegdown.ast;
 
+public class AbbreviationNode extends SuperNode {
+    private SuperNode expansion;
 
-public class AbbreviationNode extends Node {
-
-    private Node expansion;
-
-    public AbbreviationNode(Node firstChild) {
-        super(firstChild);
+    public AbbreviationNode(Node child) {
+        super(child);
     }
 
-    public Node getExpansion() {
+    public SuperNode getExpansion() {
         return expansion;
     }
 
-    public boolean setExpansion(Node expansion) {
+    public boolean setExpansion(SuperNode expansion) {
         this.expansion = expansion;
         return true;
     }
 
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
 }

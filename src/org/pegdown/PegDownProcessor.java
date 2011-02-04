@@ -19,26 +19,27 @@
 package org.pegdown;
 
 import org.parboiled.Parboiled;
+import org.parboiled.Rule;
+import org.parboiled.common.Factory;
+import org.parboiled.parserunners.ParseRunner;
+import org.parboiled.parserunners.ReportingParseRunner;
 import org.parboiled.support.ParsingResult;
 import org.pegdown.ast.Node;
+import org.pegdown.ast.RootNode;
 
 import static org.parboiled.errors.ErrorUtils.printParseErrors;
 
 /**
  * A clean and lightweight Markdown-to-HTML filter based on a PEG parser implemented with parboiled.
+ * Note: A PegDownProcessor is not thread-safe (since it internally reused the parboiled parser instance).
+ * If you need to process markdown source in parallel create one PegDownProcessor per thread!
  *
  * @see <a href="http://daringfireball.net/projects/markdown/">Markdown</a>
  * @see <a href="http://www.parboiled.org/">parboiled.org</a>
  */
 public class PegDownProcessor {
-
-    /**
-     * Defines the number of spaces in a tab, can be changed externally if required.
-     */
-    public static int TABSTOP = 4;
-
+    private final int tabstop;
     private final Parser parser;
-    private ParsingResult<Node> lastParsingResult;
 
     /**
      * Creates a new processor instance without any enabled extensions.
@@ -52,22 +53,19 @@ public class PegDownProcessor {
      *
      * @param options the flags of the extensions to enable as a bitmask
      */
-    @SuppressWarnings({"unchecked"})
     public PegDownProcessor(int options) {
-        parser = Parboiled.createParser(Parser.class, options);
+        this(options, 4);
     }
-
+    
     /**
-     * Returns the underlying parboiled parser object
+     * Creates a new processor instance with the given {@link org.pegdown.Extensions}.
      *
-     * @return the parser
+     * @param options the flags of the extensions to enable as a bitmask
+     * @param tabstop the number of spaces in a tab
      */
-    Parser getParser() {
-        return parser;
-    }
-
-    ParsingResult<Node> getLastParsingResult() {
-        return lastParsingResult;
+    public PegDownProcessor(int options, int tabstop) {
+        parser = Parboiled.createParser(Parser.class, options);
+        this.tabstop = tabstop;
     }
 
     /**
@@ -78,8 +76,7 @@ public class PegDownProcessor {
      */
     public String markdownToHtml(String markdownSource) {
         return markdownToHtml(markdownSource.toCharArray());
-    }
-        
+    }        
     
     /**
      * Converts the given markdown source to HTML.
@@ -88,27 +85,29 @@ public class PegDownProcessor {
      * @return the HTML
      */
     public String markdownToHtml(char[] markdownSource) {
-        parser.references.clear();
-        parser.abbreviations.clear();
-
-        lastParsingResult = parser.parseRawBlock(prepare(markdownSource));
-        if (lastParsingResult.hasErrors()) {
-            throw new RuntimeException("Internal error during markdown parsing:\n--- ParseErrors ---\n" +
-                    printParseErrors(lastParsingResult)/* +
-                    "\n--- ParseTree ---\n" +
-                    printNodeTree(result)*/
-            );
-        }
-
-        Printer htmlVisitor = new Printer(parser.references, parser.abbreviations);
-        htmlVisitor.visit(lastParsingResult.resultValue);
-        return htmlVisitor.getString();
+        RootNode astRoot = parseMarkdown(markdownSource);
+        return new ToHtmlSerializer().toHtml(astRoot);
+    }
+    
+    /**
+     * Parses the given markdown source and returns the root node of the generated Abstract Syntax Tree.
+     *
+     * @param markdownSource the markdown source to convert
+     * @return the AST root 
+     */
+    public RootNode parseMarkdown(char[] markdownSource) {
+        return parser.parse(prepareSource(markdownSource));
     }
 
-    // perform tabstop expansion and add two trailing newlines
-    static char[] prepare(char[] markDownSource) {
+    /**
+     * Performs tabstop expansion and adds two trailing newlines.
+     * 
+     * @param markDownSource the markdown source to process
+     * @return the processed source
+     */
+    public char[] prepareSource(char[] markDownSource) {
         StringBuilder sb = new StringBuilder(markDownSource.length + 2);
-        int charsToTab = TABSTOP;
+        int charsToTab = tabstop;
         for (char c : markDownSource) {
             switch (c) {
                 case '\t':
@@ -119,13 +118,13 @@ public class PegDownProcessor {
                     break;
                 case '\n':
                     sb.append('\n');
-                    charsToTab = TABSTOP;
+                    charsToTab = tabstop;
                     break;
                 default:
                     sb.append(c);
                     charsToTab--;
             }
-            if (charsToTab == 0) charsToTab = TABSTOP;
+            if (charsToTab == 0) charsToTab = tabstop;
         }
         sb.append('\n');
         sb.append('\n');
@@ -133,5 +132,4 @@ public class PegDownProcessor {
         sb.getChars(0, buf.length, buf, 0);
         return buf; 
     }
-
 }

@@ -66,5 +66,4 @@ public class Markdown103Test extends AbstractTest {
         test("MarkdownTest103/Markdown Documentation - Basics");
         test("MarkdownTest103/Markdown Documentation - Syntax");
     }
-
 }

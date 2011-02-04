@@ -18,14 +18,10 @@
 
 package org.pegdown.ast;
 
-public interface SimpleNodeTypes {
-
-    static int APOSTROPHE = 1;
-    static int ELLIPSIS = 2;
-    static int EMDASH = 3;
-    static int ENDASH = 4;
-    static int HRULE = 5;
-    static int LINEBREAK = 7;
-    static int NBSP = 8;
-
+public class TableHeaderNode extends SuperNode {
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
 }

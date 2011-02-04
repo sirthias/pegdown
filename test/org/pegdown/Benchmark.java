@@ -18,11 +18,15 @@
 
 package org.pegdown;
 
-import org.parboiled.common.Factory;
+import org.parboiled.Parboiled;
+import org.parboiled.Rule;
+import org.parboiled.common.FileUtils;
 import org.parboiled.common.Preconditions;
+import org.parboiled.common.Reference;
 import org.parboiled.parserunners.ParseRunner;
 import org.parboiled.parserunners.ProfilingParseRunner;
 import org.pegdown.ast.Node;
+import org.pegdown.ast.RootNode;
 
 public class Benchmark {
 
@@ -45,7 +49,7 @@ public class Benchmark {
 
         System.out.print("Parsing benchmark file 100 times... :");
         start = System.currentTimeMillis();
-        String markdown = FileUtils.readAllTextFromResource("benchmark.text");
+        char[] markdown = FileUtils.readAllCharsFromResource("benchmark.text");
         Preconditions.checkNotNull(markdown, "benchmark file not found");
         for (int i = 0; i < 100; i++) {
             processor.markdownToHtml(markdown);
@@ -54,14 +58,15 @@ public class Benchmark {
 
         System.out.println();
         System.out.println("Parsing benchmark once more with ProfileParseRunner...");
-        final ProfilingParseRunner<Node> profilingRunner = new ProfilingParseRunner<Node>(processor.getParser().Doc());
-        processor.getParser().parseRunnerFactory = new Factory<ParseRunner<Node>>() {
-            public ParseRunner<Node> create() {
-                return profilingRunner;
+        final Reference<ProfilingParseRunner<Node>> profilingRunner = new Reference<ProfilingParseRunner<Node>>();
+        Parser parser = Parboiled.createParser(Parser.class, Extensions.NONE, new Parser.ParseRunnerProvider() {
+            public ParseRunner<Node> get(Rule rule) {
+                if (profilingRunner.isNotSet()) profilingRunner.set(new ProfilingParseRunner<Node>(rule));
+                return profilingRunner.get();
             }
-        };
-        processor.markdownToHtml(markdown);
-        ProfilingParseRunner.Report report = profilingRunner.getReport();
+        });
+        parser.parse(processor.prepareSource(markdown));
+        ProfilingParseRunner.Report report = profilingRunner.get().getReport();
         System.out.println();
         System.out.println(report.print());
     }

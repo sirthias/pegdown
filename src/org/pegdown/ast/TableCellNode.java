@@ -18,15 +18,20 @@
 
 package org.pegdown.ast;
 
-
-public class TableCellNode extends Node {
+public class TableCellNode extends SuperNode {
     private int colSpan;
 
     public int getColSpan() {
         return colSpan;
     }
+    
     public boolean setColSpan(int colSpan) {
         this.colSpan = colSpan;
         return true;
+    }
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

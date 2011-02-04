@@ -18,10 +18,14 @@
 
 package org.pegdown.ast;
 
+public class OrderedListNode extends SuperNode {
 
-public class OrderedListNode extends Node {
+    public OrderedListNode(Node child) {
+        super(child);
+    }
 
-    public OrderedListNode(Node firstChild) {
-        super(firstChild);
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

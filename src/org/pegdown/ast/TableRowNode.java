@@ -18,17 +18,10 @@
 
 package org.pegdown.ast;
 
-
-public class TableRowNode extends Node {
-
-    private boolean header;
-
-    public boolean isHeader() {
-        return header;
-    }
+public class TableRowNode extends SuperNode {
     
-    public TableRowNode asHeader() {
-        header = true;
-        return this;
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

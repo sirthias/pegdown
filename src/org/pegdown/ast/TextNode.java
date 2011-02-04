@@ -18,10 +18,36 @@
 
 package org.pegdown.ast;
 
+import org.parboiled.common.ImmutableList;
+import org.parboiled.common.StringUtils;
 
-public class TextNode extends Node {
+import java.util.List;
+
+public class TextNode implements Node {
+    private final StringBuilder sb;
 
     public TextNode(String text) {
-        super(text);
+        this.sb = new StringBuilder(text);
+    }
+
+    public String getText() {
+        return sb.toString();
+    }
+    
+    public void append(String text) {
+        sb.append(text);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " '" + StringUtils.escape(getText()) + '\'';
+    }
+    
+    public List<Node> getChildren() {
+        return ImmutableList.of();
+    }
+    
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

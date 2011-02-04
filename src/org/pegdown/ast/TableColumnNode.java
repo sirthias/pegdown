@@ -18,22 +18,27 @@
 
 package org.pegdown.ast;
 
-
-public class TableColumnNode extends Node {
-
-    private int alignment;
-
+public class TableColumnNode extends SuperNode {
+    public enum Alignment { None, Left, Right, Center }
+    
+    private Alignment alignment = Alignment.None;
+    
     public boolean markLeftAligned() {
-        alignment |= 0x01;
+        alignment = alignment == Alignment.Right ? Alignment.Center : Alignment.Left;
         return true;
     }
 
     public boolean markRightAligned() {
-        alignment |= 0x02;
+        alignment = alignment == Alignment.Left ? Alignment.Center : Alignment.Right;
         return true;
     }
 
-	public int getAlignment() {
-		return alignment;
-	}
+    public Alignment getAlignment() {
+        return alignment;
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
 }

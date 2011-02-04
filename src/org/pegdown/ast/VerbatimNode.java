@@ -18,10 +18,14 @@
 
 package org.pegdown.ast;
 
-
-public class VerbatimNode extends Node {
+public class VerbatimNode extends TextNode {
 
     public VerbatimNode(String text) {
         super(text);
+    }
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

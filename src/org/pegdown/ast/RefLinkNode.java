@@ -18,41 +18,44 @@
 
 package org.pegdown.ast;
 
-
-public class RefLinkNode extends Node {
-
+public class RefLinkNode extends SuperNode {
     private String separatorSpace;
-    private Node referenceKey;
+    private SuperNode referenceKey;
     private boolean image;
 
-    public RefLinkNode(Node firstChild) {
-        super(firstChild);
+    public RefLinkNode(Node child) {
+        super(child);
+    }
+
+    public String getSeparatorSpace() {
+        return separatorSpace;
+    }
+
+    public boolean setSeparatorSpace(String separatorSpace) {
+        this.separatorSpace = separatorSpace;
+        return true;
+    }
+
+    public SuperNode getReferenceKey() {
+        return referenceKey;
+    }
+
+    public boolean setReferenceKey(SuperNode referenceKey) {
+        this.referenceKey = referenceKey;
+        return true;
     }
 
     public boolean getImage() {
 		return image;
 	}
 
-	public String getSeparatorSpace() {
-		return separatorSpace;
-	}
-
-	public Node getReferenceKey() {
-		return referenceKey;
-	}
-
-	public boolean setSeparatorSpace(String separatorSpace) {
-        this.separatorSpace = separatorSpace;
-        return true;
-    }
-
-    public boolean setReferenceKey(Node referenceKey) {
-        this.referenceKey = referenceKey;
-        return true;
-    }
-
     public RefLinkNode asImage() {
         image = true;
         return this;
+    }
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -18,10 +18,14 @@
 
 package org.pegdown.ast;
 
-
-public class MailLinkNode extends Node {
+public class MailLinkNode extends TextNode {
 
     public MailLinkNode(String text) {
         super(text);
+    }
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -26,7 +26,7 @@ import org.parboiled.annotations.DontSkipActionsInPredicates;
 import org.parboiled.annotations.MemoMismatches;
 import org.parboiled.annotations.SkipActionsInPredicates;
 import org.parboiled.common.ArrayBuilder;
-import org.parboiled.common.Factory;
+import org.parboiled.common.ImmutableList;
 import org.parboiled.common.StringUtils;
 import org.parboiled.parserunners.ParseRunner;
 import org.parboiled.parserunners.ReportingParseRunner;
@@ -35,10 +35,13 @@ import org.parboiled.support.StringBuilderVar;
 import org.parboiled.support.StringVar;
 import org.parboiled.support.Var;
 import org.pegdown.ast.*;
+import org.pegdown.ast.SimpleNode.Type;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.parboiled.errors.ErrorUtils.printParseErrors;
 
 /**
  * Parboiled parser for the standard and extended markdown syntax.
@@ -46,7 +49,11 @@ import java.util.List;
  */
 @SuppressWarnings( {"InfiniteRecursion"})
 @SkipActionsInPredicates
-public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensions {
+public class Parser extends BaseParser<Node> implements Extensions {
+
+    public interface ParseRunnerProvider {
+        ParseRunner<Node> get(Rule rule);
+    }
 
     static final String[] HTML_TAGS = new String[] {
             "address", "blockquote", "center", "dd", "dir", "div", "dl", "dt", "fieldset", "form", "frameset", "h1",
@@ -55,25 +62,43 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     };
 
     private final int options;
-    public Factory<ParseRunner<Node>> parseRunnerFactory = new Factory<ParseRunner<Node>>() {
-        public ParseRunner<Node> create() {
-            return new ReportingParseRunner<Node>(Doc());
-        }
-    };
-
-    final List<ReferenceNode> references = new ArrayList<ReferenceNode>();
+    private final ParseRunnerProvider parseRunnerProvider;
     final List<AbbreviationNode> abbreviations = new ArrayList<AbbreviationNode>();
+    final List<ReferenceNode> references = new ArrayList<ReferenceNode>();
 
     public Parser(Integer options) {
+        this(options, new Parser.ParseRunnerProvider() {
+            public ParseRunner<Node> get(Rule rule) {
+                return new ReportingParseRunner<Node>(rule);
+            }
+        });
+    }
+
+    public Parser(Integer options, ParseRunnerProvider parseRunnerProvider) {
         this.options = options;
+        this.parseRunnerProvider = parseRunnerProvider;
+    }
+
+    //************* public methods ********
+
+    public RootNode parse(char[] source) {
+        try {
+            RootNode root = parseInternal(source);
+            root.setAbbreviations(ImmutableList.copyOf(abbreviations));
+            root.setReferences(ImmutableList.copyOf(references));
+            return root;
+        } finally {
+            abbreviations.clear();
+            references.clear();
+        }
     }
 
     //************* BLOCKS ****************
 
-    Rule Doc() {
+    Rule Root() {
         return Sequence(
-                push(new Node()),
-                ZeroOrMore(Block(), peek(1).addChild(pop()))
+                push(new RootNode()),
+                ZeroOrMore(Block(), addAsChild())
         );
     }
 
@@ -101,17 +126,17 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         StringBuilderVar inner = new StringBuilderVar();
         return Sequence(
                 OneOrMore(
-                        '>', Optional(' '), Line(), inner.append(pop().getText()),
+                        '>', Optional(' '), Line(), inner.append(popAsTextNode().getText()),
                         ZeroOrMore(
                                 TestNot('>'),
                                 TestNot(BlankLine()),
-                                Line(), inner.append(pop().getText())
+                                Line(), inner.append(popAsTextNode().getText())
                         ),
                         ZeroOrMore(BlankLine(), inner.append("\n"))
                 ),
                 // trigger a recursive parsing run on the inner source we just built
                 // and attach the root of the inner parses AST
-                push(new BlockQuoteNode(parseRawBlock(inner.getChars()).resultValue))
+                push(new BlockQuoteNode(parseInternal(inner.getChars())))
         );
     }
 
@@ -122,7 +147,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                 OneOrMore(
                         ZeroOrMore(BlankLine(), temp.append("\n")),
                         NonblankIndentedLine(),
-                        text.appended(temp.getString()).append(pop().getText()) && temp.clearContents()
+                        text.appended(temp.getString()).append(popAsTextNode().getText()) && temp.clearContents()
                 ),
                 push(new VerbatimNode(text.getString()))
         );
@@ -133,7 +158,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                 NonindentSpace(),
                 FirstOf(HorizontalRule('*'), HorizontalRule('-'), HorizontalRule('_')),
                 Sp(), Newline(), OneOrMore(BlankLine()),
-                push(new SimpleNode(HRULE))
+                push(new SimpleNode(Type.HRule))
         );
     }
 
@@ -151,7 +176,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         return Sequence(
                 AtxStart(),
                 Sp(),
-                OneOrMore(AtxInline(), peek(1).addChild(pop())),
+                OneOrMore(AtxInline(), addAsChild()),
                 Optional(Sp(), ZeroOrMore('#'), Sp()),
                 Newline()
         );
@@ -180,7 +205,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule SetextHeading1() {
         return Sequence(
                 SetextInline(), push(new HeaderNode(1, pop())),
-                ZeroOrMore(SetextInline(), peek(1).addChild(pop())),
+                ZeroOrMore(SetextInline(), addAsChild()),
                 Newline(), NOrMore('=', 3), Newline()
         );
     }
@@ -188,7 +213,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule SetextHeading2() {
         return Sequence(
                 SetextInline(), push(new HeaderNode(2, pop())),
-                ZeroOrMore(SetextInline(), peek(1).addChild(pop())),
+                ZeroOrMore(SetextInline(), addAsChild()),
                 Newline(), NOrMore('-', 3), Newline()
         );
     }
@@ -217,8 +242,8 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     Rule ListTight() {
         return Sequence(
-                ListItem(true), push(new Node(pop())),
-                ZeroOrMore(ListItem(true), peek(1).addChild(pop())),
+                ListItem(true), push(new SuperNode(pop())),
+                ZeroOrMore(ListItem(true), addAsChild()),
                 ZeroOrMore(BlankLine()),
                 TestNot(FirstOf(Bullet(), Enumerator()))
         );
@@ -226,12 +251,13 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     Rule ListLoose() {
         return Sequence(
-                ListItem(false), push(new Node(pop())),
+                ListItem(false), push(new SuperNode(pop())),
                 ZeroOrMore(BlankLine()),
-                ZeroOrMore(ListItem(false), peek(1).addChild(pop()), ZeroOrMore(BlankLine()))
+                ZeroOrMore(ListItem(false), addAsChild(), ZeroOrMore(BlankLine()))
         );
     }
 
+    @Cached
     Rule ListItem(boolean tight) {
         // for a simpler parser design we use a recursive parsing strategy for list items:
         // we collect the markdown source for an item, run a complete parsing cycle on this inner source and attach
@@ -245,7 +271,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                 FirstOf(Bullet(), Enumerator()),
 
                 ListBlock(),
-                inner.set(new StringBuilder(pop().getText())) &&
+                inner.set(new StringBuilder(popAsTextNode().getText())) &&
                         (tight || extraNLs.set("\n\n")), // append extra \n\n to loose list items
 
                 ZeroOrMore(
@@ -260,7 +286,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                                 Indent(), ListBlock(),
 
                                 // append potentially captured blanks and the block text
-                                inner.appended(blanks.getAndSet("")).append(pop().getText())
+                                inner.appended(blanks.getAndSet("")).append(popAsTextNode().getText())
                         ),
                         extraNLs.set("\n\n") // if we have several lines always add two extra newlines
                 ),
@@ -280,13 +306,14 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         if (end == -1) {
             // if we have just one part simply parse and set
             Context<Node> context = getContext();
-            Node innerRoot = parseRawBlock(innerSource).resultValue;
+            Node innerRoot = parseInternal(innerSource);
             setContext(context); // we need to save and restore the context since we might be recursing
             return push(tight ? new TightListItemNode(innerRoot) : new LooseListItemNode(innerRoot));
         }
 
         // ok, we have several parts, so create the root node and attach all part roots
-        push(tight ? new TightListItemNode() : new LooseListItemNode());
+        SuperNode parent = tight ? new TightListItemNode() : new LooseListItemNode();
+        push(parent);
         while (true) {
             end = indexOf(innerSource, '\u0001', start);
             if (end == -1) end = innerSource.length;
@@ -294,11 +321,9 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
             System.arraycopy(innerSource, start, sourcePart, 0, end - start);
 
             Context<Node> context = getContext();
-            Node node = parseRawBlock(sourcePart).resultValue;
+            SuperNode node = parseInternal(sourcePart);
             setContext(context);
-            while (!node.getChildren().isEmpty()) {
-                peek().addChild(node.getChildren().get(0)); // skip one superfluous level
-            }
+            parent.getChildren().addAll(node.getChildren()); // skip one superfluous level
 
             if (end == innerSource.length) return true;
             start = end + 1;
@@ -309,9 +334,9 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         StringBuilderVar source = new StringBuilderVar();
         return Sequence(
                 Line(),
-                source.set(new StringBuilder(pop().getText())),
-                ZeroOrMore(ListBlockLine(), source.append(pop().getText())),
-                push(new Node(source.getString()))
+                source.set(new StringBuilder(popAsTextNode().getText())),
+                ZeroOrMore(ListBlockLine(), source.append(popAsTextNode().getText())),
+                push(new TextNode(source.getString()))
         );
     }
 
@@ -345,7 +370,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule HtmlBlockInTags() {
         StringVar tagName = new StringVar();
         return Sequence(
-                HtmlBlockOpen(), tagName.set(pop().getText()),
+                HtmlBlockOpen(), tagName.set(popAsTextNode().getText()),
                 ZeroOrMore(FirstOf(HtmlBlockInTags(), Sequence(TestNot(HtmlBlockClose(tagName)), ANY))),
                 HtmlBlockClose(tagName)
         );
@@ -371,7 +396,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                 OneOrMore(Alphanumeric()),
                 name.set(match().toLowerCase()) && // compare ignoring case
                         Arrays.binarySearch(HTML_TAGS, name.get()) >= 0 && // make sure its a defined tag
-                        push(new Node(name.get()))
+                        push(new TextNode(name.get()))
         );
     }
 
@@ -379,9 +404,9 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     Rule Inlines() {
         return Sequence(
-                InlineOrIntermediateEndline(), push(new Node(pop())),
-                ZeroOrMore(InlineOrIntermediateEndline(), peek(1).addChild(pop())),
-                Optional(Endline())
+                InlineOrIntermediateEndline(), push(new SuperNode(pop())),
+                ZeroOrMore(InlineOrIntermediateEndline(), addAsChild()),
+                Optional(Endline(), drop())
         );
     }
 
@@ -410,7 +435,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     }
 
     Rule LineBreak() {
-        return Sequence("  ", NormalEndline(), poke(new SimpleNode(LINEBREAK)));
+        return Sequence("  ", NormalEndline(), poke(new SimpleNode(Type.Linebreak)));
     }
 
     Rule TerminalEndline() {
@@ -428,7 +453,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                                 Sequence(Line(), FirstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline())
                         )
                 ),
-                ext(HARDWRAPS) ? toRule(push(new SimpleNode(LINEBREAK))) : toRule(push(new TextNode("\n")))
+                ext(HARDWRAPS) ? toRule(push(new SimpleNode(Type.Linebreak))) : toRule(push(new TextNode("\n")))
         );
     }
 
@@ -463,13 +488,14 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         );
     }
 
+    @Cached
     Rule EmphOrStrong(String chars) {
         return Sequence(
                 EmphOrStrongOpen(chars),
-                push(new Node()),
+                push(new SuperNode()),
                 OneOrMore(
                         TestNot(EmphOrStrongClose(chars)), TestNot(Newline()),
-                        Inline(), peek(1).addChild(pop())
+                        Inline(), addAsChild()
                 ),
                 EmphOrStrongClose(chars)
         );
@@ -529,7 +555,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                 FirstOf(
                         // regular reference link
                         Sequence(Spn1(), node.get().setSeparatorSpace(match()),
-                                Label(), node.get().setReferenceKey(pop())),
+                                Label(), node.get().setReferenceKey((SuperNode) pop())),
 
                         // implicit reference link
                         Sequence(Spn1(), node.get().setSeparatorSpace(match()), "[]"),
@@ -621,8 +647,8 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule Label() {
         return Sequence(
                 '[',
-                push(new Node()),
-                OneOrMore(TestNot(']'), Inline(), peek(1).addChild(pop())),
+                push(new SuperNode()),
+                OneOrMore(TestNot(']'), Inline(), addAsChild()),
                 ']'
         );
     }
@@ -740,7 +766,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         return Sequence(
                 ZeroOrMore(TestNot('\r'), TestNot('\n'), ANY), line.set(match() + '\n'),
                 Newline(),
-                push(new Node(line.get()))
+                push(new TextNode(line.get()))
         );
     }
 
@@ -858,7 +884,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     Rule AbbreviationText(Var<AbbreviationNode> node) {
         return Sequence(
-                node.get().setExpansion(new Node()),
+                node.get().setExpansion(new SuperNode()),
                 ZeroOrMore(TestNot(Newline()), Inline(), node.get().getExpansion().addChild(pop()))
         );
     }
@@ -867,17 +893,21 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     Rule Table() {
         Var<TableNode> node = new Var<TableNode>();
-        Var<Boolean> header = new Var<Boolean>(false);
-        Var<Boolean> body = new Var<Boolean>(false);
         return Sequence(
                 push(node.setAndGet(new TableNode())),
-                ZeroOrMore(
-                        TableRow(),
-                        node.get().addChild(((TableRowNode) pop()).asHeader()) && header.set(true)
-                ),
+                Optional(
+                        TableRow(), push(1, new TableHeaderNode()) && addAsChild(),
+                        ZeroOrMore(TableRow(), addAsChild()),
+                        addAsChild() // add the TableHeaderNode to the TableNode
+                ),  
                 TableDivider(node),
-                ZeroOrMore(TableRow(), node.get().addChild(pop()) && body.set(true)),
-                header.get() || body.get() // only accept as table if we have at least one header or at least one body
+                Optional(
+                        TableRow(), push(1, new TableBodyNode()) && addAsChild(),
+                        ZeroOrMore(TableRow(), addAsChild()),
+                        addAsChild() // add the TableHeaderNode to the TableNode
+                ),
+                !node.get().getChildren().isEmpty()
+                // only accept as table if we have at least one header or at least one body
         );
     }
 
@@ -909,8 +939,8 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
         return Sequence(
                 push(new TableRowNode()),
                 Optional('|', leadingPipe.set(Boolean.TRUE)),
-                OneOrMore(TableCell(), peek(1).addChild(pop())),
-                leadingPipe.get() || peek().getChildren().size() > 1 || match().endsWith("|"),
+                OneOrMore(TableCell(), addAsChild()),
+                leadingPipe.get() || ((TableRowNode) peek()).getChildren().size() > 1 || match().endsWith("|"),
                 Sp(), Newline()
         );
     }
@@ -922,7 +952,7 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
                 Optional(Sp(), TestNot('|'), TestNot(Newline())),
                 OneOrMore(
                         TestNot('|'), TestNot(Sp(), Newline()), Inline(),
-                        peek(1).addChild(pop()),
+                        addAsChild(),
                         Optional(Sp(), Test('|'), Test(Newline()))
                 ),
                 ZeroOrMore('|'), ((TableCellNode) peek()).setColSpan(Math.max(1, match().length()))
@@ -933,10 +963,10 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     Rule Smarts() {
         return FirstOf(
-                Sequence(FirstOf("...", ". . ."), push(new SimpleNode(ELLIPSIS))),
-                Sequence("---", push(new SimpleNode(EMDASH))),
-                Sequence("--", push(new SimpleNode(ENDASH))),
-                Sequence('\'', push(new SimpleNode(APOSTROPHE)))
+                Sequence(FirstOf("...", ". . ."), push(new SimpleNode(Type.Ellipsis))),
+                Sequence("---", push(new SimpleNode(Type.Emdash))),
+                Sequence("--", push(new SimpleNode(Type.Endash))),
+                Sequence('\'', push(new SimpleNode(Type.Apostrophe)))
         );
     }
 
@@ -945,8 +975,8 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule SingleQuoted() {
         return Sequence(
                 SingleQuoteStart(),
-                push(new QuotedNode("&lsquo;", "&rsquo;")),
-                OneOrMore(TestNot(SingleQuoteEnd()), Inline(), peek(1).addChild(pop())),
+                push(new QuotedNode(QuotedNode.Type.Single)),
+                OneOrMore(TestNot(SingleQuoteEnd()), Inline(), addAsChild()),
                 SingleQuoteEnd()
         );
     }
@@ -970,8 +1000,8 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule DoubleQuoted() {
         return Sequence(
                 '"',
-                push(new QuotedNode("&ldquo;", "&rdquo;")),
-                OneOrMore(TestNot('"'), Inline(), peek(1).addChild(pop())),
+                push(new QuotedNode(QuotedNode.Type.Double)),
+                OneOrMore(TestNot('"'), Inline(), addAsChild()),
                 '"'
         );
     }
@@ -979,12 +1009,13 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
     Rule DoubleAngleQuoted() {
         return Sequence(
                 "<<",
-                push(new QuotedNode("&laquo;", "&raquo;")),
-                Optional(Spacechar(), peek().addChild(new SimpleNode(NBSP))),
+                push(new QuotedNode(QuotedNode.Type.DoubleAngle)),
+                Optional(Spacechar(), push(new SimpleNode(Type.Nbsp)), addAsChild()),
                 OneOrMore(
                         FirstOf(
-                                Sequence(OneOrMore(Spacechar()), Test(">>"), peek().addChild(new SimpleNode(NBSP))),
-                                Sequence(TestNot(">>"), Inline(), peek(1).addChild(pop()))
+                                Sequence(OneOrMore(Spacechar()), Test(">>"), push(
+                                        new SimpleNode(Type.Nbsp)), addAsChild()),
+                                Sequence(TestNot(">>"), Inline(), addAsChild())
                         )
                 ),
                 ">>"
@@ -993,22 +1024,32 @@ public class Parser extends BaseParser<Node> implements SimpleNodeTypes, Extensi
 
     //************* HELPERS ****************
 
-    boolean ext(int extension) {
-        return (options & extension) > 0;
-    }
-
     Rule NOrMore(char c, int n) {
         return Sequence(StringUtils.repeat(c, n), ZeroOrMore(c));
     }
 
-    ParsingResult<Node> parseRawBlock(char[] text) {
-        ParsingResult<Node> result = parseRunnerFactory.create().run(text);
-        if (!result.matched) {
-            String errorMessage = "Internal error";
-            if (result.hasErrors()) errorMessage += ": " + result.parseErrors.get(0);
-            throw new RuntimeException(errorMessage);
+    boolean addAsChild() {
+        return ((SuperNode) peek(1)).addChild(pop());
+    }
+
+    TextNode popAsTextNode() {
+        return (TextNode) pop();
+    }
+
+    boolean ext(int extension) {
+        return (options & extension) > 0;
+    }
+
+    RootNode parseInternal(char[] source) {
+        ParsingResult<Node> result = parseRunnerProvider.get(Root()).run(source);
+        if (result.hasErrors()) {
+            throw new RuntimeException("Internal error during markdown parsing:\n--- ParseErrors ---\n" +
+                    printParseErrors(result)/* +
+                    "\n--- ParseTree ---\n" +
+                    printNodeTree(result)*/
+            );
         }
-        return result;
+        return (RootNode) result.resultValue;
     }
 
     private int indexOf(char[] array, char element, int start) {

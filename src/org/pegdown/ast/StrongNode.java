@@ -18,10 +18,14 @@
 
 package org.pegdown.ast;
 
-
-public class StrongNode extends Node {
+public class StrongNode extends SuperNode {
 
     public StrongNode(Node firstChild) {
         super(firstChild);
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

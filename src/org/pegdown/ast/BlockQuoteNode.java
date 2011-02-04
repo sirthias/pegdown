@@ -18,10 +18,14 @@
 
 package org.pegdown.ast;
 
+public class BlockQuoteNode extends SuperNode {
 
-public class BlockQuoteNode extends Node {
+    public BlockQuoteNode(Node child) {
+        super(child);
+    }
 
-    public BlockQuoteNode(Node firstChild) {
-        super(firstChild);
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -18,18 +18,18 @@
 
 package org.pegdown.ast;
 
-
-public class ReferenceNode extends Node {
-
+public class ReferenceNode extends SuperNode {
     private String url;
     private String title;
 
-    public ReferenceNode(Node firstChild) {
-        super(firstChild);
+    public ReferenceNode(Node child) {
+        super(child);
     }
+
     public String getUrl() {
         return url;
     }
+    
     public boolean setUrl(String url) {
         this.url = url;
         return true;
@@ -38,8 +38,14 @@ public class ReferenceNode extends Node {
     public String getTitle() {
         return title;
     }
+    
     public boolean setTitle(String title) {
         this.title = title;
         return true;
+    }
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

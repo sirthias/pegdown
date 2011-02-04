@@ -22,22 +22,30 @@ import org.parboiled.common.ImmutableList;
 
 import java.util.List;
 
-public class TableNode extends SuperNode {
-    private ImmutableList<TableColumnNode> columns = ImmutableList.of();
+import static org.parboiled.common.Preconditions.checkArgNotNull;
 
-    public List<TableColumnNode> getColumns() {
-        return columns;
+public class RootNode extends SuperNode {
+    private List<ReferenceNode> references = ImmutableList.of();
+    private List<AbbreviationNode> abbreviations = ImmutableList.of();
+
+    public List<ReferenceNode> getReferences() {
+        return references;
     }
 
-    public boolean addColumn(TableColumnNode columnNode) {
-        columns = columns.append(columnNode);
-        return true;
+    public void setReferences(List<ReferenceNode> references) {
+        checkArgNotNull(references, "references");
+        this.references = references;
     }
 
-    public boolean hasTwoOrMoreDividers() {
-        return columns != null && columns.size() > 1;
+    public List<AbbreviationNode> getAbbreviations() {
+        return abbreviations;
     }
-    
+
+    public void setAbbreviations(List<AbbreviationNode> abbreviations) {
+        checkArgNotNull(abbreviations, "abbreviations");
+        this.abbreviations = abbreviations;
+    }
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
