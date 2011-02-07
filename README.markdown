@@ -25,11 +25,15 @@ Note: _pegdown_ differs from the original Markdown in that it ignores in-word em
 
 Currently this "extension" cannot be switched off.
 
+
 Installation
 ------------
 
-Download the JAR for latest version from the [download page][].  
-Additionally _pegdown_ requires the [parboiled][] JAR on the classpath (currently v0.9.9.0, upgrade to 0.10.0 pending).
+You have two options:
+
+* Download the JAR for the latest version from the [download page][]. _pegdown_ has a dependency on [parboiled for Java][parboiled], version 0.11.0-SNAPSHOT or later (available from <http://scala-tools.org/repo-snapshots/org/parboiled/>. 
+* Point your Maven-compatible build tool to the repository at "**http://scala-tools.org/repo-releases**", group id "**org.pegdown**", artifact "**pegdown**". There may also be snapshot builds available at "**http://scala-tools.org/repo-snapshots**". 
+
 
 Documentation
 -------------
@@ -40,6 +44,7 @@ The first time you create a [PegDownProcessor][] it can take up to a few hundred
 
 See <http://sirthias.github.com/pegdown/api> for the pegdown API documation.
 
+
 Credits
 -------
 
@@ -47,7 +52,18 @@ Most of the underlying PEG grammar was developed by John MacFarlane and made ava
 tool [peg-markdown](http://github.com/jgm/peg-markdown).   
 
 
-Any feedback is, of course, very welcome.
+License
+-------
+
+_pegdown_ is licensed under [ASF2](http://www.apache.org/licenses/LICENSE-2.0).
+
+
+Patch Policy
+------------
+
+Feedback and contributions to the project, no matter what kind, are always very welcome.
+However, patches can only be accepted from their original author.
+Along with any patches, please state that the patch is your original work and that you license the work to the pegdown project under the project’s open source license.
   
    [Markdown]: http://daringfireball.net/projects/markdown/ "Main Markdown site"
    [parboiled]: http://www.parboiled.org
