@@ -1,5 +1,3 @@
-pegdown.iml
-.idea/
-build/
-classes/
-test-output/
+/.idea/workspace.xml
+target/
+reports/
