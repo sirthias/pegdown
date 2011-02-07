@@ -19,15 +19,7 @@
 package org.pegdown;
 
 import org.parboiled.Parboiled;
-import org.parboiled.Rule;
-import org.parboiled.common.Factory;
-import org.parboiled.parserunners.ParseRunner;
-import org.parboiled.parserunners.ReportingParseRunner;
-import org.parboiled.support.ParsingResult;
-import org.pegdown.ast.Node;
 import org.pegdown.ast.RootNode;
-
-import static org.parboiled.errors.ErrorUtils.printParseErrors;
 
 /**
  * A clean and lightweight Markdown-to-HTML filter based on a PEG parser implemented with parboiled.
@@ -56,7 +48,7 @@ public class PegDownProcessor {
     public PegDownProcessor(int options) {
         this(options, 4);
     }
-    
+
     /**
      * Creates a new processor instance with the given {@link org.pegdown.Extensions}.
      *
@@ -64,7 +56,17 @@ public class PegDownProcessor {
      * @param tabstop the number of spaces in a tab
      */
     public PegDownProcessor(int options, int tabstop) {
-        parser = Parboiled.createParser(Parser.class, options);
+        this(Parboiled.createParser(Parser.class, options), tabstop);
+    }
+
+    /**
+     * Creates a new processor instance using the given Parser and tabstop width.
+     *
+     * @param parser the parser instance to use
+     * @param tabstop the number of spaces in a tab 
+     */
+    public PegDownProcessor(Parser parser, int tabstop) {
+        this.parser = parser;
         this.tabstop = tabstop;
     }
 
@@ -76,8 +78,8 @@ public class PegDownProcessor {
      */
     public String markdownToHtml(String markdownSource) {
         return markdownToHtml(markdownSource.toCharArray());
-    }        
-    
+    }
+
     /**
      * Converts the given markdown source to HTML.
      *
@@ -88,12 +90,12 @@ public class PegDownProcessor {
         RootNode astRoot = parseMarkdown(markdownSource);
         return new ToHtmlSerializer().toHtml(astRoot);
     }
-    
+
     /**
      * Parses the given markdown source and returns the root node of the generated Abstract Syntax Tree.
      *
      * @param markdownSource the markdown source to convert
-     * @return the AST root 
+     * @return the AST root
      */
     public RootNode parseMarkdown(char[] markdownSource) {
         return parser.parse(prepareSource(markdownSource));
@@ -101,7 +103,7 @@ public class PegDownProcessor {
 
     /**
      * Performs tabstop expansion and adds two trailing newlines.
-     * 
+     *
      * @param markDownSource the markdown source to process
      * @return the processed source
      */
@@ -130,6 +132,6 @@ public class PegDownProcessor {
         sb.append('\n');
         char[] buf = new char[sb.length()];
         sb.getChars(0, buf.length, buf, 0);
-        return buf; 
+        return buf;
     }
 }
