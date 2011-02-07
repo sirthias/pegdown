@@ -38,12 +38,17 @@ public class CustomPegDownTest extends AbstractTest {
         test("pegdown/Linebreaks");
         test("pegdown/Parens_in_URL");
         test("pegdown/Quoted Blockquote");
-
         test("pegdown/Smartypants");
         test("pegdown/Tables");
     }
-
+    
     @Test(dependsOnMethods = "customPegDownTests")
+    public void customPegDownTests2() throws Exception {
+        processor = new PegDownProcessor(Extensions.NONE);
+        test("pegdown/Special Chars");
+    }
+
+    @Test(dependsOnMethods = "customPegDownTests2")
     public void testHTMLSuppression() throws Exception {
         test("pegdown/HTML suppression", "" +
                 "<h1>HTML <b>SUPPRESSION</b></h1>\n" +
