@@ -31,12 +31,12 @@ Installation
 
 You have two options:
 
-* Download the JAR for the latest version from the [download page][]. _pegdown_ has a dependency on [parboiled for Java][parboiled], version 0.11.0-SNAPSHOT or later (available from <http://scala-tools.org/repo-snapshots/org/parboiled/>. 
+* Download the JAR for the latest version from the [download page][]. _pegdown_ has a dependency on [parboiled for Java][parboiled], version 0.11.0-SNAPSHOT or later (available from <http://scala-tools.org/repo-snapshots/org/parboiled/>). 
 * Point your Maven-compatible build tool to the repository at "**http://scala-tools.org/repo-releases**", group id "**org.pegdown**", artifact "**pegdown**". There may also be snapshot builds available at "**http://scala-tools.org/repo-snapshots**". 
 
 
-Documentation
--------------
+Usage
+-----
 
 Using _pegdown_ is very simple: Just create a new instance of a [PegDownProcessor][] and call its markdownToHtml(String) method to convert the given Markdown source to an HTML string.
 
@@ -48,14 +48,14 @@ See <http://sirthias.github.com/pegdown/api> for the pegdown API documation.
 Credits
 -------
 
-Most of the underlying PEG grammar was developed by John MacFarlane and made available with his
+A large part of the underlying PEG grammar was developed by John MacFarlane and made available with his
 tool [peg-markdown](http://github.com/jgm/peg-markdown).   
 
 
 License
 -------
 
-_pegdown_ is licensed under [ASF2](http://www.apache.org/licenses/LICENSE-2.0).
+_pegdown_ is licensed under [APL 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 
 Patch Policy
