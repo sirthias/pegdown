@@ -27,6 +27,7 @@ import org.parboiled.annotations.MemoMismatches;
 import org.parboiled.annotations.SkipActionsInPredicates;
 import org.parboiled.common.ArrayBuilder;
 import org.parboiled.common.ImmutableList;
+import org.parboiled.common.Preconditions;
 import org.parboiled.common.StringUtils;
 import org.parboiled.parserunners.ParseRunner;
 import org.parboiled.parserunners.ReportingParseRunner;
@@ -882,8 +883,9 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule AbbreviationText(Var<AbbreviationNode> node) {
         return Sequence(
-                node.get().setExpansion(new SuperNode()),
-                ZeroOrMore(TestNot(Newline()), Inline(), node.get().getExpansion().addChild(pop()))
+                push(new SuperNode()),
+                ZeroOrMore(TestNot(Newline()), Inline(), addAsChild()),
+                node.get().setExpansion(pop())
         );
     }
 
@@ -938,7 +940,8 @@ public class Parser extends BaseParser<Node> implements Extensions {
                 push(new TableRowNode()),
                 Optional('|', leadingPipe.set(Boolean.TRUE)),
                 OneOrMore(TableCell(), addAsChild()),
-                leadingPipe.get() || ((TableRowNode) peek()).getChildren().size() > 1 || match().endsWith("|"),
+                leadingPipe.get() || peek().getChildren().size() > 1 ||
+                    getContext().getInputBuffer().charAt(matchEnd()-1) == '|',
                 Sp(), Newline()
         );
     }
@@ -953,7 +956,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
                         addAsChild(),
                         Optional(Sp(), Test('|'), Test(Newline()))
                 ),
-                ZeroOrMore('|'), ((TableCellNode) peek()).setColSpan(Math.max(1, match().length()))
+                ZeroOrMore('|'), ((TableCellNode) peek()).setColSpan(Math.max(1, matchLength()))
         );
     }
 
@@ -1027,7 +1030,19 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public boolean addAsChild() {
-        return ((SuperNode) peek(1)).addChild(pop());
+        SuperNode parent = (SuperNode) peek(1);
+        List<Node> children = parent.getChildren(); 
+        Node child = pop();
+        if (child.getClass() == TextNode.class && !children.isEmpty()) {
+            Node lastChild = children.get(children.size() - 1);
+            if (lastChild.getClass() == TextNode.class) {
+                // collapse peer TextNodes
+                ((TextNode)lastChild).append(((TextNode)child).getText());
+                return true;
+            }
+        }
+        children.add(child);
+        return true;
     }
 
     public TextNode popAsTextNode() {

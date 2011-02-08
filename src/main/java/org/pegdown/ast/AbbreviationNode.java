@@ -19,17 +19,17 @@
 package org.pegdown.ast;
 
 public class AbbreviationNode extends SuperNode {
-    private SuperNode expansion;
+    private Node expansion;
 
     public AbbreviationNode(Node child) {
         super(child);
     }
 
-    public SuperNode getExpansion() {
+    public Node getExpansion() {
         return expansion;
     }
 
-    public boolean setExpansion(SuperNode expansion) {
+    public boolean setExpansion(Node expansion) {
         this.expansion = expansion;
         return true;
     }

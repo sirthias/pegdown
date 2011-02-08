@@ -18,8 +18,6 @@
 
 package org.pegdown.ast;
 
-import org.parboiled.common.Preconditions;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,25 +28,11 @@ public class SuperNode implements Node {
     }
 
     public SuperNode(Node child) {
-        addChild(child);
+        children.add(child);
     }
 
     public List<Node> getChildren() {
         return children;
-    }
-
-    public boolean addChild(Node child) {
-        Preconditions.checkArgNotNull(child, "child");
-        if (child.getClass() == TextNode.class && !children.isEmpty()) {
-            Node lastChild = children.get(children.size() - 1);
-            if (lastChild.getClass() == TextNode.class) {
-                // collapse peer TextNodes
-                ((TextNode)lastChild).append(((TextNode)child).getText());
-                return true;
-            }
-        }
-        children.add(child);
-        return true;
     }
 
     public void accept(Visitor visitor) {
