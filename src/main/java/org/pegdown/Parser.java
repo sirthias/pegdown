@@ -174,7 +174,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public Rule AtxHeading() {
         return Sequence(
                 AtxStart(),
-                Sp(),
+                Optional(Sp()),
                 OneOrMore(AtxInline(), addAsChild()),
                 Optional(Sp(), ZeroOrMore('#'), Sp()),
                 Newline()
@@ -189,7 +189,11 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public Rule AtxInline() {
-        return Sequence(TestNot(Newline()), TestNot(Sp(), ZeroOrMore('#'), Sp(), Newline()), Inline());
+        return Sequence(
+                TestNot(Newline()),
+                TestNot(Optional(Sp()), ZeroOrMore('#'), Sp(), Newline()),
+                Inline()
+        );
     }
 
     public Rule SetextHeading() {
@@ -828,7 +832,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public Rule SpecialChar() {
-        String chars = "*_`&[]<>!\\";
+        String chars = "*_`&[]<>!#\\";
         if (ext(QUOTES)) {
             chars += "'\"";
         }
