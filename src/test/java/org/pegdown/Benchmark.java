@@ -55,7 +55,7 @@ public class Benchmark {
             processor.markdownToHtml(markdown);
         }
         time(start);
-
+        
         System.out.println();
         System.out.println("Parsing benchmark once more with ProfileParseRunner...");
         final Reference<ProfilingParseRunner<Node>> profilingRunner = new Reference<ProfilingParseRunner<Node>>();

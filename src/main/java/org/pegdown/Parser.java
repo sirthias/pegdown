@@ -27,7 +27,6 @@ import org.parboiled.annotations.MemoMismatches;
 import org.parboiled.annotations.SkipActionsInPredicates;
 import org.parboiled.common.ArrayBuilder;
 import org.parboiled.common.ImmutableList;
-import org.parboiled.common.Preconditions;
 import org.parboiled.common.StringUtils;
 import org.parboiled.parserunners.ParseRunner;
 import org.parboiled.parserunners.ReportingParseRunner;
@@ -55,12 +54,6 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public interface ParseRunnerProvider {
         ParseRunner<Node> get(Rule rule);
     }
-
-    static final String[] HTML_TAGS = new String[] {
-            "address", "blockquote", "center", "dd", "dir", "div", "dl", "dt", "fieldset", "form", "frameset", "h1",
-            "h2", "h3", "h4", "h5", "h6", "hr", "isindex", "li", "menu", "noframes", "noscript", "ol", "p", "pre",
-            "script", "style", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul"
-    };
 
     private final int options;
     private final ParseRunnerProvider parseRunnerProvider;
@@ -373,19 +366,33 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public Rule HtmlBlockInTags() {
         StringVar tagName = new StringVar();
         return Sequence(
-                HtmlBlockOpen(), tagName.set(popAsTextNode().getText()),
-                ZeroOrMore(FirstOf(HtmlBlockInTags(), Sequence(TestNot(HtmlBlockClose(tagName)), ANY))),
+                Test(HtmlBlockOpen(tagName)), // get the type of tag if there is one
+                HtmlTagBlock(tagName) // specifically match that type of tag
+        );
+    }
+
+    @Cached
+    public Rule HtmlTagBlock(StringVar tagName) {
+        return Sequence(
+                HtmlBlockOpen(tagName),
+                ZeroOrMore(
+                        FirstOf(
+                                HtmlTagBlock(tagName),
+                                Sequence(TestNot(HtmlBlockClose(tagName)), ANY)
+                        )
+                ),
                 HtmlBlockClose(tagName)
         );
     }
 
     public Rule HtmlBlockSelfClosing() {
-        return Sequence('<', Spn1(), DefinedHtmlTagName(), drop(), Spn1(), ZeroOrMore(HtmlAttribute()), Optional('/'),
+        StringVar tagName = new StringVar();
+        return Sequence('<', Spn1(), DefinedHtmlTagName(tagName), Spn1(), ZeroOrMore(HtmlAttribute()), Optional('/'),
                 Spn1(), '>');
     }
 
-    public Rule HtmlBlockOpen() {
-        return Sequence('<', Spn1(), DefinedHtmlTagName(), Spn1(), ZeroOrMore(HtmlAttribute()), '>');
+    public Rule HtmlBlockOpen(StringVar tagName) {
+        return Sequence('<', Spn1(), DefinedHtmlTagName(tagName), Spn1(), ZeroOrMore(HtmlAttribute()), '>');
     }
 
     @DontSkipActionsInPredicates
@@ -393,15 +400,24 @@ public class Parser extends BaseParser<Node> implements Extensions {
         return Sequence('<', Spn1(), '/', OneOrMore(Alphanumeric()), match().equals(tagName.get()), Spn1(), '>');
     }
 
-    public Rule DefinedHtmlTagName() {
-        StringVar name = new StringVar();
+    @Cached
+    public Rule DefinedHtmlTagName(StringVar tagName) {
         return Sequence(
                 OneOrMore(Alphanumeric()),
-                name.set(match().toLowerCase()) && // compare ignoring case
-                        Arrays.binarySearch(HTML_TAGS, name.get()) >= 0 && // make sure its a defined tag
-                        push(new TextNode(name.get()))
+                tagName.isSet() && match().equals(tagName.get()) ||
+                        tagName.isNotSet() && tagName.set(match().toLowerCase()) && isHtmlTag(tagName.get())
         );
     }
+
+    public boolean isHtmlTag(String string) {
+        return Arrays.binarySearch(HTML_TAGS, string) >= 0;
+    }
+
+    private static final String[] HTML_TAGS = new String[] {
+            "address", "blockquote", "center", "dd", "dir", "div", "dl", "dt", "fieldset", "form", "frameset", "h1",
+            "h2", "h3", "h4", "h5", "h6", "hr", "isindex", "li", "menu", "noframes", "noscript", "ol", "p", "pre",
+            "script", "style", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul"
+    };
 
     //************* INLINES ****************
 
@@ -903,7 +919,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
                         TableRow(), push(1, new TableHeaderNode()) && addAsChild(),
                         ZeroOrMore(TableRow(), addAsChild()),
                         addAsChild() // add the TableHeaderNode to the TableNode
-                ),  
+                ),
                 TableDivider(node),
                 Optional(
                         TableRow(), push(1, new TableBodyNode()) && addAsChild(),
@@ -945,7 +961,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
                 Optional('|', leadingPipe.set(Boolean.TRUE)),
                 OneOrMore(TableCell(), addAsChild()),
                 leadingPipe.get() || peek().getChildren().size() > 1 ||
-                    getContext().getInputBuffer().charAt(matchEnd()-1) == '|',
+                        getContext().getInputBuffer().charAt(matchEnd() - 1) == '|',
                 Sp(), Newline()
         );
     }
@@ -1035,13 +1051,13 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public boolean addAsChild() {
         SuperNode parent = (SuperNode) peek(1);
-        List<Node> children = parent.getChildren(); 
+        List<Node> children = parent.getChildren();
         Node child = pop();
         if (child.getClass() == TextNode.class && !children.isEmpty()) {
             Node lastChild = children.get(children.size() - 1);
             if (lastChild.getClass() == TextNode.class) {
                 // collapse peer TextNodes
-                ((TextNode)lastChild).append(((TextNode)child).getText());
+                ((TextNode) lastChild).append(((TextNode) child).getText());
                 return true;
             }
         }
