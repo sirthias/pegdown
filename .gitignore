@@ -1,5 +1,4 @@
 pegdown.iml
 /.idea
-/build
-/classes
-/test-output
+/target
+/reports
