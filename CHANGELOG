@@ -1,3 +1,15 @@
+Version 0.9.0 (2011-02-11)
+--------------------------
+- Completely overhauled and cleaned up general architecture, split out HTML serialization into AST visitor (thanks to Ravindar Reddy)
+- Fixed bug causing the disappearance of text elements in certain list constructs
+- Fixed excessive backtracking bug on parsing larger blocks of 'opening-tags-only' HTML
+- Fixed file name casing problem causing certain tests to fail on case-sensitive file systems
+- Implemented various smaller performance improvements resulting in a general speed-up by 10-30%
+- Opened up PegDownProcessor and Parser to custom extensions
+- Switched from Ant to Buildr, changed to maven-style project layout
+- Changed to 3 part version numbering in preparation of the coming semantic versioning compatibility (http://semver.org)
+- Upgraded to parboiled 0.10.1
+
 Version 0.8.5.4 (2010-10-04)
 ----------------------------
 - Switched off superfluous parse tree building resulting in nearly doubled parsing performance
