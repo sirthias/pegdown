@@ -299,6 +299,11 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         visitChildren(node);
     }
 
+    public void visit(Node node) {
+        // override this method for processing custom Node implementations
+        throw new RuntimeException("Not implemented");
+    }
+
     // Printer.Encoder
 
     public String encode(char c) {

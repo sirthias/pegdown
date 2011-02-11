@@ -49,4 +49,5 @@ public interface Visitor {
 
     void visit(TextNode node);
     void visit(SuperNode node);
+    void visit(Node node); // general catch all for custom Node implementations    
 }
