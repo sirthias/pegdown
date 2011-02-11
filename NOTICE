@@ -1,5 +1,5 @@
 pegdown
-Copyright (C) 2010 Mathias Doenitz
+Copyright (C) 2010-2011 Mathias Doenitz
 
 Based on peg-markdown - markdown in c, implemented using PEG grammar
 Copyright (c) 2008 John MacFarlane (http://github.com/jgm/peg-markdown)
