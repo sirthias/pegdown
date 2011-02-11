@@ -1,10 +1,10 @@
 repositories.remote << 'http://repo1.maven.org/maven2'
 repositories.remote << 'http://nexus.scala-tools.org/content/repositories/releases'
 
-repositories.release_to[:url] = 'http://nexus.scala-tools.org/content/repositories/releases'
-#repositories.release_to[:url] = 'http://nexus.scala-tools.org/content/repositories/snapshots'
+#repositories.release_to[:url] = 'http://nexus.scala-tools.org/content/repositories/releases'
+repositories.release_to[:url] = 'http://nexus.scala-tools.org/content/repositories/snapshots'
 
-VERSION_NUMBER = '0.9.0'
+VERSION_NUMBER = '0.10.0-SNAPSHOT'
 
 desc 'The pegdown project'
 define 'pegdown' do
