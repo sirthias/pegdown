@@ -1,8 +1,12 @@
 repositories.remote << 'http://repo1.maven.org/maven2'
-repositories.remote << 'http://nexus.scala-tools.org/content/repositories/releases'
+repositories.remote << 'http://scala-tools.org/repo-releases'
+repositories.remote << 'http://scala-tools.org/repo-snapshots'
 
-#repositories.release_to[:url] = 'http://nexus.scala-tools.org/content/repositories/releases'
-repositories.release_to[:url] = 'http://nexus.scala-tools.org/content/repositories/snapshots'
+#upload_to = 'scala_tools_releases'
+#upload_to = 'scala_tools_snapshots'
+upload_to = 'silo'
+url, user, pass = Buildr.settings.user[upload_to].values_at('url', 'user', 'pass')
+repositories.release_to = { :url => url, :username => user, :password => pass }
 
 VERSION_NUMBER = '0.10.0-SNAPSHOT'
 
