@@ -1,10 +1,14 @@
 repositories.remote << 'http://repo1.maven.org/maven2'
-repositories.remote << 'http://nexus.scala-tools.org/content/repositories/releases'
+repositories.remote << 'http://scala-tools.org/repo-releases'
+repositories.remote << 'http://scala-tools.org/repo-snapshots'
 
-repositories.release_to[:url] = 'http://nexus.scala-tools.org/content/repositories/releases'
-#repositories.release_to[:url] = 'http://nexus.scala-tools.org/content/repositories/snapshots'
+#upload_to = 'scala_tools_releases'
+#upload_to = 'scala_tools_snapshots'
+upload_to = 'silo'
+url, user, pass = Buildr.settings.user[upload_to].values_at('url', 'user', 'pass')
+repositories.release_to = { :url => url, :username => user, :password => pass }
 
-VERSION_NUMBER = '0.9.0'
+VERSION_NUMBER = '0.9.1'
 
 desc 'The pegdown project'
 define 'pegdown' do
@@ -28,7 +32,7 @@ define 'pegdown' do
   
   meta_inf << file('NOTICE')
 
-  PARBOILED_VERSION = '0.10.1'
+  PARBOILED_VERSION = '0.11.0'
   PARBOILED = [
           "org.parboiled:parboiled-core:jar:#{PARBOILED_VERSION}",
           "org.parboiled:parboiled-core:jar:sources:#{PARBOILED_VERSION}",
