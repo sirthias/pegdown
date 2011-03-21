@@ -32,7 +32,7 @@ Installation
 You have two options:
 
 * Download the JAR for the latest version from the [download page][].
-  _pegdown_ has a dependency on [parboiled for Java][parboiled], version 0.10.1 or later.
+  _pegdown_ has a dependency on [parboiled for Java][parboiled], version 0.11.0.
    
 * Point your Maven-compatible build tool to the repository at <http://scala-tools.org/repo-releases>,
   group id "**org.pegdown**", artifact "**pegdown**". There may also be snapshot builds available at <http://scala-tools.org/repo-snapshots>. 
