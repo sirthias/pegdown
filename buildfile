@@ -8,7 +8,7 @@ upload_to = 'silo'
 url, user, pass = Buildr.settings.user[upload_to].values_at('url', 'user', 'pass')
 repositories.release_to = { :url => url, :username => user, :password => pass }
 
-VERSION_NUMBER = '0.10.0-SNAPSHOT'
+VERSION_NUMBER = '0.9.1'
 
 desc 'The pegdown project'
 define 'pegdown' do
