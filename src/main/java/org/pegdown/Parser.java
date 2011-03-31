@@ -49,7 +49,7 @@ import static org.parboiled.errors.ErrorUtils.printParseErrors;
  */
 @SuppressWarnings( {"InfiniteRecursion"})
 @SkipActionsInPredicates
-public class Parser extends BaseParser<Node> implements Extensions {
+public class Parser extends BaseParser<Object> implements Extensions {
 
     public interface ParseRunnerProvider {
         ParseRunner<Node> get(Rule rule);
@@ -110,7 +110,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule Para() {
         return Sequence(
-                NonindentSpace(), Inlines(), push(new ParaNode(pop())), OneOrMore(BlankLine())
+                NonindentSpace(), Inlines(), push(new ParaNode(popAsNode())), OneOrMore(BlankLine())
         );
     }
 
@@ -200,7 +200,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule SetextHeading1() {
         return Sequence(
-                SetextInline(), push(new HeaderNode(1, pop())),
+                SetextInline(), push(new HeaderNode(1, popAsNode())),
                 ZeroOrMore(SetextInline(), addAsChild()),
                 Newline(), NOrMore('=', 3), Newline()
         );
@@ -208,7 +208,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule SetextHeading2() {
         return Sequence(
-                SetextInline(), push(new HeaderNode(2, pop())),
+                SetextInline(), push(new HeaderNode(2, popAsNode())),
                 ZeroOrMore(SetextInline(), addAsChild()),
                 Newline(), NOrMore('-', 3), Newline()
         );
@@ -224,7 +224,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
         return Sequence(
                 Test(Bullet()),
                 FirstOf(ListTight(), ListLoose()),
-                push(new BulletListNode(pop()))
+                push(new BulletListNode(popAsNode()))
         );
     }
 
@@ -232,13 +232,13 @@ public class Parser extends BaseParser<Node> implements Extensions {
         return Sequence(
                 Test(Enumerator()),
                 FirstOf(ListTight(), ListLoose()),
-                push(new OrderedListNode(pop()))
+                push(new OrderedListNode(popAsNode()))
         );
     }
 
     public Rule ListTight() {
         return Sequence(
-                ListItem(true), push(new SuperNode(pop())),
+                ListItem(true), push(new SuperNode(popAsNode())),
                 ZeroOrMore(ListItem(true), addAsChild()),
                 ZeroOrMore(BlankLine()),
                 TestNot(FirstOf(Bullet(), Enumerator()))
@@ -247,7 +247,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule ListLoose() {
         return Sequence(
-                ListItem(false), push(new SuperNode(pop())),
+                ListItem(false), push(new SuperNode(popAsNode())),
                 ZeroOrMore(BlankLine()),
                 ZeroOrMore(ListItem(false), addAsChild(), ZeroOrMore(BlankLine()))
         );
@@ -301,7 +301,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
         int end = indexOf(innerSource, '\u0001', start); // look for boundary markers
         if (end == -1) {
             // if we have just one part simply parse and set
-            Context<Node> context = getContext();
+            Context<Object> context = getContext();
             Node innerRoot = parseInternal(innerSource);
             setContext(context); // we need to save and restore the context since we might be recursing
             return push(tight ? new TightListItemNode(innerRoot) : new LooseListItemNode(innerRoot));
@@ -316,7 +316,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
             char[] sourcePart = new char[end - start];
             System.arraycopy(innerSource, start, sourcePart, 0, end - start);
 
-            Context<Node> context = getContext();
+            Context<Object> context = getContext();
             SuperNode node = parseInternal(sourcePart);
             setContext(context);
             parent.getChildren().addAll(node.getChildren()); // skip one superfluous level
@@ -423,7 +423,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule Inlines() {
         return Sequence(
-                InlineOrIntermediateEndline(), push(new SuperNode(pop())),
+                InlineOrIntermediateEndline(), push(new SuperNode(popAsNode())),
                 ZeroOrMore(InlineOrIntermediateEndline(), addAsChild()),
                 Optional(Endline(), drop())
         );
@@ -496,14 +496,14 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public Rule Emph() {
         return Sequence(
                 FirstOf(EmphOrStrong("*"), EmphOrStrong("_")),
-                push(new EmphNode(pop()))
+                push(new EmphNode(popAsNode()))
         );
     }
 
     public Rule Strong() {
         return Sequence(
                 FirstOf(EmphOrStrong("**"), EmphOrStrong("__")),
-                push(new StrongNode(pop()))
+                push(new StrongNode(popAsNode()))
         );
     }
 
@@ -559,7 +559,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public Rule ExplicitLink() {
         Var<ExpLinkNode> node = new Var<ExpLinkNode>();
         return Sequence(
-                Label(), push(node.setAndGet(new ExpLinkNode(pop()))),
+                Label(), push(node.setAndGet(new ExpLinkNode(popAsNode()))),
                 Spn1(), '(', Sp(),
                 Source(node),
                 Spn1(), Optional(Title(node)),
@@ -570,7 +570,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public Rule ReferenceLink() {
         Var<RefLinkNode> node = new Var<RefLinkNode>();
         return Sequence(
-                Label(), push(node.setAndGet(new RefLinkNode(pop()))),
+                Label(), push(node.setAndGet(new RefLinkNode(popAsNode()))),
                 FirstOf(
                         // regular reference link
                         Sequence(Spn1(), node.get().setSeparatorSpace(match()),
@@ -654,7 +654,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public Rule Reference() {
         Var<ReferenceNode> ref = new Var<ReferenceNode>();
         return Sequence(
-                NonindentSpace(), Label(), push(ref.setAndGet(new ReferenceNode(pop()))),
+                NonindentSpace(), Label(), push(ref.setAndGet(new ReferenceNode(popAsNode()))),
                 ':', Spn1(), RefSrc(ref),
                 Sp(), Optional(RefTitle(ref)),
                 Sp(), Newline(),
@@ -894,7 +894,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public Rule Abbreviation() {
         Var<AbbreviationNode> node = new Var<AbbreviationNode>();
         return Sequence(
-                NonindentSpace(), '*', Label(), push(node.setAndGet(new AbbreviationNode(pop()))),
+                NonindentSpace(), '*', Label(), push(node.setAndGet(new AbbreviationNode(popAsNode()))),
                 Sp(), ':', Sp(), AbbreviationText(node),
                 ZeroOrMore(BlankLine()),
                 abbreviations.add(node.get())
@@ -905,7 +905,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
         return Sequence(
                 push(new SuperNode()),
                 ZeroOrMore(TestNot(Newline()), Inline(), addAsChild()),
-                node.get().setExpansion(pop())
+                node.get().setExpansion(popAsNode())
         );
     }
 
@@ -960,7 +960,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
                 push(new TableRowNode()),
                 Optional('|', leadingPipe.set(Boolean.TRUE)),
                 OneOrMore(TableCell(), addAsChild()),
-                leadingPipe.get() || peek().getChildren().size() > 1 ||
+                leadingPipe.get() || ((Node)peek()).getChildren().size() > 1 ||
                         getContext().getInputBuffer().charAt(matchEnd() - 1) == '|',
                 Sp(), Newline()
         );
@@ -1052,7 +1052,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public boolean addAsChild() {
         SuperNode parent = (SuperNode) peek(1);
         List<Node> children = parent.getChildren();
-        Node child = pop();
+        Node child = popAsNode();
         if (child.getClass() == TextNode.class && !children.isEmpty()) {
             Node lastChild = children.get(children.size() - 1);
             if (lastChild.getClass() == TextNode.class) {
@@ -1063,6 +1063,10 @@ public class Parser extends BaseParser<Node> implements Extensions {
         }
         children.add(child);
         return true;
+    }
+    
+    public Node popAsNode() {
+        return (Node) pop();
     }
 
     public TextNode popAsTextNode() {
