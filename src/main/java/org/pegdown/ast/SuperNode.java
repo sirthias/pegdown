@@ -21,7 +21,7 @@ package org.pegdown.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SuperNode implements Node {
+public class SuperNode extends AbstractNode {
     private final List<Node> children = new ArrayList<Node>();
 
     public SuperNode() {
@@ -29,6 +29,10 @@ public class SuperNode implements Node {
 
     public SuperNode(Node child) {
         children.add(child);
+    }
+    
+    public SuperNode(List<Node> children) {
+        this.children.addAll(children);
     }
 
     public List<Node> getChildren() {

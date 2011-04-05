@@ -18,10 +18,12 @@
 
 package org.pegdown.ast;
 
+import java.util.List;
+
 public class StrongNode extends SuperNode {
 
-    public StrongNode(Node firstChild) {
-        super(firstChild);
+    public StrongNode(List<Node> children) {
+        super(children);
     }
 
     @Override

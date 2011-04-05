@@ -18,27 +18,13 @@
 
 package org.pegdown.ast;
 
-import org.parboiled.common.ImmutableList;
+public class InlineHtmlNode extends TextNode {
 
-import java.util.List;
-
-public class SimpleNode extends AbstractNode {
-    public enum Type { Apostrophe, Ellipsis, Emdash, Endash, HRule, Linebreak, Nbsp }
-
-    private final Type type;
-
-    public SimpleNode(Type type) {
-        this.type = type;
+    public InlineHtmlNode(String text) {
+        super(text);
     }
-
-    public Type getType() {
-        return type;
-    }
-
-    public List<Node> getChildren() {
-        return ImmutableList.of();
-    }
-
+    
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

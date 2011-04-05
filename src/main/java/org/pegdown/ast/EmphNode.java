@@ -18,10 +18,12 @@
 
 package org.pegdown.ast;
 
+import java.util.List;
+
 public class EmphNode extends SuperNode {
 
-    public EmphNode(Node child) {
-        super(child);
+    public EmphNode(List<Node> children) {
+        super(children);
     }
 
     @Override

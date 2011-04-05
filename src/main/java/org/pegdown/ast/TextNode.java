@@ -23,7 +23,7 @@ import org.parboiled.common.StringUtils;
 
 import java.util.List;
 
-public class TextNode implements Node {
+public class TextNode extends AbstractNode {
     private final StringBuilder sb;
 
     public TextNode(String text) {

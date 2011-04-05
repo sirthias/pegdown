@@ -30,8 +30,8 @@ import org.pegdown.ast.RootNode;
  * @see <a href="http://www.parboiled.org/">parboiled.org</a>
  */
 public class PegDownProcessor {
-    private final int tabstop;
-    private final Parser parser;
+    public final int tabstop;
+    public final Parser parser;
 
     /**
      * Creates a new processor instance without any enabled extensions.

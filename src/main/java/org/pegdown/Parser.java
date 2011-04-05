@@ -21,10 +21,7 @@ package org.pegdown;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
-import org.parboiled.annotations.Cached;
-import org.parboiled.annotations.DontSkipActionsInPredicates;
-import org.parboiled.annotations.MemoMismatches;
-import org.parboiled.annotations.SkipActionsInPredicates;
+import org.parboiled.annotations.*;
 import org.parboiled.common.ArrayBuilder;
 import org.parboiled.common.ImmutableList;
 import org.parboiled.common.StringUtils;
@@ -224,7 +221,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 Test(Bullet()),
                 FirstOf(ListTight(), ListLoose()),
-                push(new BulletListNode(popAsNode()))
+                push(new BulletListNode(popAsNode().getChildren()))
         );
     }
 
@@ -232,7 +229,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 Test(Enumerator()),
                 FirstOf(ListTight(), ListLoose()),
-                push(new OrderedListNode(popAsNode()))
+                push(new OrderedListNode(popAsNode().getChildren()))
         );
     }
 
@@ -294,7 +291,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     // special action running the inner parse for list node source
     // the innerSource can contain \u0001 boundary markers, which indicate, where to split the innerSource
-    // and run independent inner parsing runs
+    // and run independent inner parsings
 
     boolean setListItemNode(boolean tight, char[] innerSource) {
         int start = 0;
@@ -478,11 +475,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     //************* EMPHASIS / STRONG ****************
 
-    // This keeps the parser from getting bogged down on long strings of '*' or '_',
-    // or strings of '*' or '_' with space on each side:
-
     @MemoMismatches
     public Rule UlOrStarLine() {
+        // This keeps the parser from getting bogged down on long strings of '*' or '_',
+        // or strings of '*' or '_' with space on each side:
         return Sequence(
                 FirstOf(CharLine('_'), CharLine('*')),
                 push(new TextNode(match()))
@@ -496,14 +492,14 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule Emph() {
         return Sequence(
                 FirstOf(EmphOrStrong("*"), EmphOrStrong("_")),
-                push(new EmphNode(popAsNode()))
+                push(new EmphNode(popAsNode().getChildren()))
         );
     }
 
     public Rule Strong() {
         return Sequence(
                 FirstOf(EmphOrStrong("**"), EmphOrStrong("__")),
-                push(new StrongNode(popAsNode()))
+                push(new StrongNode(popAsNode().getChildren()))
         );
     }
 
@@ -651,6 +647,15 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     //************* REFERENCE ****************
 
+    public Rule Label() {
+        return Sequence(
+                '[',
+                push(new SuperNode()),
+                OneOrMore(TestNot(']'), Inline(), addAsChild()),
+                ']'
+        );
+    }
+
     public Rule Reference() {
         Var<ReferenceNode> ref = new Var<ReferenceNode>();
         return Sequence(
@@ -660,15 +665,6 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 Sp(), Newline(),
                 ZeroOrMore(BlankLine()),
                 references.add(ref.get())
-        );
-    }
-
-    public Rule Label() {
-        return Sequence(
-                '[',
-                push(new SuperNode()),
-                OneOrMore(TestNot(']'), Inline(), addAsChild()),
-                ']'
         );
     }
 
@@ -733,7 +729,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule InlineHtml() {
         return Sequence(
                 FirstOf(HtmlComment(), HtmlTag()),
-                push(new TextNode(ext(SUPPRESS_INLINE_HTML) ? "" : match()))
+                push(new InlineHtmlNode(ext(SUPPRESS_INLINE_HTML) ? "" : match()))
         );
     }
 
@@ -781,11 +777,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public Rule Line() {
-        StringVar line = new StringVar();
         return Sequence(
-                ZeroOrMore(TestNot('\r'), TestNot('\n'), ANY), line.set(match() + '\n'),
+                ZeroOrMore(TestNot('\r'), TestNot('\n'), ANY), push(match()),
                 Newline(),
-                push(new TextNode(line.get()))
+                push(new TextNode(((String) pop()) + '\n'))
         );
     }
 
@@ -793,8 +788,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     public Rule Entity() {
         return Sequence(
-            Sequence('&', FirstOf(HexEntity(), DecEntity(), CharEntity()), ';'),
-            push(new TextNode(match()))
+                Sequence('&', FirstOf(HexEntity(), DecEntity(), CharEntity()), ';'),
+                push(new TextNode(match()))
         );
     }
 
@@ -905,8 +900,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     public Rule AbbreviationText(Var<AbbreviationNode> node) {
         return Sequence(
-                push(new SuperNode()),
-                ZeroOrMore(TestNot(Newline()), Inline(), addAsChild()),
+                Sequence(
+                    push(new SuperNode()),
+                    ZeroOrMore(TestNot(Newline()), Inline(), addAsChild())
+                ),
                 node.get().setExpansion(popAsNode())
         );
     }
@@ -918,14 +915,18 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 push(node.setAndGet(new TableNode())),
                 Optional(
-                        TableRow(), push(1, new TableHeaderNode()) && addAsChild(),
-                        ZeroOrMore(TableRow(), addAsChild()),
+                        Sequence(
+                                TableRow(), push(1, new TableHeaderNode()) && addAsChild(),
+                                ZeroOrMore(TableRow(), addAsChild())
+                        ),
                         addAsChild() // add the TableHeaderNode to the TableNode
                 ),
                 TableDivider(node),
                 Optional(
-                        TableRow(), push(1, new TableBodyNode()) && addAsChild(),
-                        ZeroOrMore(TableRow(), addAsChild()),
+                        Sequence(
+                                TableRow(), push(1, new TableBodyNode()) && addAsChild(),
+                                ZeroOrMore(TableRow(), addAsChild())
+                        ),
                         addAsChild() // add the TableHeaderNode to the TableNode
                 ),
                 !node.get().getChildren().isEmpty()
@@ -962,7 +963,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 push(new TableRowNode()),
                 Optional('|', leadingPipe.set(Boolean.TRUE)),
                 OneOrMore(TableCell(), addAsChild()),
-                leadingPipe.get() || ((Node)peek()).getChildren().size() > 1 ||
+                leadingPipe.get() || ((Node) peek()).getChildren().size() > 1 ||
                         getContext().getInputBuffer().charAt(matchEnd() - 1) == '|',
                 Sp(), Newline()
         );
@@ -1033,11 +1034,12 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 "<<",
                 push(new QuotedNode(QuotedNode.Type.DoubleAngle)),
-                Optional(Spacechar(), push(new SimpleNode(Type.Nbsp)), addAsChild()),
+                Optional(Sequence(Spacechar(), push(new SimpleNode(Type.Nbsp))), addAsChild()),
                 OneOrMore(
                         FirstOf(
-                                Sequence(OneOrMore(Spacechar()), Test(">>"), push(
-                                        new SimpleNode(Type.Nbsp)), addAsChild()),
+                                Sequence(Sequence(OneOrMore(Spacechar()), Test(">>"),
+                                        push(new SimpleNode(Type.Nbsp))),
+                                        addAsChild()),
                                 Sequence(TestNot(">>"), Inline(), addAsChild())
                         )
                 ),
@@ -1050,6 +1052,17 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule NOrMore(char c, int n) {
         return Sequence(StringUtils.repeat(c, n), ZeroOrMore(c));
     }
+    
+    public Rule NodeSequence(Object... nodeRules) {
+        return Sequence(push(getContext().getCurrentIndex()), Sequence(nodeRules), setIndices());
+    }
+    
+    public boolean setIndices() {
+        AbstractNode node = (AbstractNode) peek();
+        node.setStartIndex((Integer)pop(1));
+        node.setEndIndex(getContext().getCurrentIndex());
+        return true;
+    }
 
     public boolean addAsChild() {
         SuperNode parent = (SuperNode) peek(1);
@@ -1059,7 +1072,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
             Node lastChild = children.get(children.size() - 1);
             if (lastChild.getClass() == TextNode.class) {
                 // collapse peer TextNodes
-                ((TextNode) lastChild).append(((TextNode) child).getText());
+                TextNode last = (TextNode) lastChild;
+                TextNode current = (TextNode) child;
+                last.append(current.getText());
+                last.setEndIndex(current.getEndIndex());
                 return true;
             }
         }
@@ -1080,7 +1096,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public RootNode parseInternal(char[] source) {
-        ParsingResult<Node> result = parseRunnerProvider.get(Root()).run(source);
+        ParsingResult<Node> result = parseInternal2(source);
         if (result.hasErrors()) {
             throw new RuntimeException("Internal error during markdown parsing:\n--- ParseErrors ---\n" +
                     printParseErrors(result)/* +
@@ -1090,6 +1106,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
         }
         return (RootNode) result.resultValue;
     }
+    
+    ParsingResult<Node> parseInternal2(char[] source) {
+        return parseRunnerProvider.get(Root()).run(source);
+    } 
 
     public int indexOf(char[] array, char element, int start) {
         for (int i = start; i < array.length; i++) {

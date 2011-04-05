@@ -112,6 +112,10 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         printer.println().print(node.getText());
     }
 
+    public void visit(InlineHtmlNode node) {
+        printer.print(node.getText());
+    }
+
     public void visit(LooseListItemNode node) {
         printIndentedTag(node, "li");
     }

@@ -28,6 +28,7 @@ public interface Visitor {
     void visit(ExpLinkNode node);
     void visit(HeaderNode node);
     void visit(HtmlBlockNode node);
+    void visit(InlineHtmlNode node);
     void visit(LooseListItemNode node);
     void visit(MailLinkNode node);
     void visit(OrderedListNode node);

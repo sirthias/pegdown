@@ -31,6 +31,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 
+import static org.parboiled.support.ParseTreeUtils.printNodeTree;
 import static org.parboiled.trees.GraphUtils.printTree;
 import static org.pegdown.TestUtils.assertEqualsMultiline;
 import static org.testng.Assert.assertEquals;
@@ -64,13 +65,13 @@ public abstract class AbstractTest {
         String actualHtml = new ToHtmlSerializer().toHtml(astRoot);
 
         // debugging I: check the parse tree
-        // assertEquals(printNodeTree(getProcessor().getLastParsingResult()), "");
+        //assertEquals(printNodeTree(getProcessor().parser.parseInternal2(markdown)), "");
 
         // debugging II: check the AST
-        // assertEquals(printTree(astRoot, new ToStringFormatter<Node>()), "");
+        //assertEquals(printTree(astRoot, new ToStringFormatter<Node>()), "");
 
         // debugging III: check the actual (untidied) HTML
-        // assertEquals(actualHtml, "");
+        //assertEquals(actualHtml, "");
 
         // tidy up html for fair equality test
         actualHtml = tidy(actualHtml);
