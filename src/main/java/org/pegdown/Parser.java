@@ -792,20 +792,22 @@ public class Parser extends BaseParser<Object> implements Extensions {
     //************* ENTITIES ****************
 
     public Rule Entity() {
-        return Sequence(FirstOf(HexEntity(), DecEntity(), CharEntity()), push(new TextNode(match())));
+        return Sequence(
+            Sequence('&', FirstOf(HexEntity(), DecEntity(), CharEntity()), ';'),
+            push(new TextNode(match()))
+        );
     }
 
     public Rule HexEntity() {
-        return Sequence("&", IgnoreCase("x"), OneOrMore(FirstOf(Digit(), CharRange('a', 'f'), CharRange('A', 'F'))),
-                ';');
+        return Sequence('#', IgnoreCase('x'), OneOrMore(FirstOf(Digit(), CharRange('a', 'f'), CharRange('A', 'F'))));
     }
 
     public Rule DecEntity() {
-        return Sequence("&#", OneOrMore(Digit()), ';');
+        return Sequence('#', OneOrMore(Digit()));
     }
 
     public Rule CharEntity() {
-        return Sequence('&', OneOrMore(Alphanumeric()), ';');
+        return OneOrMore(Alphanumeric());
     }
 
     //************* BASICS ****************
