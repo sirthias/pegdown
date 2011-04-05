@@ -51,9 +51,9 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         for (AbbreviationNode abbrNode : node.getAbbreviations()) {
             visitChildren(abbrNode);
             String abbr = printer.getString();
-            printer.clear().startEncoding(this);
+            printer.clear();
             abbrNode.getExpansion().accept(this);
-            String expansion = printer.stopEncoding().getString();
+            String expansion = printer.getString();
             abbreviations.put(abbr, expansion);
             printer.clear();
         }
@@ -295,6 +295,10 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         }
     }
 
+    public void visit(SpecialTextNode node) {
+        printer.printEncoded(node.getText(), this);
+    }
+
     public void visit(SuperNode node) {
         visitChildren(node);
     }
@@ -316,6 +320,8 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
                 return "&gt;";
             case '"':
                 return "&quot;";
+            case '\'':
+                return "&#39;";
         }
         return null;
     }
@@ -400,26 +406,27 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         }
 
         if (expansions != null) {
-            StringBuilder sb = new StringBuilder();
             int ix = 0;
             for (Map.Entry<Integer, Map.Entry<String, String>> entry : expansions.entrySet()) {
                 int sx = entry.getKey();
                 String abbr = entry.getValue().getKey();
                 String expansion = entry.getValue().getValue();
 
-                sb.append(string.substring(ix, sx));
-
-                StringBuilder replaceSB = new StringBuilder("<abbr");
-                if (StringUtils.isNotEmpty(expansion)) replaceSB.append(" title=\"").append(expansion).append('"');
-                replaceSB.append('>').append(abbr).append("</abbr>");
-                String replace = replaceSB.toString();
-
-                sb.append(replace);
+                printer.printEncoded(string.substring(ix, sx), this);
+                printer.print("<abbr");
+                if (StringUtils.isNotEmpty(expansion)) {
+                    printer.print(" title=\"");
+                    printer.printEncoded(expansion, this);
+                    printer.print('"');
+                }
+                printer.print('>');
+                printer.printEncoded(abbr, this);
+                printer.print("</abbr>");
                 ix = sx + abbr.length();
             }
-            sb.append(string.substring(ix));
-            string = sb.toString();
+            printer.print(string.substring(ix));
+        } else {
+            printer.print(string);
         }
-        printer.print(string);
     }
 }

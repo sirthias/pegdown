@@ -842,11 +842,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public Rule EscapedChar() {
-        return Sequence('\\', TestNot(Newline()), ANY, push(new TextNode(match())));
+        return Sequence('\\', TestNot(Newline()), ANY, push(new SpecialTextNode(match())));
     }
 
     public Rule Symbol() {
-        return Sequence(SpecialChar(), push(new TextNode(match())));
+        return Sequence(SpecialChar(), push(new SpecialTextNode(match())));
     }
 
     public Rule SpecialChar() {
