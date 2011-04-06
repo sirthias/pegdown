@@ -18,7 +18,11 @@
 
 package org.pegdown.ast;
 
-public class TableBodyNode extends SuperNode {
+public class InlineHtmlNode extends TextNode {
+
+    public InlineHtmlNode(String text) {
+        super(text);
+    }
     
     @Override
     public void accept(Visitor visitor) {

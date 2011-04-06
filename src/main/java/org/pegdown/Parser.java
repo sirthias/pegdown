@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Mathias Doenitz
+ * Copyright (C) 2010-2011 Mathias Doenitz
  *
  * Based on peg-markdown (C) 2008-2010 John MacFarlane
  *
@@ -21,10 +21,7 @@ package org.pegdown;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
-import org.parboiled.annotations.Cached;
-import org.parboiled.annotations.DontSkipActionsInPredicates;
-import org.parboiled.annotations.MemoMismatches;
-import org.parboiled.annotations.SkipActionsInPredicates;
+import org.parboiled.annotations.*;
 import org.parboiled.common.ArrayBuilder;
 import org.parboiled.common.ImmutableList;
 import org.parboiled.common.StringUtils;
@@ -49,7 +46,7 @@ import static org.parboiled.errors.ErrorUtils.printParseErrors;
  */
 @SuppressWarnings( {"InfiniteRecursion"})
 @SkipActionsInPredicates
-public class Parser extends BaseParser<Node> implements Extensions {
+public class Parser extends BaseParser<Object> implements Extensions {
 
     public interface ParseRunnerProvider {
         ParseRunner<Node> get(Rule rule);
@@ -88,7 +85,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     //************* BLOCKS ****************
 
     public Rule Root() {
-        return Sequence(
+        return NodeSequence(
                 push(new RootNode()),
                 ZeroOrMore(Block(), addAsChild())
         );
@@ -109,14 +106,14 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public Rule Para() {
-        return Sequence(
-                NonindentSpace(), Inlines(), push(new ParaNode(pop())), OneOrMore(BlankLine())
+        return NodeSequence(
+                NonindentSpace(), Inlines(), push(new ParaNode(popAsNode())), OneOrMore(BlankLine())
         );
     }
 
     public Rule BlockQuote() {
         StringBuilderVar inner = new StringBuilderVar();
-        return Sequence(
+        return NodeSequence(
                 OneOrMore(
                         '>', Optional(' '), Line(), inner.append(popAsTextNode().getText()),
                         ZeroOrMore(
@@ -135,7 +132,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public Rule Verbatim() {
         StringBuilderVar text = new StringBuilderVar();
         StringBuilderVar temp = new StringBuilderVar();
-        return Sequence(
+        return NodeSequence(
                 OneOrMore(
                         ZeroOrMore(BlankLine(), temp.append("\n")),
                         NonblankIndentedLine(),
@@ -146,7 +143,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public Rule HorizontalRule() {
-        return Sequence(
+        return NodeSequence(
                 NonindentSpace(),
                 FirstOf(HorizontalRule('*'), HorizontalRule('-'), HorizontalRule('_')),
                 Sp(), Newline(), OneOrMore(BlankLine()),
@@ -161,7 +158,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     //************* HEADINGS ****************
 
     public Rule Heading() {
-        return FirstOf(AtxHeading(), SetextHeading());
+        return NodeSequence(FirstOf(AtxHeading(), SetextHeading()));
     }
 
     public Rule AtxHeading() {
@@ -200,7 +197,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule SetextHeading1() {
         return Sequence(
-                SetextInline(), push(new HeaderNode(1, pop())),
+                SetextInline(), push(new HeaderNode(1, popAsNode())),
                 ZeroOrMore(SetextInline(), addAsChild()),
                 Newline(), NOrMore('=', 3), Newline()
         );
@@ -208,7 +205,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule SetextHeading2() {
         return Sequence(
-                SetextInline(), push(new HeaderNode(2, pop())),
+                SetextInline(), push(new HeaderNode(2, popAsNode())),
                 ZeroOrMore(SetextInline(), addAsChild()),
                 Newline(), NOrMore('-', 3), Newline()
         );
@@ -221,24 +218,24 @@ public class Parser extends BaseParser<Node> implements Extensions {
     //************* LISTS ****************
 
     public Rule BulletList() {
-        return Sequence(
+        return NodeSequence(
                 Test(Bullet()),
                 FirstOf(ListTight(), ListLoose()),
-                push(new BulletListNode(pop()))
+                push(new BulletListNode(popAsNode().getChildren()))
         );
     }
 
     public Rule OrderedList() {
-        return Sequence(
+        return NodeSequence(
                 Test(Enumerator()),
                 FirstOf(ListTight(), ListLoose()),
-                push(new OrderedListNode(pop()))
+                push(new OrderedListNode(popAsNode().getChildren()))
         );
     }
 
     public Rule ListTight() {
         return Sequence(
-                ListItem(true), push(new SuperNode(pop())),
+                ListItem(true), push(new SuperNode(popAsNode())),
                 ZeroOrMore(ListItem(true), addAsChild()),
                 ZeroOrMore(BlankLine()),
                 TestNot(FirstOf(Bullet(), Enumerator()))
@@ -247,7 +244,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule ListLoose() {
         return Sequence(
-                ListItem(false), push(new SuperNode(pop())),
+                ListItem(false), push(new SuperNode(popAsNode())),
                 ZeroOrMore(BlankLine()),
                 ZeroOrMore(ListItem(false), addAsChild(), ZeroOrMore(BlankLine()))
         );
@@ -294,36 +291,36 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     // special action running the inner parse for list node source
     // the innerSource can contain \u0001 boundary markers, which indicate, where to split the innerSource
-    // and run independent inner parsing runs
+    // and run independent inner parsings
 
     boolean setListItemNode(boolean tight, char[] innerSource) {
+        SuperNode parent = tight ? new TightListItemNode() : new LooseListItemNode();
         int start = 0;
         int end = indexOf(innerSource, '\u0001', start); // look for boundary markers
         if (end == -1) {
             // if we have just one part simply parse and set
-            Context<Node> context = getContext();
+            Context<Object> context = getContext();
             Node innerRoot = parseInternal(innerSource);
             setContext(context); // we need to save and restore the context since we might be recursing
-            return push(tight ? new TightListItemNode(innerRoot) : new LooseListItemNode(innerRoot));
+            parent = tight ? new TightListItemNode(innerRoot) : new LooseListItemNode(innerRoot); 
+        } else {
+            // ok, we have several parts, so create the root node and attach all part roots
+            while (true) {
+                end = indexOf(innerSource, '\u0001', start);
+                if (end == -1) end = innerSource.length;
+                char[] sourcePart = new char[end - start];
+                System.arraycopy(innerSource, start, sourcePart, 0, end - start);
+    
+                Context<Object> context = getContext();
+                SuperNode node = parseInternal(sourcePart);
+                setContext(context);
+                parent.getChildren().add(node); // skip one superfluous level
+    
+                if (end == innerSource.length) break;
+                start = end + 1;
+            }
         }
-
-        // ok, we have several parts, so create the root node and attach all part roots
-        SuperNode parent = tight ? new TightListItemNode() : new LooseListItemNode();
-        push(parent);
-        while (true) {
-            end = indexOf(innerSource, '\u0001', start);
-            if (end == -1) end = innerSource.length;
-            char[] sourcePart = new char[end - start];
-            System.arraycopy(innerSource, start, sourcePart, 0, end - start);
-
-            Context<Node> context = getContext();
-            SuperNode node = parseInternal(sourcePart);
-            setContext(context);
-            parent.getChildren().addAll(node.getChildren()); // skip one superfluous level
-
-            if (end == innerSource.length) return true;
-            start = end + 1;
-        }
+        return push(parent);
     }
 
     public Rule ListBlock() {
@@ -356,7 +353,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     //************* HTML BLOCK ****************
 
     public Rule HtmlBlock() {
-        return Sequence(
+        return NodeSequence(
                 FirstOf(HtmlBlockInTags(), HtmlComment(), HtmlBlockSelfClosing()),
                 push(new HtmlBlockNode(ext(SUPPRESS_HTML_BLOCKS) ? "" : match())),
                 OneOrMore(BlankLine())
@@ -422,8 +419,8 @@ public class Parser extends BaseParser<Node> implements Extensions {
     //************* INLINES ****************
 
     public Rule Inlines() {
-        return Sequence(
-                InlineOrIntermediateEndline(), push(new SuperNode(pop())),
+        return NodeSequence(
+                InlineOrIntermediateEndline(), push(new SuperNode(popAsNode())),
                 ZeroOrMore(InlineOrIntermediateEndline(), addAsChild()),
                 Optional(Endline(), drop())
         );
@@ -450,7 +447,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     @MemoMismatches
     public Rule Endline() {
-        return FirstOf(LineBreak(), TerminalEndline(), NormalEndline());
+        return NodeSequence(FirstOf(LineBreak(), TerminalEndline(), NormalEndline()));
     }
 
     public Rule LineBreak() {
@@ -458,7 +455,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public Rule TerminalEndline() {
-        return Sequence(Sp(), Newline(), EOI, push(new TextNode("\n")));
+        return NodeSequence(Sp(), Newline(), EOI, push(new TextNode("\n")));
     }
 
     public Rule NormalEndline() {
@@ -478,12 +475,11 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     //************* EMPHASIS / STRONG ****************
 
-    // This keeps the parser from getting bogged down on long strings of '*' or '_',
-    // or strings of '*' or '_' with space on each side:
-
     @MemoMismatches
     public Rule UlOrStarLine() {
-        return Sequence(
+        // This keeps the parser from getting bogged down on long strings of '*' or '_',
+        // or strings of '*' or '_' with space on each side:
+        return NodeSequence(
                 FirstOf(CharLine('_'), CharLine('*')),
                 push(new TextNode(match()))
         );
@@ -494,16 +490,16 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public Rule Emph() {
-        return Sequence(
+        return NodeSequence(
                 FirstOf(EmphOrStrong("*"), EmphOrStrong("_")),
-                push(new EmphNode(pop()))
+                push(new EmphNode(popAsNode().getChildren()))
         );
     }
 
     public Rule Strong() {
-        return Sequence(
+        return NodeSequence(
                 FirstOf(EmphOrStrong("**"), EmphOrStrong("__")),
-                push(new StrongNode(pop()))
+                push(new StrongNode(popAsNode().getChildren()))
         );
     }
 
@@ -543,7 +539,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     //************* LINKS ****************
 
     public Rule Image() {
-        return Sequence('!',
+        return NodeSequence('!',
                 FirstOf(
                         Sequence(ExplicitLink(), push(((ExpLinkNode) pop()).asImage())),
                         Sequence(ReferenceLink(), push(((RefLinkNode) pop()).asImage()))
@@ -553,13 +549,13 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     @MemoMismatches
     public Rule Link() {
-        return FirstOf(ExplicitLink(), ReferenceLink(), AutoLinkUrl(), AutoLinkEmail());
+        return NodeSequence(FirstOf(ExplicitLink(), ReferenceLink(), AutoLinkUrl(), AutoLinkEmail()));
     }
 
     public Rule ExplicitLink() {
         Var<ExpLinkNode> node = new Var<ExpLinkNode>();
         return Sequence(
-                Label(), push(node.setAndGet(new ExpLinkNode(pop()))),
+                Label(), push(node.setAndGet(new ExpLinkNode(popAsNode()))),
                 Spn1(), '(', Sp(),
                 Source(node),
                 Spn1(), Optional(Title(node)),
@@ -570,7 +566,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public Rule ReferenceLink() {
         Var<RefLinkNode> node = new Var<RefLinkNode>();
         return Sequence(
-                Label(), push(node.setAndGet(new RefLinkNode(pop()))),
+                Label(), push(node.setAndGet(new RefLinkNode(popAsNode()))),
                 FirstOf(
                         // regular reference link
                         Sequence(Spn1(), node.get().setSeparatorSpace(match()),
@@ -651,24 +647,24 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     //************* REFERENCE ****************
 
-    public Rule Reference() {
-        Var<ReferenceNode> ref = new Var<ReferenceNode>();
-        return Sequence(
-                NonindentSpace(), Label(), push(ref.setAndGet(new ReferenceNode(pop()))),
-                ':', Spn1(), RefSrc(ref),
-                Sp(), Optional(RefTitle(ref)),
-                Sp(), Newline(),
-                ZeroOrMore(BlankLine()),
-                references.add(ref.get())
-        );
-    }
-
     public Rule Label() {
         return Sequence(
                 '[',
                 push(new SuperNode()),
                 OneOrMore(TestNot(']'), Inline(), addAsChild()),
                 ']'
+        );
+    }
+    
+    public Rule Reference() {
+        Var<ReferenceNode> ref = new Var<ReferenceNode>();
+        return NodeSequence(
+                NonindentSpace(), Label(), push(ref.setAndGet(new ReferenceNode(popAsNode()))),
+                ':', Spn1(), RefSrc(ref),
+                Sp(), Optional(RefTitle(ref)),
+                Sp(), Newline(),
+                ZeroOrMore(BlankLine()),
+                references.add(ref.get())
         );
     }
 
@@ -699,12 +695,14 @@ public class Parser extends BaseParser<Node> implements Extensions {
     //************* CODE ****************
 
     public Rule Code() {
-        return FirstOf(
-                Code(Ticks(1)),
-                Code(Ticks(2)),
-                Code(Ticks(3)),
-                Code(Ticks(4)),
-                Code(Ticks(5))
+        return NodeSequence(
+                FirstOf(
+                        Code(Ticks(1)),
+                        Code(Ticks(2)),
+                        Code(Ticks(3)),
+                        Code(Ticks(4)),
+                        Code(Ticks(5))
+                )
         );
     }
 
@@ -731,9 +729,9 @@ public class Parser extends BaseParser<Node> implements Extensions {
     //************* RAW HTML ****************
 
     public Rule InlineHtml() {
-        return Sequence(
+        return NodeSequence(
                 FirstOf(HtmlComment(), HtmlTag()),
-                push(new TextNode(ext(SUPPRESS_INLINE_HTML) ? "" : match()))
+                push(new InlineHtmlNode(ext(SUPPRESS_INLINE_HTML) ? "" : match()))
         );
     }
 
@@ -781,41 +779,42 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public Rule Line() {
-        StringVar line = new StringVar();
         return Sequence(
-                ZeroOrMore(TestNot('\r'), TestNot('\n'), ANY), line.set(match() + '\n'),
+                ZeroOrMore(TestNot('\r'), TestNot('\n'), ANY), push(match()),
                 Newline(),
-                push(new TextNode(line.get()))
+                push(new TextNode(((String) pop()) + '\n'))
         );
     }
 
     //************* ENTITIES ****************
 
     public Rule Entity() {
-        return Sequence(FirstOf(HexEntity(), DecEntity(), CharEntity()), push(new TextNode(match())));
+        return NodeSequence(
+                Sequence('&', FirstOf(HexEntity(), DecEntity(), CharEntity()), ';'),
+                push(new TextNode(match()))
+        );
     }
 
     public Rule HexEntity() {
-        return Sequence("&", IgnoreCase("x"), OneOrMore(FirstOf(Digit(), CharRange('a', 'f'), CharRange('A', 'F'))),
-                ';');
+        return Sequence('#', IgnoreCase('x'), OneOrMore(FirstOf(Digit(), CharRange('a', 'f'), CharRange('A', 'F'))));
     }
 
     public Rule DecEntity() {
-        return Sequence("&#", OneOrMore(Digit()), ';');
+        return Sequence('#', OneOrMore(Digit()));
     }
 
     public Rule CharEntity() {
-        return Sequence('&', OneOrMore(Alphanumeric()), ';');
+        return OneOrMore(Alphanumeric());
     }
 
     //************* BASICS ****************
 
     public Rule Str() {
-        return Sequence(OneOrMore(NormalChar()), push(new TextNode(match())));
+        return NodeSequence(OneOrMore(NormalChar()), push(new TextNode(match())));
     }
 
     public Rule Space() {
-        return Sequence(OneOrMore(Spacechar()), push(new TextNode(" ")));
+        return NodeSequence(OneOrMore(Spacechar()), push(new TextNode(" ")));
     }
 
     public Rule Spn1() {
@@ -840,11 +839,11 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public Rule EscapedChar() {
-        return Sequence('\\', TestNot(Newline()), ANY, push(new TextNode(match())));
+        return NodeSequence('\\', TestNot(Newline()), ANY, push(new SpecialTextNode(match())));
     }
 
     public Rule Symbol() {
-        return Sequence(SpecialChar(), push(new TextNode(match())));
+        return NodeSequence(SpecialChar(), push(new SpecialTextNode(match())));
     }
 
     public Rule SpecialChar() {
@@ -893,8 +892,8 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule Abbreviation() {
         Var<AbbreviationNode> node = new Var<AbbreviationNode>();
-        return Sequence(
-                NonindentSpace(), '*', Label(), push(node.setAndGet(new AbbreviationNode(pop()))),
+        return NodeSequence(
+                NonindentSpace(), '*', Label(), push(node.setAndGet(new AbbreviationNode(popAsNode()))),
                 Sp(), ':', Sp(), AbbreviationText(node),
                 ZeroOrMore(BlankLine()),
                 abbreviations.add(node.get())
@@ -903,9 +902,11 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule AbbreviationText(Var<AbbreviationNode> node) {
         return Sequence(
-                push(new SuperNode()),
-                ZeroOrMore(TestNot(Newline()), Inline(), addAsChild()),
-                node.get().setExpansion(pop())
+                NodeSequence(
+                    push(new SuperNode()),
+                    ZeroOrMore(TestNot(Newline()), Inline(), addAsChild())
+                ),
+                node.get().setExpansion(popAsNode())
         );
     }
 
@@ -913,17 +914,21 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule Table() {
         Var<TableNode> node = new Var<TableNode>();
-        return Sequence(
+        return NodeSequence(
                 push(node.setAndGet(new TableNode())),
                 Optional(
-                        TableRow(), push(1, new TableHeaderNode()) && addAsChild(),
-                        ZeroOrMore(TableRow(), addAsChild()),
+                        NodeSequence(
+                                TableRow(), push(1, new TableHeaderNode()) && addAsChild(),
+                                ZeroOrMore(TableRow(), addAsChild())
+                        ),
                         addAsChild() // add the TableHeaderNode to the TableNode
                 ),
                 TableDivider(node),
                 Optional(
-                        TableRow(), push(1, new TableBodyNode()) && addAsChild(),
-                        ZeroOrMore(TableRow(), addAsChild()),
+                        NodeSequence(
+                                TableRow(), push(1, new TableBodyNode()) && addAsChild(),
+                                ZeroOrMore(TableRow(), addAsChild())
+                        ),
                         addAsChild() // add the TableHeaderNode to the TableNode
                 ),
                 !node.get().getChildren().isEmpty()
@@ -956,18 +961,18 @@ public class Parser extends BaseParser<Node> implements Extensions {
 
     public Rule TableRow() {
         Var<Boolean> leadingPipe = new Var<Boolean>(Boolean.FALSE);
-        return Sequence(
+        return NodeSequence(
                 push(new TableRowNode()),
                 Optional('|', leadingPipe.set(Boolean.TRUE)),
                 OneOrMore(TableCell(), addAsChild()),
-                leadingPipe.get() || peek().getChildren().size() > 1 ||
+                leadingPipe.get() || ((Node) peek()).getChildren().size() > 1 ||
                         getContext().getInputBuffer().charAt(matchEnd() - 1) == '|',
                 Sp(), Newline()
         );
     }
 
     public Rule TableCell() {
-        return Sequence(
+        return NodeSequence(
                 push(new TableCellNode()),
                 TestNot(Sp(), Optional(':'), Sp(), OneOrMore('-'), Sp(), Optional(':'), Sp(), FirstOf('|', Newline())),
                 Optional(Sp(), TestNot('|'), TestNot(Newline())),
@@ -983,18 +988,20 @@ public class Parser extends BaseParser<Node> implements Extensions {
     //************* SMARTS ****************
 
     public Rule Smarts() {
-        return FirstOf(
-                Sequence(FirstOf("...", ". . ."), push(new SimpleNode(Type.Ellipsis))),
-                Sequence("---", push(new SimpleNode(Type.Emdash))),
-                Sequence("--", push(new SimpleNode(Type.Endash))),
-                Sequence('\'', push(new SimpleNode(Type.Apostrophe)))
+        return NodeSequence(
+                FirstOf(
+                    Sequence(FirstOf("...", ". . ."), push(new SimpleNode(Type.Ellipsis))),
+                    Sequence("---", push(new SimpleNode(Type.Emdash))),
+                    Sequence("--", push(new SimpleNode(Type.Endash))),
+                    Sequence('\'', push(new SimpleNode(Type.Apostrophe)))
+                )
         );
     }
 
     //************* QUOTES ****************
 
     public Rule SingleQuoted() {
-        return Sequence(
+        return NodeSequence(
                 SingleQuoteStart(),
                 push(new QuotedNode(QuotedNode.Type.Single)),
                 OneOrMore(TestNot(SingleQuoteEnd()), Inline(), addAsChild()),
@@ -1019,7 +1026,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public Rule DoubleQuoted() {
-        return Sequence(
+        return NodeSequence(
                 '"',
                 push(new QuotedNode(QuotedNode.Type.Double)),
                 OneOrMore(TestNot('"'), Inline(), addAsChild()),
@@ -1028,14 +1035,14 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public Rule DoubleAngleQuoted() {
-        return Sequence(
+        return NodeSequence(
                 "<<",
                 push(new QuotedNode(QuotedNode.Type.DoubleAngle)),
-                Optional(Spacechar(), push(new SimpleNode(Type.Nbsp)), addAsChild()),
+                Optional(NodeSequence(Spacechar(), push(new SimpleNode(Type.Nbsp))), addAsChild()),
                 OneOrMore(
                         FirstOf(
-                                Sequence(OneOrMore(Spacechar()), Test(">>"), push(
-                                        new SimpleNode(Type.Nbsp)), addAsChild()),
+                                Sequence(NodeSequence(OneOrMore(Spacechar()), Test(">>"),
+                                        push(new SimpleNode(Type.Nbsp))), addAsChild()),
                                 Sequence(TestNot(">>"), Inline(), addAsChild())
                         )
                 ),
@@ -1048,21 +1055,43 @@ public class Parser extends BaseParser<Node> implements Extensions {
     public Rule NOrMore(char c, int n) {
         return Sequence(StringUtils.repeat(c, n), ZeroOrMore(c));
     }
+    
+    public Rule NodeSequence(Object... nodeRules) {
+        return Sequence(
+                push(getContext().getCurrentIndex()),
+                Sequence(nodeRules),
+                setIndices()
+        );
+    }
+    
+    boolean setIndices() {
+        AbstractNode node = (AbstractNode) peek();
+        node.setStartIndex((Integer)pop(1));
+        node.setEndIndex(getContext().getCurrentIndex());
+        return true;
+    }
 
     public boolean addAsChild() {
         SuperNode parent = (SuperNode) peek(1);
         List<Node> children = parent.getChildren();
-        Node child = pop();
+        Node child = popAsNode();
         if (child.getClass() == TextNode.class && !children.isEmpty()) {
             Node lastChild = children.get(children.size() - 1);
             if (lastChild.getClass() == TextNode.class) {
                 // collapse peer TextNodes
-                ((TextNode) lastChild).append(((TextNode) child).getText());
+                TextNode last = (TextNode) lastChild;
+                TextNode current = (TextNode) child;
+                last.append(current.getText());
+                last.setEndIndex(current.getEndIndex());
                 return true;
             }
         }
         children.add(child);
         return true;
+    }
+    
+    public Node popAsNode() {
+        return (Node) pop();
     }
 
     public TextNode popAsTextNode() {
@@ -1074,7 +1103,7 @@ public class Parser extends BaseParser<Node> implements Extensions {
     }
 
     public RootNode parseInternal(char[] source) {
-        ParsingResult<Node> result = parseRunnerProvider.get(Root()).run(source);
+        ParsingResult<Node> result = parseInternal2(source);
         if (result.hasErrors()) {
             throw new RuntimeException("Internal error during markdown parsing:\n--- ParseErrors ---\n" +
                     printParseErrors(result)/* +
@@ -1084,6 +1113,10 @@ public class Parser extends BaseParser<Node> implements Extensions {
         }
         return (RootNode) result.resultValue;
     }
+    
+    ParsingResult<Node> parseInternal2(char[] source) {
+        return parseRunnerProvider.get(Root()).run(source);
+    } 
 
     public int indexOf(char[] array, char element, int start) {
         for (int i = start; i < array.length; i++) {

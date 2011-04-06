@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Mathias Doenitz
+ * Copyright (C) 2010-2011 Mathias Doenitz
  *
  * Based on peg-markdown (C) 2008-2010 John MacFarlane
  *
@@ -22,7 +22,7 @@ import org.parboiled.common.ImmutableList;
 
 import java.util.List;
 
-public class SimpleNode implements Node {
+public class SimpleNode extends AbstractNode {
     public enum Type { Apostrophe, Ellipsis, Emdash, Endash, HRule, Linebreak, Nbsp }
 
     private final Type type;
@@ -41,5 +41,10 @@ public class SimpleNode implements Node {
 
     public void accept(Visitor visitor) {
         visitor.visit(this);
+    }
+    
+    @Override
+    public String toString() {
+        return super.toString() + " " +  type;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Mathias Doenitz
+ * Copyright (C) 2010-2011 Mathias Doenitz
  *
  * Based on peg-markdown (C) 2008-2010 John MacFarlane
  *
@@ -28,6 +28,7 @@ public interface Visitor {
     void visit(ExpLinkNode node);
     void visit(HeaderNode node);
     void visit(HtmlBlockNode node);
+    void visit(InlineHtmlNode node);
     void visit(LooseListItemNode node);
     void visit(MailLinkNode node);
     void visit(OrderedListNode node);
@@ -37,6 +38,7 @@ public interface Visitor {
     void visit(RefLinkNode node);
     void visit(RootNode node);
     void visit(SimpleNode node);
+    void visit(SpecialTextNode node);
     void visit(StrongNode node);
     void visit(TableBodyNode node);
     void visit(TableCellNode node);

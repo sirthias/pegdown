@@ -13,28 +13,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-core/0.11.0-SNAPSHOT/parboiled-core-0.11.0-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-core/0.11.0-SNAPSHOT/parboiled-core-0.11.0-SNAPSHOT-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-java/0.11.0-SNAPSHOT/parboiled-java-0.11.0-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-java/0.11.0-SNAPSHOT/parboiled-java-0.11.0-SNAPSHOT-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
     <orderEntry type="module-library" scope="TEST">
       <library>
         <CLASSES>
@@ -87,6 +65,28 @@
         </CLASSES>
         <JAVADOC />
         <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-core/0.12.0-SNAPSHOT/parboiled-core-0.12.0-SNAPSHOT.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-core/0.12.0-SNAPSHOT/parboiled-core-0.12.0-SNAPSHOT-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-java/0.12.0-SNAPSHOT/parboiled-java-0.12.0-SNAPSHOT.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-java/0.12.0-SNAPSHOT/parboiled-java-0.12.0-SNAPSHOT-sources.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
   </component>

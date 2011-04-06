@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Mathias Doenitz
+ * Copyright (C) 2010-2011 Mathias Doenitz
  *
  * Based on peg-markdown (C) 2008-2010 John MacFarlane
  *
@@ -31,6 +31,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 
+import static org.parboiled.support.ParseTreeUtils.printNodeTree;
 import static org.parboiled.trees.GraphUtils.printTree;
 import static org.pegdown.TestUtils.assertEqualsMultiline;
 import static org.testng.Assert.assertEquals;
@@ -64,17 +65,29 @@ public abstract class AbstractTest {
         String actualHtml = new ToHtmlSerializer().toHtml(astRoot);
 
         // debugging I: check the parse tree
-        // assertEquals(printNodeTree(getProcessor().getLastParsingResult()), "");
+        //assertEquals(printNodeTree(getProcessor().parser.parseInternal2(markdown)), "");
 
         // debugging II: check the AST
-        // assertEquals(printTree(astRoot, new ToStringFormatter<Node>()), "");
+        //assertEquals(printTree(astRoot, new ToStringFormatter<Node>()), "");
 
         // debugging III: check the actual (untidied) HTML
-        // assertEquals(actualHtml, "");
+        //assertEquals(actualHtml, "");
 
         // tidy up html for fair equality test
         actualHtml = tidy(actualHtml);
         assertEqualsMultiline(actualHtml, expectedOutput);
+    }
+    
+    protected void testAST(String testName) {        
+        char[] markdown = FileUtils.readAllCharsFromResource(testName + ".text");        
+        Preconditions.checkState(markdown != null, "Test not found");
+        
+        String expectedAst = FileUtils.readAllTextFromResource(testName + ".ast.text");
+        assertNotNull(expectedAst);
+        
+        RootNode astRoot = getProcessor().parseMarkdown(markdown);
+
+        assertEqualsMultiline(printTree(astRoot, new ToStringFormatter<Node>()), expectedAst);
     }
 
     private String tidy(String html) {

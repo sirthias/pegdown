@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Mathias Doenitz
+ * Copyright (C) 2010-2011 Mathias Doenitz
  *
  * Based on peg-markdown (C) 2008-2010 John MacFarlane
  *
@@ -18,10 +18,12 @@
 
 package org.pegdown.ast;
 
+import java.util.List;
+
 public class StrongNode extends SuperNode {
 
-    public StrongNode(Node firstChild) {
-        super(firstChild);
+    public StrongNode(List<Node> children) {
+        super(children);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Mathias Doenitz
+ * Copyright (C) 2010-2011 Mathias Doenitz
  *
  * Based on peg-markdown (C) 2008-2010 John MacFarlane
  *
@@ -23,7 +23,7 @@ import org.parboiled.common.StringUtils;
 
 import java.util.List;
 
-public class TextNode implements Node {
+public class TextNode extends AbstractNode {
     private final StringBuilder sb;
 
     public TextNode(String text) {
@@ -40,7 +40,7 @@ public class TextNode implements Node {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " '" + StringUtils.escape(getText()) + '\'';
+        return super.toString() + " '" + StringUtils.escape(getText()) + '\'';
     }
     
     public List<Node> getChildren() {

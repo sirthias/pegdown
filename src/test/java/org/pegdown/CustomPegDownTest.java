@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Mathias Doenitz
+ * Copyright (C) 2010-2011 Mathias Doenitz
  *
  * Based on peg-markdown (C) 2008-2010 John MacFarlane
  *
@@ -18,6 +18,7 @@
 
 package org.pegdown;
 
+import org.parboiled.common.FileUtils;
 import org.testng.annotations.Test;
 
 public class CustomPegDownTest extends AbstractTest {
@@ -30,7 +31,7 @@ public class CustomPegDownTest extends AbstractTest {
     }
 
     @Test
-    public void customPegDownTests() throws Exception {
+    public void customPegDownTests() {
         test("pegdown/Abbreviations");
         test("pegdown/Autolinks");
         test("pegdown/Bug_in_0.8.5.1");
@@ -43,13 +44,13 @@ public class CustomPegDownTest extends AbstractTest {
     }
     
     @Test(dependsOnMethods = "customPegDownTests")
-    public void customPegDownTests2() throws Exception {
+    public void customPegDownTests2() {
         processor = new PegDownProcessor(Extensions.NONE);
         test("pegdown/Special Chars");
     }
 
     @Test(dependsOnMethods = "customPegDownTests2")
-    public void testHTMLSuppression() throws Exception {
+    public void testHTMLSuppression() {
         test("pegdown/HTML suppression", "" +
                 "<h1>HTML <b>SUPPRESSION</b></h1>\n" +
                 "<p>This is a paragraph containing a <strong>strong</strong> inline\n" +
@@ -82,6 +83,11 @@ public class CustomPegDownTest extends AbstractTest {
                 "<p>This is a paragraph containing a strong inline HTML element\n" +
                 "and:</p>\n" +
                 "\n");
+    }
+    
+    @Test(dependsOnMethods = "testHTMLSuppression")
+    public void testASTIndices() {
+        testAST("pegdown/AstText");
     }
 
 }

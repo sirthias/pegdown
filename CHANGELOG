@@ -1,6 +1,15 @@
+Version 0.9.2 (2011-04-06)
+--------------------------
+- Fix: special characters not encoded correctly in plain text sections
+- Fix: HTML hex entities incorrectly parsed
+- Add indices into underlying buffer to AST nodes
+- Upgraded to parboiled 0.11.1
+
+
 Version 0.9.1 (2011-03-21)
 --------------------------
 - Upgraded to parboiled 0.11.0
+
 
 Version 0.9.0 (2011-02-11)
 --------------------------
@@ -14,19 +23,23 @@ Version 0.9.0 (2011-02-11)
 - Changed to 3 part version numbering in preparation of the coming semantic versioning compatibility (http://semver.org)
 - Upgraded to parboiled 0.10.1
 
+
 Version 0.8.5.4 (2010-10-04)
 ----------------------------
 - Switched off superfluous parse tree building resulting in nearly doubled parsing performance
 - Upgraded to parboiled 0.9.9.0
+
 
 Version 0.8.5.3 (2010-08-13)
 ----------------------------
 - Added HTML suppression options
 - Upgraded to parboiled 0.9.8.2 (another ~ 5% performance increase by using a few @MemoMismatches annotations)
 
+
 Version 0.8.5.2 (2010-08-12)
 ----------------------------
 - Upgraded to parboiled 0.9.8.1 (~ 10% performance increase, slightly simplified parser)
+
 
 Version 0.8.5.1 (2010-06-19)
 ----------------------------
@@ -34,12 +47,14 @@ Version 0.8.5.1 (2010-06-19)
 - Added support for double angle quotes to the QUOTES extension
 - Further increased test coverage
 
+
 Version 0.8.5.0 (2010-06-14)
 ----------------------------
 - Completely rewrote AST implementation improving maintainability and simplifying further extensions
 - Fixed different problems, mainly related to the ABBREVIATIONS extension
 - Added TABLES extension
 - Added simple benchmarking "test"
+
 
 Version 0.8.1.0 (2010-06-08)
 ----------------------------
@@ -50,6 +65,7 @@ Version 0.8.1.0 (2010-06-08)
 - Added AUTOLINKS extension
 - Added support for parens in link urls (must be escaped in explicit links)
 - Expanded test coverage
+
 
 Version 0.8.0.1 (2010-04-30)
 ----------------------------

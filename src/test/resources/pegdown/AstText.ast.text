@@ -1,0 +1,41 @@
+RootNode [0-196]
+  HeaderNode [0-11]
+    TextNode [2-10] 'Ast Test'
+  ParaNode [12-53]
+    SuperNode [12-50]
+      TextNode [12-17] 'This '
+      EmphNode [17-21]
+        TextNode [18-20] 'is'
+      TextNode [21-24] ' a '
+      StrongNode [24-34]
+        TextNode [26-32] 'simple'
+      TextNode [34-35] ' '
+      SpecialTextNode [35-36] '&'
+      TextNode [36-50] ' small text to'
+  BlockQuoteNode [53-73]
+    RootNode [0-16]
+      ParaNode [0-16]
+        SuperNode [0-14]
+          TextNode [0-14] 'test\nyes, test'
+  ParaNode [73-95]
+    SuperNode [73-93]
+      TextNode [73-93] 'the functionality of'
+  BulletListNode [95-153]
+    TightListItemNode [0-0]
+      RootNode [0-20]
+        SuperNode [0-20]
+          TextNode [0-18] 'AST index creation'
+      RootNode [0-19]
+        BulletListNode [0-19]
+          TightListItemNode [0-0]
+            RootNode [0-16]
+              SuperNode [0-16]
+                TextNode [0-14] 'one more level'
+    TightListItemNode [0-0]
+      RootNode [0-14]
+        SuperNode [0-14]
+          TextNode [0-12] 'nothing more'
+  ParaNode [153-165]
+    SuperNode [153-163]
+      TextNode [153-163] 'Everything'
+  VerbatimNode [165-196] 'is expected\nto be fine\n'
