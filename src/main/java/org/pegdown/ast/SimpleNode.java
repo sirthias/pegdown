@@ -42,4 +42,9 @@ public class SimpleNode extends AbstractNode {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+    
+    @Override
+    public String toString() {
+        return super.toString() + " " +  type;
+    }
 }

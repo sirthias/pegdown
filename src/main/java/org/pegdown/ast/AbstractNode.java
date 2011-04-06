@@ -19,4 +19,9 @@ public abstract class AbstractNode implements Node {
     public void setEndIndex(int endIndex) {
         this.endIndex = endIndex;
     }
+    
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " [" + startIndex + '-' + endIndex + ']';
+    }
 }

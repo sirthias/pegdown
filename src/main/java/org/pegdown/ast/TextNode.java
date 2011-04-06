@@ -40,7 +40,7 @@ public class TextNode extends AbstractNode {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " '" + StringUtils.escape(getText()) + '\'';
+        return super.toString() + " '" + StringUtils.escape(getText()) + '\'';
     }
     
     public List<Node> getChildren() {
