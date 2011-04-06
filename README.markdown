@@ -1,11 +1,11 @@
 Introduction
 ------------
 
-_pegdown_ is a pure Java library for clean and lightweight [Markdown][] processing.
+_pegdown_ is a pure Java library for clean and lightweight [Markdown][] processing.  
 It's implementation is based on a [parboiled][] PEG parser and is therefore rather easy to understand and extend.
 
 _pegdown_ is nearly 100% compatible with the original Markdown specification and fully passes the original Markdown test suite.
-On top of the standard Markdown feature set _pegdown_ implements a number of extensions similar to what other popular Markdown processors offer.
+On top of the standard Markdown feature set _pegdown_ implements a number of extensions similar to what other popular Markdown processors offer.  
 Currently _pegdown_ supports the following extensions over standard Markdown:
 
 * SMARTS: Beautifys apostrophes, ellipsises ("..." and ". . .") and dashes ("--" and "---")
@@ -32,10 +32,11 @@ Installation
 You have two options:
 
 * Download the JAR for the latest version from the [download page][].
-  _pegdown_ has a dependency on [parboiled for Java][parboiled], version 0.11.0.
+  _pegdown_ 0.9.2 has a dependency on [parboiled for Java][parboiled], version 0.11.1.
    
 * Point your Maven-compatible build tool to the repository at <http://scala-tools.org/repo-releases>,
-  group id "**org.pegdown**", artifact "**pegdown**". There may also be snapshot builds available at <http://scala-tools.org/repo-snapshots>. 
+  group id "**org.pegdown**", artifact "**pegdown**".    
+  There may also be snapshot builds available at <http://scala-tools.org/repo-snapshots>. 
 
 
 Usage
@@ -62,8 +63,8 @@ Hacking on pegdown
 ------------------
 
 pegdown uses [Apache Buildr](http://buildr.apache.org) for managing the build process. However, if you do not want to
-install Buildr on your machine, it should be no problem to quickly set up project structure for the IDE of your choice
-around the sources, since they are quite compact and the dependecies are few.
+install Buildr on your machine, it should be no problem to quickly set up a project structure for the IDE of your choice
+around the sources, since they are quite compact and the dependencies are few.
 
 In order to provide custom markdown extensions to pegdown you shouldn't even have to get your hands dirty with its
 sources. A [PegDownProcessor][] can be constructed around a given Parser instance, so you can supply your own.
