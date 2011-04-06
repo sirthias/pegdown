@@ -77,6 +77,18 @@ public abstract class AbstractTest {
         actualHtml = tidy(actualHtml);
         assertEqualsMultiline(actualHtml, expectedOutput);
     }
+    
+    protected void testAST(String testName) {        
+        char[] markdown = FileUtils.readAllCharsFromResource(testName + ".text");        
+        Preconditions.checkState(markdown != null, "Test not found");
+        
+        String expectedAst = FileUtils.readAllTextFromResource(testName + ".ast.text");
+        assertNotNull(expectedAst);
+        
+        RootNode astRoot = getProcessor().parseMarkdown(markdown);
+
+        assertEqualsMultiline(printTree(astRoot, new ToStringFormatter<Node>()), expectedAst);
+    }
 
     private String tidy(String html) {
         Reader in = new StringReader(html);

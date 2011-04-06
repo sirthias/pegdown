@@ -70,22 +70,22 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-core/0.11.0/parboiled-core-0.11.0.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-core/0.12.0-SNAPSHOT/parboiled-core-0.12.0-SNAPSHOT.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-core/0.11.0/parboiled-core-0.11.0-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-core/0.12.0-SNAPSHOT/parboiled-core-0.12.0-SNAPSHOT-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-java/0.11.0/parboiled-java-0.11.0.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-java/0.12.0-SNAPSHOT/parboiled-java-0.12.0-SNAPSHOT.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-java/0.11.0/parboiled-java-0.11.0-sources.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/parboiled/parboiled-java/0.12.0-SNAPSHOT/parboiled-java-0.12.0-SNAPSHOT-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
