@@ -109,7 +109,9 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     }
 
     public void visit(HtmlBlockNode node) {
-        printer.println().print(node.getText());
+        String text = node.getText();
+        if (!text.isEmpty()) printer.println();
+        printer.print(text);
     }
 
     public void visit(InlineHtmlNode node) {
@@ -213,7 +215,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
                 printer.println().print("<hr/>");
                 break;
             case Linebreak:
-                printer.print("<br/>").println();
+                printer.print("<br/>");
                 break;
             case Nbsp:
                 printer.print("&nbsp;");

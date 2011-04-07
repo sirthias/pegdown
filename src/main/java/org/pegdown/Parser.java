@@ -469,7 +469,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                                 Sequence(Line(), FirstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline())
                         )
                 ),
-                ext(HARDWRAPS) ? toRule(push(new SimpleNode(Type.Linebreak))) : toRule(push(new TextNode("\n")))
+                ext(HARDWRAPS) ? toRule(push(new SimpleNode(Type.Linebreak))) : toRule(push(new TextNode(" ")))
         );
     }
 

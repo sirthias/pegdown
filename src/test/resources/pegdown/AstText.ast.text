@@ -16,7 +16,7 @@ RootNode [0-196]
     RootNode [0-16]
       ParaNode [0-16]
         SuperNode [0-14]
-          TextNode [0-14] 'test\nyes, test'
+          TextNode [0-14] 'test yes, test'
   ParaNode [73-95]
     SuperNode [73-93]
       TextNode [73-93] 'the functionality of'
