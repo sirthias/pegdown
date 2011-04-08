@@ -32,7 +32,7 @@ define 'pegdown' do
   
   meta_inf << file('NOTICE')
                                     
-  PARBOILED_VERSION = '0.11.1'
+  PARBOILED_VERSION = '0.12.0-SNAPSHOT'
   PARBOILED = [
           "org.parboiled:parboiled-core:jar:#{PARBOILED_VERSION}",
           "org.parboiled:parboiled-core:jar:sources:#{PARBOILED_VERSION}",
