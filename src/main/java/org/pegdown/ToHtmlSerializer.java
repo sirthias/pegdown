@@ -23,6 +23,7 @@ import org.pegdown.ast.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 import static org.parboiled.common.Preconditions.checkArgNotNull;
@@ -35,6 +36,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     private TableNode currentTableNode;
     private int currentTableColumn;
     private boolean inTableHeader;
+    private Random random = new Random(0x2626); // for email obfuscation 
 
     public String toHtml(RootNode astRoot) {
         checkArgNotNull(astRoot, "astRoot");
@@ -123,8 +125,8 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     }
 
     public void visit(MailLinkNode node) {
-        printer.print("<a href=\"mailto:").printEncoded(node.getText(), this).print("\">")
-                .printEncoded(node.getText(), this)
+        printer.print("<a href=\"mailto:").print(obfuscate(node.getText())).print("\">")
+                .print(obfuscate(node.getText()))
                 .print("</a>");
     }
 
@@ -367,7 +369,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         printer = priorPrinter;
         return result;
     }
-    
+
     private String normalize(String string) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < string.length(); i++) {
@@ -379,6 +381,27 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
                     continue;
             }
             sb.append(Character.toLowerCase(c));
+        }
+        return sb.toString();
+    }
+  
+    private String obfuscate(String email) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < email.length(); i++) {
+            char c = email.charAt(i);
+            switch (random.nextInt(5)) {
+                case 0:
+                case 1:
+                    sb.append("&#").append((int) c).append(';');
+                    break;
+                case 2:
+                case 3:
+                    sb.append("&#x").append(Integer.toHexString(c)).append(';');
+                    break;
+                case 4:
+                    String encoded = encode(c);
+                    if (encoded != null) sb.append(encoded); else sb.append(c);
+            }
         }
         return sb.toString();
     }
