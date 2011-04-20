@@ -18,13 +18,9 @@
 
 package org.pegdown.ast;
 
-public class LooseListItemNode extends SuperNode {
+public class DefinitionListNode extends SuperNode {
 
-    public LooseListItemNode() {
-    }
-
-    public LooseListItemNode(Node child) {
-        super(child);
+    public DefinitionListNode() {
     }
 
     @Override

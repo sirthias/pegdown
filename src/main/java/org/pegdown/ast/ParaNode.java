@@ -18,10 +18,16 @@
 
 package org.pegdown.ast;
 
+import java.util.List;
+
 public class ParaNode extends SuperNode {
 
     public ParaNode(Node child) {
         super(child);
+    }
+
+    public ParaNode(List<Node> children) {
+        super(children);
     }
 
     @Override

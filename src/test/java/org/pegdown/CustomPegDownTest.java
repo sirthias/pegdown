@@ -18,11 +18,26 @@
 
 package org.pegdown;
 
+import org.parboiled.Parboiled;
+import org.parboiled.Rule;
 import org.parboiled.common.FileUtils;
+import org.parboiled.parserunners.ParseRunner;
+import org.parboiled.parserunners.TracingParseRunner;
+import org.pegdown.ast.Node;
 import org.testng.annotations.Test;
 
 public class CustomPegDownTest extends AbstractTest {
 
+    /*private final PegDownProcessor processor = new PegDownProcessor(
+            Parboiled.createParser(Parser.class, Extensions.ALL,
+                    new Parser.ParseRunnerProvider() {
+                        public ParseRunner<Node> get(Rule rule) {
+                            return new TracingParseRunner<Node>(rule);
+                        }
+                    }
+            ), 4
+    );*/
+    
     private PegDownProcessor processor = new PegDownProcessor(Extensions.ALL);
 
     @Override

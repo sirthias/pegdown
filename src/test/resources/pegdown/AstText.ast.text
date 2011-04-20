@@ -21,17 +21,17 @@ RootNode [0-196]
     SuperNode [73-93]
       TextNode [73-93] 'the functionality of'
   BulletListNode [95-153]
-    TightListItemNode [0-0]
+    ListItemNode [0-0]
       RootNode [0-20]
         SuperNode [0-20]
           TextNode [0-18] 'AST index creation'
-      RootNode [0-19]
-        BulletListNode [0-19]
-          TightListItemNode [0-0]
+      RootNode [0-17]
+        BulletListNode [0-17]
+          ListItemNode [0-0]
             RootNode [0-16]
               SuperNode [0-16]
                 TextNode [0-14] 'one more level'
-    TightListItemNode [0-0]
+    ListItemNode [0-0]
       RootNode [0-14]
         SuperNode [0-14]
           TextNode [0-12] 'nothing more'

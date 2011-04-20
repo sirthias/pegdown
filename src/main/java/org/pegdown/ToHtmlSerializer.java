@@ -36,6 +36,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     private TableNode currentTableNode;
     private int currentTableColumn;
     private boolean inTableHeader;
+    private boolean inDefinitionList;
     private Random random = new Random(0x2626); // for email obfuscation 
 
     public String toHtml(RootNode astRoot) {
@@ -86,6 +87,16 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         printTag(node, "code");
     }
 
+    public void visit(DefinitionListNode node) {
+        inDefinitionList = true;
+        printIndentedTag(node, "dl");
+        inDefinitionList = false;
+    }
+
+    public void visit(DefinitionTermNode node) {
+        printTag(node, "dt");
+    }
+
     public void visit(EmphNode node) {
         printTag(node, "em");
     }
@@ -120,8 +131,13 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         printer.print(node.getText());
     }
 
-    public void visit(LooseListItemNode node) {
-        printIndentedTag(node, "li");
+    public void visit(ListItemNode node) {
+        if (inDefinitionList) {
+            printIndentedTag(node, "dd");
+        } else {
+            printer.println();
+            printTag(node, "li");
+        }
     }
 
     public void visit(MailLinkNode node) {
@@ -284,10 +300,6 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         printIndentedTag(node, "tr");
     }
 
-    public void visit(TightListItemNode node) {
-        printTag(node, "li");
-    }
-
     public void visit(VerbatimNode node) {
         printer
                 .println().print("<pre><code>")
@@ -356,7 +368,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     }
 
     private void printIndentedTag(SuperNode node, String tag) {
-        printer.println().print('<').print(tag).print('>').indent(+2).println();
+        printer.println().print('<').print(tag).print('>').indent(+2);
         visitChildren(node);
         printer.indent(-2).println().print('<').print('/').print(tag).print('>');
     }

@@ -18,12 +18,10 @@
 
 package org.pegdown.ast;
 
-import java.util.List;
-
 public class BulletListNode extends SuperNode {
 
-    public BulletListNode(List<Node> children) {
-        super(children);
+    public BulletListNode(Node child) {
+        super(child);
     }
 
     @Override

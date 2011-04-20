@@ -24,12 +24,14 @@ public interface Visitor {
     void visit(BlockQuoteNode node);
     void visit(BulletListNode node);
     void visit(CodeNode node);
+    void visit(DefinitionListNode node);
+    void visit(DefinitionTermNode node);
     void visit(EmphNode node);
     void visit(ExpLinkNode node);
     void visit(HeaderNode node);
     void visit(HtmlBlockNode node);
     void visit(InlineHtmlNode node);
-    void visit(LooseListItemNode node);
+    void visit(ListItemNode node);
     void visit(MailLinkNode node);
     void visit(OrderedListNode node);
     void visit(ParaNode node);
@@ -46,7 +48,6 @@ public interface Visitor {
     void visit(TableHeaderNode node);
     void visit(TableNode node);
     void visit(TableRowNode node);
-    void visit(TightListItemNode node);
     void visit(VerbatimNode node);
 
     void visit(TextNode node);

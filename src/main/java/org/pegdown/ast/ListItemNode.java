@@ -16,26 +16,16 @@
  * limitations under the License.
  */
 
-package org.pegdown;
+package org.pegdown.ast;
 
-import org.testng.annotations.Test;
+public class ListItemNode extends SuperNode {
 
-public class PhpMarkdownExtraTest extends AbstractTest {
-
-    private final PegDownProcessor processor = new PegDownProcessor(
-            Extensions.ALL & ~Extensions.SMARTYPANTS & ~Extensions.HARDWRAPS
-    );
+    public ListItemNode(Node child) {
+        super(child);
+    }
 
     @Override
-    public PegDownProcessor getProcessor() {
-        return processor;
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
-
-    @Test
-    public void phpMarkdownExtraTests() throws Exception {
-        test("PhpMarkdownExtra/Abbr");
-        test("PhpMarkdownExtra/Tables");
-        //test("PhpMarkdownExtra/Definition_Lists");
-    }
-
 }

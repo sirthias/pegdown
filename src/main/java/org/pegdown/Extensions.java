@@ -66,11 +66,18 @@ public interface Extensions {
     static final int AUTOLINKS = 0x10;
 
     /**
-     * Enables table support similar to what Multimarkdown offers.
+     * Table support similar to what Multimarkdown offers.
      *
-     * @see <a href="http://fletcherpenney.net/multimarkdown/users_guide/multimarkdown_syntax_guide/">MultiMarkdown</a>
+     * @see <a href="http://fletcherpenney.net/multimarkdown/users_guide/">MultiMarkdown</a>
      */
     static final int TABLES = 0x20;
+    
+    /**
+     * PHP Markdown Extra style definition lists.
+     *
+     * @see <a href="http://michelf.com/projects/php-markdown/extra/#abbr">PHP Markdown Extra</a>
+     */
+    static final int DEFINITIONS = 0x40;
 
     /**
      * All available extensions not including the HTML SUPPRESSION options.
