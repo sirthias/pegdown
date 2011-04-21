@@ -299,8 +299,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
                                 push(new ListItemNode(parseListBlock(block.get().append("\n\n")))),
                 ZeroOrMore(
                     FirstOf(Sequence(BlankLine(), tight.set(false)), tight.set(true)),
-                    Indent(), Line(block),
-                    ZeroOrMore(FirstOf(Sequence(Indent(), TestNot(BlankLine())), NoItem()), Line(block)),
+                    Indent(),
+                    FirstOf(
+                        DoubleIndentedBlocks(block),
+                        IndentedBlock(block)
+                    ),        
                     (tight.get() ? push(parseListBlock(block.get())) :
                         (tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
                                 push(parseListBlock(block.get().append("\n\n")))
@@ -308,7 +311,31 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 )
         );
     }
-
+    
+    public Rule DoubleIndentedBlocks(StringBuilderVar block) {
+        StringBuilderVar line = new StringBuilderVar();
+        return Sequence(
+                Indent(), TestNot(BlankLine()), block.append("    "), Line(block),
+                ZeroOrMore(
+                        OneOrMore(BlankLine(), line.append("\n")),
+                        Indent(), Indent(), line.append("    "), Line(line),
+                        block.append(line.getString()) && line.clearContents()
+                )
+        );
+    }
+    
+    public Rule IndentedBlock(StringBuilderVar block) {
+        return Sequence(
+                Line(block),
+                ZeroOrMore(
+                    FirstOf(
+                        NonblankIndentedLine(block),
+                        Sequence(NoItem(), Line(block))
+                    )
+                )
+        );
+    }
+    
     public Rule NoItem() {
         return TestNot(
                 FirstOf(new ArrayBuilder<Rule>()
@@ -760,15 +787,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
     //************* LINES ****************
 
     public Rule NonblankIndentedLine(StringBuilderVar sb) {
-        return Sequence(TestNot(BlankLine()), IndentedLine(sb));
+        return Sequence(Indent(), TestNot(BlankLine()), Line(sb));
     }
 
     public Rule BlankLine() {
         return Sequence(Sp(), Newline());
-    }
-
-    public Rule IndentedLine(StringBuilderVar sb) {
-        return Sequence(Indent(), Line(sb));
     }
 
     public Rule Line(StringBuilderVar sb) {
