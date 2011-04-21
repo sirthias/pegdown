@@ -74,10 +74,19 @@ public interface Extensions {
     
     /**
      * PHP Markdown Extra style definition lists.
+     * Additionally supports the small extension proposed in the article referenced below.
      *
-     * @see <a href="http://michelf.com/projects/php-markdown/extra/#abbr">PHP Markdown Extra</a>
+     * @see <a href="http://michelf.com/projects/php-markdown/extra/#def-list">PHP Markdown Extra</a>
+     * @see <a href="http://www.justatheory.com/computers/markup/modest-markdown-proposal.html">Extension proposal</a>
      */
     static final int DEFINITIONS = 0x40;
+
+    /**
+     * PHP Markdown Extra style fenced code blocks.
+     *
+     * @see <a href="http://michelf.com/projects/php-markdown/extra/#fenced-code-blocks">PHP Markdown Extra</a>
+     */
+    static final int FENCED_CODE_BLOCKS = 0x80;
 
     /**
      * All available extensions not including the HTML SUPPRESSION options.

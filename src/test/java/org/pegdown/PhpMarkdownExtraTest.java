@@ -35,6 +35,7 @@ public class PhpMarkdownExtraTest extends AbstractTest {
     public void phpMarkdownExtraTests() throws Exception {
         test("PhpMarkdownExtra/Abbr");
         test("PhpMarkdownExtra/Definition_Lists");
+        test("PhpMarkdownExtra/Fenced_Code_Blocks");
         test("PhpMarkdownExtra/Tables");
     }
 

@@ -97,9 +97,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 FirstOf(new ArrayBuilder<Rule>()
                         .add(BlockQuote(), Verbatim())
                         .addNonNulls(ext(ABBREVIATIONS) ? Abbreviation() : null)
-                        .addNonNulls(ext(TABLES) ? Table() : null)
                         .add(Reference(), HorizontalRule(), Heading(), OrderedList(), BulletList(), HtmlBlock())
+                        .addNonNulls(ext(TABLES) ? Table() : null)
                         .addNonNulls(ext(DEFINITIONS) ? DefinitionList() : null)
+                        .addNonNulls(ext(FENCED_CODE_BLOCKS) ? FencedCodeBlock() : null)
                         .add(Para(), Inlines())
                         .get()
                 )
@@ -142,7 +143,31 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 push(new VerbatimNode(text.getString()))
         );
     }
-
+    
+    public Rule FencedCodeBlock() {
+        StringBuilderVar text = new StringBuilderVar();
+        Var<Integer> markerLength = new Var<Integer>();
+        return NodeSequence(
+                CodeFence(markerLength),
+                TestNot(CodeFence(markerLength)), // prevent empty matches
+                ZeroOrMore(BlankLine(), text.append('\n')),
+                OneOrMore(TestNot(Newline(), CodeFence(markerLength)), ANY, text.append(matchedChar())),
+                Newline(),
+                push(new VerbatimNode(text.appended('\n').getString())),
+                CodeFence(markerLength)
+        );
+    }
+    
+    @Cached
+    public Rule CodeFence(Var<Integer> markerLength) {
+        return Sequence(
+                NOrMore('~', 3),
+                (markerLength.isSet() && matchLength() == markerLength.get()) ||
+                    (markerLength.isNotSet() && markerLength.set(matchLength())),
+                Sp(), Newline()
+        );
+    }
+    
     public Rule HorizontalRule() {
         return NodeSequence(
                 NonindentSpace(),
@@ -345,8 +370,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 Line(block),
                 ZeroOrMore(
                     FirstOf(
-                        NonblankIndentedLine(block),
-                        Sequence(NoItem(), Line(block))
+                            NonblankIndentedLine(block),
+                            Sequence(NoItem(), Line(block))
                     )
                 )
         );
@@ -910,9 +935,6 @@ public class Parser extends BaseParser<Object> implements Extensions {
         if (ext(AUTOLINKS)) {
             chars += "(){}";
         }
-        if (ext(TABLES)) {
-            chars += '|';
-        }
         return AnyOf(chars);
     }
 
@@ -1107,7 +1129,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     //************* HELPERS ****************
-
+    
     public Rule NOrMore(char c, int n) {
         return Sequence(StringUtils.repeat(c, n), ZeroOrMore(c));
     }
