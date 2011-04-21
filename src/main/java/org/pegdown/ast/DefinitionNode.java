@@ -18,7 +18,11 @@
 
 package org.pegdown.ast;
 
-public class DefinitionTermNode extends SuperNode {
+public class DefinitionNode extends SuperNode {
+
+    public DefinitionNode(Node child) {
+        super(child);
+    }
 
     @Override
     public void accept(Visitor visitor) {

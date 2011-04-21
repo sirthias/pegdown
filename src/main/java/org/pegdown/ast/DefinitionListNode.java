@@ -20,9 +20,6 @@ package org.pegdown.ast;
 
 public class DefinitionListNode extends SuperNode {
 
-    public DefinitionListNode() {
-    }
-
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

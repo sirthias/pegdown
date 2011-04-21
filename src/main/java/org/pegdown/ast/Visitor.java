@@ -25,6 +25,7 @@ public interface Visitor {
     void visit(BulletListNode node);
     void visit(CodeNode node);
     void visit(DefinitionListNode node);
+    void visit(DefinitionNode node);
     void visit(DefinitionTermNode node);
     void visit(EmphNode node);
     void visit(ExpLinkNode node);

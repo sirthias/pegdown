@@ -99,9 +99,9 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         .add(BlockQuote(), Verbatim())
                         .addNonNulls(ext(ABBREVIATIONS) ? Abbreviation() : null)
                         .addNonNulls(ext(TABLES) ? Table() : null)
-                        // .addNonNulls(ext(DEFINITIONS) ? DefinitionList() : null)
-                        .add(Reference(), HorizontalRule(), Heading(), OrderedList(), BulletList(), HtmlBlock(), Para(),
-                                Inlines())
+                        .add(Reference(), HorizontalRule(), Heading(), OrderedList(), BulletList(), HtmlBlock())
+                        .addNonNulls(ext(DEFINITIONS) ? DefinitionList() : null)
+                        .add(Para(), Inlines())
                         .get()
                 )
         );
@@ -221,14 +221,20 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule DefinitionList() {
         return NodeSequence(
                 // test for successful definition list match before actually building it to reduce backtracking
-                //TestNot(Spacechar()),
-                //Test(OneOrMore(OneOrMore(TestNot(Newline()), ANY), Newline()), Optional(BlankLine()), DefListBullet()),
+                TestNot(Spacechar()),
+                Test(
+                        OneOrMore(TestNot(BlankLine()), TestNot(DefListBullet()),
+                                OneOrMore(NotNewline(), ANY), Newline()),
+                        Optional(BlankLine()),
+                        DefListBullet()
+                ),
                 push(new DefinitionListNode()),
                 OneOrMore(
                         push(new SuperNode()),
                         OneOrMore(DefListTerm(), addAsChild()),
                         OneOrMore(Definition(), addAsChild()),
-                        addAsChild()
+                        addAsChild(),
+                        Optional(BlankLine())
                 )
         );
     }
@@ -246,18 +252,19 @@ public class Parser extends BaseParser<Object> implements Extensions {
     
     public Rule DefTermInline() {
         return Sequence(
-                TestNot(Optional(':'), Newline()),
+                NotNewline(),
+                TestNot(':', Newline()),
                 Inline()
         );
     }
     
     public Rule Definition() {
-        /*return FirstOf(
-                Sequence(BlankLine(), ListLoose(DefListBullet())),
-                ListTight(DefListBullet()),
-                ListLoose(DefListBullet()) // if it's not tight it might be loose without starting blank line
-        );*/
-        return EMPTY;
+        SuperNodeCreator itemNodeCreator = new SuperNodeCreator() {
+            public SuperNode create(Node child) {
+                return new DefinitionNode(child);
+            }
+        };
+        return ListItem(DefListBullet(), itemNodeCreator);
     }
     
     public Rule DefListBullet() {
@@ -267,36 +274,46 @@ public class Parser extends BaseParser<Object> implements Extensions {
     //************* LISTS ****************
 
     public Rule BulletList() {
+        SuperNodeCreator itemNodeCreator = new SuperNodeCreator() {
+            public SuperNode create(Node child) {
+                return new ListItemNode(child);
+            }
+        };
         return NodeSequence(
-                ListItem(Bullet()), push(new BulletListNode(popAsNode())),
-                ZeroOrMore(ListItem(Bullet()), addAsChild()),
+                ListItem(Bullet(), itemNodeCreator), push(new BulletListNode(popAsNode())),
+                ZeroOrMore(ListItem(Bullet(), itemNodeCreator), addAsChild()),
                 ZeroOrMore(BlankLine())
         );
     }
 
     public Rule OrderedList() {
+        SuperNodeCreator itemNodeCreator = new SuperNodeCreator() {
+            public SuperNode create(Node child) {
+                return new ListItemNode(child);
+            }
+        };
         return NodeSequence(
-                ListItem(Enumerator()), push(new OrderedListNode(popAsNode())),
-                ZeroOrMore(ListItem(Enumerator()), addAsChild()),
+                ListItem(Enumerator(), itemNodeCreator), push(new OrderedListNode(popAsNode())),
+                ZeroOrMore(ListItem(Enumerator(), itemNodeCreator), addAsChild()),
                 ZeroOrMore(BlankLine())
         );
     }
 
     @Cached
-    public Rule ListItem(Rule itemStart) {
+    public Rule ListItem(Rule itemStart, SuperNodeCreator itemNodeCreator) {
         // for a simpler parser design we use a recursive parsing strategy for list items:
         // we collect a number of markdown source blocks for an item, run complete parsing cycle on these and attach
         // the roots of the inner parsing results AST to the outer AST tree
         StringBuilderVar block = new StringBuilderVar();
         Var<Boolean> tight = new Var<Boolean>(false);
-        Var<ListItemNode> tightFirstItem = new Var<ListItemNode>();
+        Var<SuperNode> tightFirstItem = new Var<SuperNode>();
         return Sequence(
                 FirstOf(BlankLine(), tight.set(true)), 
                 itemStart, Line(block),                
                 ZeroOrMore(Optional(Indent()), NoItem(), Line(block)),
-                tight.get() ? push(tightFirstItem.setAndGet(new ListItemNode(parseListBlock(block.get())))) :
+                tight.get() ? push(tightFirstItem.setAndGet(itemNodeCreator.create(parseListBlock(block.get())))) :
                         fixFirstItem((SuperNode) peek()) &&
-                                push(new ListItemNode(parseListBlock(block.get().append("\n\n")))),
+                                push(itemNodeCreator.create(parseListBlock(block.get().append("\n\n")))),
                 ZeroOrMore(
                     FirstOf(Sequence(BlankLine(), tight.set(false)), tight.set(true)),
                     Indent(),
@@ -356,13 +373,13 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     boolean fixFirstItem(SuperNode listNode) {
         List<Node> items = listNode.getChildren();
-        if (items.size() == 1) {
-            wrapFirstItemInPara((ListItemNode) items.get(0));
+        if (items.size() == 1 && items.get(0) instanceof ListItemNode) {
+            wrapFirstItemInPara((SuperNode) items.get(0));
         }
         return true;
     }
 
-    boolean wrapFirstItemInPara(ListItemNode item) {
+    boolean wrapFirstItemInPara(SuperNode item) {
         List<Node> firstItemChildren = item.getChildren();
         firstItemChildren.set(0, new ParaNode(firstItemChildren.get(0).getChildren()));
         return true;
@@ -1145,6 +1162,6 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
     
     private interface SuperNodeCreator {
-        SuperNode create();
+        SuperNode create(Node child);
     }
 }

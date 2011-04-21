@@ -36,7 +36,6 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     private TableNode currentTableNode;
     private int currentTableColumn;
     private boolean inTableHeader;
-    private boolean inDefinitionList;
     private Random random = new Random(0x2626); // for email obfuscation 
 
     public String toHtml(RootNode astRoot) {
@@ -88,9 +87,11 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     }
 
     public void visit(DefinitionListNode node) {
-        inDefinitionList = true;
         printIndentedTag(node, "dl");
-        inDefinitionList = false;
+    }
+
+    public void visit(DefinitionNode node) {
+        printTag(node, "dd");
     }
 
     public void visit(DefinitionTermNode node) {
@@ -132,12 +133,8 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     }
 
     public void visit(ListItemNode node) {
-        if (inDefinitionList) {
-            printIndentedTag(node, "dd");
-        } else {
-            printer.println();
-            printTag(node, "li");
-        }
+        printer.println();
+        printTag(node, "li");
     }
 
     public void visit(MailLinkNode node) {
