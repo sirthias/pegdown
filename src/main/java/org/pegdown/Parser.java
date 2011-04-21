@@ -46,7 +46,6 @@ import static org.parboiled.errors.ErrorUtils.printParseErrors;
  * Builds an Abstract Syntax Tree (AST) of {@link Node} objects.
  */
 @SuppressWarnings( {"InfiniteRecursion"})
-@SkipActionsInPredicates
 public class Parser extends BaseParser<Object> implements Extensions {
 
     public interface ParseRunnerProvider {
@@ -479,7 +478,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     @MemoMismatches
     public Rule Inline() {
         return FirstOf(new ArrayBuilder<Rule>()
-                .add(Link(), Str(), Endline(), UlOrStarLine(), Space(), Strong(), Emph(), Image(), Code(), InlineHtml(),
+                .add(Link(), Str(), Endline(), UlOrStarLine(), Space(), StrongOrEmph(), Image(), Code(), InlineHtml(),
                         Entity(), EscapedChar())
                 .addNonNulls(ext(QUOTES) ? new Rule[] {SingleQuoted(), DoubleQuoted(), DoubleAngleQuoted()} : null)
                 .addNonNulls(ext(SMARTS) ? new Rule[] {Smarts()} : null)
@@ -532,6 +531,13 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule CharLine(char c) {
         return FirstOf(NOrMore(c, 4), Sequence(Spacechar(), OneOrMore(c), Test(Spacechar())));
     }
+    
+    public Rule StrongOrEmph() {
+        return Sequence(
+                Test(AnyOf("*_")),
+                FirstOf(Strong(), Emph())
+        );
+    }
 
     public Rule Emph() {
         return NodeSequence(
@@ -580,23 +586,29 @@ public class Parser extends BaseParser<Object> implements Extensions {
     //************* LINKS ****************
 
     public Rule Image() {
-        return NodeSequence('!',
+        return NodeSequence(
+                '!', Label(),
                 FirstOf(
-                        Sequence(ExplicitLink(), push(((ExpLinkNode) pop()).asImage())),
-                        Sequence(ReferenceLink(), push(((RefLinkNode) pop()).asImage()))
+                        Sequence(ExplicitLink(), ((ExpLinkNode) peek()).makeImage()),
+                        Sequence(ReferenceLink(), ((RefLinkNode) peek()).makeImage())
                 )
         );
     }
 
     @MemoMismatches
     public Rule Link() {
-        return NodeSequence(FirstOf(ExplicitLink(), ReferenceLink(), AutoLinkUrl(), AutoLinkEmail()));
+        return NodeSequence(
+                FirstOf(
+                        Sequence(Label(), FirstOf(ExplicitLink(), ReferenceLink())),
+                        AutoLink()
+                )
+        );
     }
 
     public Rule ExplicitLink() {
         Var<ExpLinkNode> node = new Var<ExpLinkNode>();
         return Sequence(
-                Label(), push(node.setAndGet(new ExpLinkNode(popAsNode()))),
+                push(node.setAndGet(new ExpLinkNode(popAsNode()))),
                 Spn1(), '(', Sp(),
                 Source(node),
                 Spn1(), Optional(Title(node)),
@@ -607,7 +619,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule ReferenceLink() {
         Var<RefLinkNode> node = new Var<RefLinkNode>();
         return Sequence(
-                Label(), push(node.setAndGet(new RefLinkNode(popAsNode()))),
+                push(node.setAndGet(new RefLinkNode(popAsNode()))),
                 FirstOf(
                         // regular reference link
                         Sequence(Spn1(), node.get().setSeparatorSpace(match()),
@@ -653,21 +665,25 @@ public class Parser extends BaseParser<Object> implements Extensions {
         );
     }
 
-    public Rule AutoLinkUrl() {
+    public Rule AutoLink() {
         return Sequence(
                 ext(AUTOLINKS) ? Optional('<') : Ch('<'),
-                Sequence(OneOrMore(Letter()), "://", AutoLinkEnd()),
-                push(new AutoLinkNode(match())),
+                FirstOf(AutoLinkUrl(), AutoLinkEmail()),
                 ext(AUTOLINKS) ? Optional('>') : Ch('>')
+        );
+    }
+
+    public Rule AutoLinkUrl() {
+        return Sequence(
+                Sequence(OneOrMore(Letter()), "://", AutoLinkEnd()),
+                push(new AutoLinkNode(match()))
         );
     }
 
     public Rule AutoLinkEmail() {
         return Sequence(
-                ext(AUTOLINKS) ? Optional('<') : Ch('<'),
                 Sequence(OneOrMore(FirstOf(Alphanumeric(), AnyOf("-+_."))), '@', AutoLinkEnd()),
-                push(new MailLinkNode(match())),
-                ext(AUTOLINKS) ? Optional('>') : Ch('>')
+                push(new MailLinkNode(match()))
         );
     }
 
@@ -737,6 +753,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     public Rule Code() {
         return NodeSequence(
+                Test('`'),
                 FirstOf(
                         Code(Ticks(1)),
                         Code(Ticks(2)),

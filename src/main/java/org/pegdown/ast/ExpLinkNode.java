@@ -49,9 +49,8 @@ public class ExpLinkNode extends SuperNode {
         return image;
     }
 
-    public ExpLinkNode asImage() {
-        image = true;
-        return this;
+    public boolean makeImage() {
+        return image = true;
     }
     
     @Override

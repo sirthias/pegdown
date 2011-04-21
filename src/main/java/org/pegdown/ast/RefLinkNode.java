@@ -49,9 +49,8 @@ public class RefLinkNode extends SuperNode {
 		return image;
 	}
 
-    public RefLinkNode asImage() {
-        image = true;
-        return this;
+    public boolean makeImage() {
+        return image = true;
     }
     
     @Override
