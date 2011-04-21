@@ -20,6 +20,11 @@ public abstract class AbstractNode implements Node {
         this.endIndex = endIndex;
     }
     
+    public void shiftIndices(int delta) {
+        startIndex += delta;
+        endIndex += delta;
+    }
+    
     @Override
     public String toString() {
         return getClass().getSimpleName() + " [" + startIndex + '-' + endIndex + ']';

@@ -126,7 +126,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 ),
                 // trigger a recursive parsing run on the inner source we just built
                 // and attach the root of the inner parses AST
-                push(new BlockQuoteNode(parseInternal(inner.getChars())))
+                push(new BlockQuoteNode(parseInternal(inner.getChars()).getChildren()))
         );
     }
 
@@ -232,7 +232,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         push(new SuperNode()),
                         OneOrMore(DefListTerm(), addAsChild()),
                         OneOrMore(Definition(), addAsChild()),
-                        addAsChild(),
+                        ((SuperNode)peek(1)).getChildren().addAll(popAsNode().getChildren()),
                         Optional(BlankLine())
                 )
         );
@@ -306,24 +306,24 @@ public class Parser extends BaseParser<Object> implements Extensions {
         StringBuilderVar block = new StringBuilderVar();
         Var<Boolean> tight = new Var<Boolean>(false);
         Var<SuperNode> tightFirstItem = new Var<SuperNode>();
-        return Sequence(
-                FirstOf(BlankLine(), tight.set(true)), 
-                itemStart, Line(block),                
+        return NodeSequence(
+                FirstOf(BlankLine(), tight.set(true)),
+                itemStart, Line(block),
                 ZeroOrMore(Optional(Indent()), NoItem(), Line(block)),
                 tight.get() ? push(tightFirstItem.setAndGet(itemNodeCreator.create(parseListBlock(block.get())))) :
-                        fixFirstItem((SuperNode) peek()) &&
+                        fixFirstItem((SuperNode) peek(1)) &&
                                 push(itemNodeCreator.create(parseListBlock(block.get().append("\n\n")))),
                 ZeroOrMore(
-                    FirstOf(Sequence(BlankLine(), tight.set(false)), tight.set(true)),
-                    Indent(),
-                    FirstOf(
-                        DoubleIndentedBlocks(block),
-                        IndentedBlock(block)
-                    ),        
-                    (tight.get() ? push(parseListBlock(block.get())) :
-                        (tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
-                                push(parseListBlock(block.get().append("\n\n")))
-                    ) && addAsChild()
+                        FirstOf(Sequence(BlankLine(), tight.set(false)), tight.set(true)),
+                        Indent(),
+                        FirstOf(
+                                DoubleIndentedBlocks(block),
+                                IndentedBlock(block)
+                        ),
+                        (tight.get() ? push(parseListBlock(block.get())) :
+                                (tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
+                                        push(parseListBlock(block.get().append("\n\n")))
+                        ) && addAsChild()
                 )
         );
     }
@@ -379,8 +379,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     boolean wrapFirstItemInPara(SuperNode item) {
-        List<Node> firstItemChildren = item.getChildren();
-        firstItemChildren.set(0, new ParaNode(firstItemChildren.get(0).getChildren()));
+        Node firstItemFirstChild = item.getChildren().get(0);
+        ParaNode paraNode = new ParaNode(firstItemFirstChild.getChildren());
+        paraNode.setStartIndex(firstItemFirstChild.getStartIndex());
+        paraNode.setEndIndex(firstItemFirstChild.getEndIndex());
+        item.getChildren().set(0, paraNode);
         return true;
     }
     
@@ -1117,11 +1120,23 @@ public class Parser extends BaseParser<Object> implements Extensions {
         );
     }
     
-    boolean setIndices() {
+    public boolean setIndices() {
         AbstractNode node = (AbstractNode) peek();
         node.setStartIndex((Integer)pop(1));
         node.setEndIndex(getContext().getCurrentIndex());
+        if (node instanceof BlockQuoteNode || node instanceof ListItemNode || node instanceof DefinitionNode) {
+            for (Node subNode : node.getChildren()) {
+                shiftSubTreeIndices(subNode, node.getStartIndex());
+            }
+        }
         return true;
+    }
+    
+    public void shiftSubTreeIndices(Node node, int delta) {
+        ((AbstractNode) node).shiftIndices(delta);
+        for (Node subNode : node.getChildren()) {
+            shiftSubTreeIndices(subNode, delta);
+        }
     }
 
     public boolean addAsChild() {

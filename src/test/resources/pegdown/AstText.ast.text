@@ -1,4 +1,4 @@
-RootNode [0-196]
+RootNode [0-262]
   HeaderNode [0-11]
     TextNode [2-10] 'Ast Test'
   ParaNode [12-53]
@@ -13,29 +13,50 @@ RootNode [0-196]
       SpecialTextNode [35-36] '&'
       TextNode [36-50] ' small text to'
   BlockQuoteNode [53-73]
-    RootNode [0-16]
-      ParaNode [0-16]
-        SuperNode [0-14]
-          TextNode [0-14] 'test yes, test'
+    ParaNode [53-69]
+      SuperNode [53-67]
+        TextNode [53-57] 'test'
+        SimpleNode [57-58] Linebreak
+        TextNode [58-67] 'yes, test'
   ParaNode [73-95]
     SuperNode [73-93]
       TextNode [73-93] 'the functionality of'
-  BulletListNode [95-153]
-    ListItemNode [0-0]
-      RootNode [0-20]
-        SuperNode [0-20]
-          TextNode [0-18] 'AST index creation'
-      RootNode [0-17]
-        BulletListNode [0-17]
-          ListItemNode [0-0]
-            RootNode [0-16]
-              SuperNode [0-16]
-                TextNode [0-14] 'one more level'
-    ListItemNode [0-0]
-      RootNode [0-14]
-        SuperNode [0-14]
-          TextNode [0-12] 'nothing more'
-  ParaNode [153-165]
-    SuperNode [153-163]
-      TextNode [153-163] 'Everything'
-  VerbatimNode [165-196] 'is expected\nto be fine\n'
+  BulletListNode [95-181]
+    ListItemNode [95-137]
+      ParaNode [95-115]
+        SuperNode [95-115]
+          TextNode [95-113] 'AST index creation'
+      RootNode [95-112]
+        BulletListNode [95-112]
+          ListItemNode [95-112]
+            RootNode [95-111]
+              SuperNode [95-111]
+                TextNode [95-109] 'one more level'
+    ListItemNode [137-157]
+      RootNode [137-152]
+        ParaNode [137-152]
+          SuperNode [137-149]
+            TextNode [137-149] 'nothing more'
+    ListItemNode [157-178]
+      RootNode [157-177]
+        ParaNode [157-177]
+          SuperNode [157-174]
+            TextNode [157-162] 'multi'
+            SimpleNode [162-163] Linebreak
+            TextNode [163-174] ' paragraph'
+  ParaNode [181-195]
+    SuperNode [183-193]
+      TextNode [183-192] 'list item'
+      SpecialTextNode [192-193] '!'
+  DefinitionListNode [195-219]
+    DefinitionTermNode [195-200]
+      TextNode [195-199] 'And:'
+    DefinitionNode [200-218]
+      RootNode [200-215]
+        SuperNode [200-215]
+          TextNode [200-212] 'a definition'
+          SpecialTextNode [212-213] '!'
+  ParaNode [219-231]
+    SuperNode [219-229]
+      TextNode [219-229] 'Everything'
+  VerbatimNode [231-262] 'is expected\nto be fine\n'

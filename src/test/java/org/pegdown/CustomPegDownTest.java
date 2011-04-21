@@ -59,6 +59,11 @@ public class CustomPegDownTest extends AbstractTest {
     }
     
     @Test(dependsOnMethods = "customPegDownTests")
+    public void testASTIndices() {
+        testAST("pegdown/AstText");
+    }
+    
+    @Test(dependsOnMethods = "testASTIndices")
     public void customPegDownTests2() {
         processor = new PegDownProcessor(Extensions.NONE);
         test("pegdown/Special Chars");
@@ -98,11 +103,6 @@ public class CustomPegDownTest extends AbstractTest {
                 "<p>This is a paragraph containing a strong inline HTML element\n" +
                 "and:</p>\n" +
                 "\n");
-    }
-    
-    @Test(dependsOnMethods = "testHTMLSuppression")
-    public void testASTIndices() {
-        testAST("pegdown/AstText");
     }
 
 }
