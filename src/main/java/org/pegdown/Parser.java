@@ -935,6 +935,15 @@ public class Parser extends BaseParser<Object> implements Extensions {
         if (ext(AUTOLINKS)) {
             chars += "(){}";
         }
+        if (ext(DEFINITIONS)) {
+            chars += ":";
+        }
+        if (ext(TABLES)) {
+            chars += "|";
+        }
+        if (ext(DEFINITIONS) | ext(FENCED_CODE_BLOCKS)) {
+            chars += "~";
+        }
         return AnyOf(chars);
     }
 

@@ -50,7 +50,7 @@ RootNode [0-262]
       SpecialTextNode [192-193] '!'
   DefinitionListNode [195-219]
     DefinitionTermNode [195-200]
-      TextNode [195-199] 'And:'
+      TextNode [195-198] 'And'
     DefinitionNode [200-218]
       RootNode [200-215]
         SuperNode [200-215]
