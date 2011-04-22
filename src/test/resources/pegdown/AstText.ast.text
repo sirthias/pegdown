@@ -13,37 +13,37 @@ RootNode [0-262]
       SpecialTextNode [35-36] '&'
       TextNode [36-50] ' small text to'
   BlockQuoteNode [53-73]
-    ParaNode [53-69]
-      SuperNode [53-67]
-        TextNode [53-57] 'test'
-        SimpleNode [57-58] Linebreak
-        TextNode [58-67] 'yes, test'
+    ParaNode [55-53]
+      SuperNode [55-71]
+        TextNode [55-59] 'test'
+        SimpleNode [59-62] Linebreak
+        TextNode [62-71] 'yes, test'
   ParaNode [73-95]
     SuperNode [73-93]
       TextNode [73-93] 'the functionality of'
   BulletListNode [95-181]
     ListItemNode [95-137]
-      ParaNode [95-115]
-        SuperNode [95-115]
-          TextNode [95-113] 'AST index creation'
-      RootNode [95-112]
-        BulletListNode [95-112]
-          ListItemNode [95-112]
-            RootNode [95-111]
-              SuperNode [95-111]
-                TextNode [95-109] 'one more level'
+      ParaNode [97-95]
+        SuperNode [97-95]
+          TextNode [97-115] 'AST index creation'
+      RootNode [99-95]
+        BulletListNode [99-95]
+          ListItemNode [99-95]
+            RootNode [101-99]
+              SuperNode [101-99]
+                TextNode [101-115] 'one more level'
     ListItemNode [137-157]
-      RootNode [137-152]
-        ParaNode [137-152]
-          SuperNode [137-149]
-            TextNode [137-149] 'nothing more'
+      RootNode [144-137]
+        ParaNode [144-137]
+          SuperNode [144-156]
+            TextNode [144-156] 'nothing more'
     ListItemNode [157-178]
-      RootNode [157-177]
-        ParaNode [157-177]
-          SuperNode [157-174]
-            TextNode [157-162] 'multi'
-            SimpleNode [162-163] Linebreak
-            TextNode [163-174] ' paragraph'
+      RootNode [160-157]
+        ParaNode [160-157]
+          SuperNode [160-177]
+            TextNode [160-165] 'multi'
+            SimpleNode [165-166] Linebreak
+            TextNode [166-177] ' paragraph'
   ParaNode [181-195]
     SuperNode [183-193]
       TextNode [183-192] 'list item'
@@ -52,10 +52,10 @@ RootNode [0-262]
     DefinitionTermNode [195-200]
       TextNode [195-198] 'And'
     DefinitionNode [200-218]
-      RootNode [200-215]
-        SuperNode [200-215]
-          TextNode [200-212] 'a definition'
-          SpecialTextNode [212-213] '!'
+      RootNode [204-200]
+        SuperNode [204-200]
+          TextNode [204-216] 'a definition'
+          SpecialTextNode [216-217] '!'
   ParaNode [219-231]
     SuperNode [219-229]
       TextNode [219-229] 'Everything'

@@ -18,11 +18,12 @@
 
 package org.pegdown;
 
-import org.objectweb.asm.tree.InnerClassNode;
 import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
 import org.parboiled.annotations.*;
+import org.parboiled.buffers.DefaultInputBuffer;
+import org.parboiled.buffers.InputBuffer;
 import org.parboiled.common.ArrayBuilder;
 import org.parboiled.common.ImmutableList;
 import org.parboiled.common.StringUtils;
@@ -47,6 +48,8 @@ import static org.parboiled.errors.ErrorUtils.printParseErrors;
  */
 @SuppressWarnings( {"InfiniteRecursion"})
 public class Parser extends BaseParser<Object> implements Extensions {
+    
+    private static final char CROSSED_OUT = '\uffff';
 
     public interface ParseRunnerProvider {
         ParseRunner<Node> get(Rule rule);
@@ -117,17 +120,17 @@ public class Parser extends BaseParser<Object> implements Extensions {
         StringBuilderVar inner = new StringBuilderVar();
         return NodeSequence(
                 OneOrMore(
-                        '>', Optional(' '), Line(inner),
+                        CrossedOut(Sequence('>', Optional(' ')), inner), Line(inner),
                         ZeroOrMore(
                                 TestNot('>'),
                                 TestNot(BlankLine()),
                                 Line(inner)
                         ),
-                        ZeroOrMore(BlankLine(), inner.append("\n"))
+                        ZeroOrMore(BlankLine(), inner.append(match()))
                 ),
                 // trigger a recursive parsing run on the inner source we just built
                 // and attach the root of the inner parses AST
-                push(new BlockQuoteNode(parseInternal(inner.getChars()).getChildren()))
+                push(new BlockQuoteNode(parseInternal(inner).getChildren()))
         );
     }
 
@@ -137,7 +140,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return NodeSequence(
                 OneOrMore(
                         ZeroOrMore(BlankLine(), line.append("\n")),
-                        NonblankIndentedLine(line),
+                        Indent(), TestNot(BlankLine()), Line(line),
                         text.append(line.getString()) && line.clearContents()
                 ),
                 push(new VerbatimNode(text.getString()))
@@ -163,7 +166,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 NOrMore('~', 3),
                 (markerLength.isSet() && matchLength() == markerLength.get()) ||
-                    (markerLength.isNotSet() && markerLength.set(matchLength())),
+                        (markerLength.isNotSet() && markerLength.set(matchLength())),
                 Sp(), Newline()
         );
     }
@@ -329,28 +332,45 @@ public class Parser extends BaseParser<Object> implements Extensions {
         // we collect a number of markdown source blocks for an item, run complete parsing cycle on these and attach
         // the roots of the inner parsing results AST to the outer AST tree
         StringBuilderVar block = new StringBuilderVar();
+        StringBuilderVar temp = new StringBuilderVar();
         Var<Boolean> tight = new Var<Boolean>(false);
         Var<SuperNode> tightFirstItem = new Var<SuperNode>();
         return NodeSequence(
-                FirstOf(BlankLine(), tight.set(true)),
-                itemStart, Line(block),
-                ZeroOrMore(Optional(Indent()), NoItem(), Line(block)),
-                tight.get() ? push(tightFirstItem.setAndGet(itemNodeCreator.create(parseListBlock(block.get())))) :
-                        fixFirstItem((SuperNode) peek(1)) &&
-                                push(itemNodeCreator.create(parseListBlock(block.get().append("\n\n")))),
+                FirstOf(CrossedOut(BlankLine(), block), tight.set(true)),
+                CrossedOut(itemStart, block), Line(block),
                 ZeroOrMore(
-                        FirstOf(Sequence(BlankLine(), tight.set(false)), tight.set(true)),
-                        Indent(),
+                        Optional(CrossedOut(Indent(), temp)),
+                        NotItem(),
+                        Line(temp),
+                        block.append(temp.getString()) && temp.clearContents()
+                ),
+                tight.get() ? push(tightFirstItem.setAndGet(itemNodeCreator.create(parseListBlock(block)))) :
+                        fixFirstItem((SuperNode) peek(1)) &&
+                                push(itemNodeCreator.create(parseListBlock(block.appended("\n\n")))),
+                ZeroOrMore(
+                        FirstOf(Sequence(CrossedOut(BlankLine(), block), tight.set(false)), tight.set(true)),
+                        CrossedOut(Indent(), block),
                         FirstOf(
                                 DoubleIndentedBlocks(block),
                                 IndentedBlock(block)
                         ),
-                        (tight.get() ? push(parseListBlock(block.get())) :
+                        (tight.get() ? push(parseListBlock(block)) :
                                 (tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
-                                        push(parseListBlock(block.get().append("\n\n")))
+                                        push(parseListBlock(block.appended("\n\n")))
                         ) && addAsChild()
                 )
         );
+    }
+    
+    public Rule CrossedOut(Rule rule, StringBuilderVar block) {
+        return Sequence(rule, appendCrossed(block));
+    }
+    
+    boolean appendCrossed(StringBuilderVar block) {
+        for (int i = 0; i < matchLength(); i++) {
+            block.append(CROSSED_OUT);
+        }
+        return true;
     }
     
     public Rule DoubleIndentedBlocks(StringBuilderVar block) {
@@ -358,8 +378,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 Indent(), TestNot(BlankLine()), block.append("    "), Line(block),
                 ZeroOrMore(
-                        OneOrMore(BlankLine(), line.append("\n")),
-                        Indent(), Indent(), line.append("    "), Line(line),
+                        OneOrMore(BlankLine(), line.append(match())),
+                        CrossedOut(Indent(), line), Indent(), line.append("    "), Line(line),
                         block.append(line.getString()) && line.clearContents()
                 )
         );
@@ -370,14 +390,15 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 Line(block),
                 ZeroOrMore(
                     FirstOf(
-                            NonblankIndentedLine(block),
-                            Sequence(NoItem(), Line(block))
-                    )
+                            Sequence(TestNot(BlankLine()), CrossedOut(Indent(), block)),
+                            NotItem()
+                    ),
+                    Line(block)
                 )
         );
     }
     
-    public Rule NoItem() {
+    public Rule NotItem() {
         return TestNot(
                 FirstOf(new ArrayBuilder<Rule>()
                         .add(Bullet(), Enumerator(), BlankLine(), HorizontalRule())
@@ -387,11 +408,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
         );
     }
 
-    Node parseListBlock(StringBuilder block) {
+    Node parseListBlock(StringBuilderVar block) {
         Context<Object> context = getContext();
-        Node innerRoot = parseInternal(block.toString().toCharArray());
+        Node innerRoot = parseInternal(block);
         setContext(context); // we need to save and restore the context since we might be recursing
-        block.setLength(0); // clear inner source buffer
+        block.clearContents();
         return innerRoot;
     }
 
@@ -848,19 +869,14 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     //************* LINES ****************
 
-    public Rule NonblankIndentedLine(StringBuilderVar sb) {
-        return Sequence(Indent(), TestNot(BlankLine()), Line(sb));
-    }
-
     public Rule BlankLine() {
         return Sequence(Sp(), Newline());
     }
 
     public Rule Line(StringBuilderVar sb) {
         return Sequence(
-                ZeroOrMore(NotNewline(), ANY), push(match()),
-                Newline(),
-                sb.append((String)pop()) && sb.append('\n')
+                Sequence(ZeroOrMore(NotNewline(), ANY), Newline()),
+                sb.append(match())
         );
     }
 
@@ -1200,9 +1216,42 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public boolean ext(int extension) {
         return (options & extension) > 0;
     }
+    
+    // called for inner parses for list items and blockquotes
+    public RootNode parseInternal(StringBuilderVar block) {
+        char[] chars = block.getChars();
+        int[] ixMap = new int[chars.length]; // map of cleaned indices to original indices
+        
+        // strip out CROSSED_OUT characters and build index map
+        StringBuilder clean = new StringBuilder();
+        for (int i = 0; i < chars.length; i++) {
+            char c = chars[i];
+            if (c != CROSSED_OUT) {
+                ixMap[clean.length()] = i;
+                clean.append(c);
+            }
+        }
+        
+        // run inner parse
+        char[] cleaned = new char[clean.length()];
+        clean.getChars(0, cleaned.length, cleaned, 0);
+        RootNode rootNode = parseInternal(cleaned);
+        
+        // correct AST indices with index map
+        fixIndices(rootNode, ixMap);
+        
+        return rootNode;
+    }
+
+    private void fixIndices(Node node, int[] ixMap) {
+        ((AbstractNode) node).mapIndices(ixMap);
+        for (Node subNode : node.getChildren()) {
+            fixIndices(subNode, ixMap);
+        }
+    }
 
     public RootNode parseInternal(char[] source) {
-        ParsingResult<Node> result = parseInternal2(source);
+        ParsingResult<Node> result = parseRunnerProvider.get(Root()).run(source);
         if (result.hasErrors()) {
             throw new RuntimeException("Internal error during markdown parsing:\n--- ParseErrors ---\n" +
                     printParseErrors(result)/* +
@@ -1212,18 +1261,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         }
         return (RootNode) result.resultValue;
     }
-    
-    ParsingResult<Node> parseInternal2(char[] source) {
-        return parseRunnerProvider.get(Root()).run(source);
-    } 
 
-    public int indexOf(char[] array, char element, int start) {
-        for (int i = start; i < array.length; i++) {
-            if (array[i] == element) return i;
-        }
-        return -1;
-    }
-    
     private interface SuperNodeCreator {
         SuperNode create(Node child);
     }
