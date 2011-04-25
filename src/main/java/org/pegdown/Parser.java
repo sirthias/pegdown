@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.parboiled.errors.ErrorUtils.printParseErrors;
+import static org.parboiled.common.StringUtils.repeat;
 
 /**
  * Parboiled parser for the standard and extended markdown syntax.
@@ -138,8 +139,15 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return NodeSequence(
                 OneOrMore(
                         ZeroOrMore(BlankLine(), line.append("\n")),
-                        Indent(), TestNot(BlankLine()), Line(line),
-                        text.append(line.getString()) && line.clearContents()
+                        Indent(), push(currentIndex()), 
+                        OneOrMore(
+                                FirstOf(
+                                        Sequence('\t', line.append(repeat(' ', 4-(currentIndex()-1-(Integer)peek())%4))),
+                                        Sequence(NotNewline(), ANY, line.append(matchedChar()))
+                                )
+                        ),
+                        Newline(),
+                        text.appended(line.getString()).append('\n') && line.clearContents() && drop()
                 ),
                 push(new VerbatimNode(text.getString()))
         );
@@ -849,7 +857,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public Rule Ticks(int count) {
-        return Sequence(StringUtils.repeat('`', count), TestNot('`'));
+        return Sequence(repeat('`', count), TestNot('`'));
     }
 
     //************* RAW HTML ****************
@@ -995,7 +1003,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public Rule Indent() {
-        return String("    ");
+        return FirstOf('\t', "    ");
     }
 
     public Rule Alphanumeric() {
@@ -1175,7 +1183,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     //************* HELPERS ****************
     
     public Rule NOrMore(char c, int n) {
-        return Sequence(StringUtils.repeat(c, n), ZeroOrMore(c));
+        return Sequence(repeat(c, n), ZeroOrMore(c));
     }
     
     public Rule NodeSequence(Object... nodeRules) {
@@ -1189,7 +1197,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public boolean setIndices() {
         AbstractNode node = (AbstractNode) peek();
         node.setStartIndex((Integer)pop(1));
-        node.setEndIndex(getContext().getCurrentIndex());
+        node.setEndIndex(currentIndex());
         return true;
     }
     

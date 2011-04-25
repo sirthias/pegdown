@@ -43,6 +43,7 @@ public abstract class AbstractTest {
 
     @BeforeClass
     public void setup() {
+        tidy.setTabsize(4);
         tidy.setPrintBodyOnly(true);
         tidy.setShowWarnings(false);
         tidy.setQuiet(true);

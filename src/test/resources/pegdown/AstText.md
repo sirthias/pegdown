@@ -31,4 +31,15 @@ Everything
 
     is expected
     to be fine
+    
+A Blockquote
 
+> easy
+>
+> easy easy
+
+A code block starting with a tab:
+
+	> bla bla
+
+And more text

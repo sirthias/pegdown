@@ -1,4 +1,4 @@
-RootNode [0-336]
+RootNode [0-439]
   HeaderNode [0-11]
     TextNode [2-10] 'Ast Test'
   ParaNode [12-53]
@@ -73,3 +73,21 @@ RootNode [0-336]
     SuperNode [293-303]
       TextNode [293-303] 'Everything'
   VerbatimNode [305-336] 'is expected\nto be fine\n'
+  ParaNode [341-355]
+    SuperNode [341-353]
+      TextNode [341-353] 'A Blockquote'
+  BlockQuoteNode [355-377]
+    ParaNode [357-366]
+      SuperNode [357-361]
+        TextNode [357-361] 'easy'
+    ParaNode [366-377]
+      SuperNode [366-375]
+        TextNode [366-375] 'easy easy'
+  ParaNode [377-412]
+    SuperNode [377-410]
+      TextNode [377-409] 'A code block starting with a tab'
+      SpecialTextNode [409-410] ':'
+  VerbatimNode [412-423] '> bla bla\n'
+  ParaNode [424-439]
+    SuperNode [424-437]
+      TextNode [424-437] 'And more text'
