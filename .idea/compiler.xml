@@ -18,6 +18,8 @@
       <entry name="?*.tld" />
       <entry name="?*.ftl" />
       <entry name="?*.text" />
+      <entry name="?*.md" />
+      <entry name="?*.ast" />
     </wildcardResourcePatterns>
     <annotationProcessing enabled="false" useClasspath="true" />
   </component>

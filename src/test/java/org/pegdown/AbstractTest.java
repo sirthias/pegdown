@@ -58,7 +58,7 @@ public abstract class AbstractTest {
     }
 
     protected void test(String testName, String expectedOutput) {
-        char[] markdown = FileUtils.readAllCharsFromResource(testName + ".text");
+        char[] markdown = FileUtils.readAllCharsFromResource(testName + ".md");
         Preconditions.checkState(markdown != null, "Test not found");
         
         RootNode astRoot = getProcessor().parseMarkdown(markdown);
@@ -80,10 +80,10 @@ public abstract class AbstractTest {
     
     @SuppressWarnings( {"ConstantConditions"})
     protected void testAST(String testName) {        
-        String markdown = FileUtils.readAllTextFromResource(testName + ".text").replace("\r\n", "\n");
+        String markdown = FileUtils.readAllTextFromResource(testName + ".md").replace("\r\n", "\n");
         Preconditions.checkState(markdown != null, "Test not found");
         
-        String expectedAst = FileUtils.readAllTextFromResource(testName + ".ast.text");
+        String expectedAst = FileUtils.readAllTextFromResource(testName + ".ast");
         assertNotNull(expectedAst);
         
         RootNode astRoot = getProcessor().parseMarkdown(markdown.toCharArray());
