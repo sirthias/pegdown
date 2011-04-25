@@ -12,6 +12,8 @@ the functionality of
     
 * nothing more
 
+        Some code!
+
 * multi
   paragraph
   
@@ -19,6 +21,11 @@ the functionality of
 
 And:
   ~ a definition!
+  
+Another one
+:   With more
+
+    than one paragraph!
 
 Everything
 

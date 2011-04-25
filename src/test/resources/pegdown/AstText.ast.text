@@ -1,4 +1,4 @@
-RootNode [0-262]
+RootNode [0-336]
   HeaderNode [0-11]
     TextNode [2-10] 'Ast Test'
   ParaNode [12-53]
@@ -13,7 +13,7 @@ RootNode [0-262]
       SpecialTextNode [35-36] '&'
       TextNode [36-50] ' small text to'
   BlockQuoteNode [53-73]
-    ParaNode [55-53]
+    ParaNode [55-73]
       SuperNode [55-71]
         TextNode [55-59] 'test'
         SimpleNode [59-62] Linebreak
@@ -21,42 +21,55 @@ RootNode [0-262]
   ParaNode [73-95]
     SuperNode [73-93]
       TextNode [73-93] 'the functionality of'
-  BulletListNode [95-181]
-    ListItemNode [95-137]
-      ParaNode [97-95]
-        SuperNode [97-95]
+  BulletListNode [95-201]
+    ListItemNode [97-137]
+      ParaNode [97-116]
+        SuperNode [97-116]
           TextNode [97-115] 'AST index creation'
-      RootNode [99-95]
-        BulletListNode [99-95]
-          ListItemNode [99-95]
-            RootNode [101-99]
-              SuperNode [101-99]
-                TextNode [101-115] 'one more level'
-    ListItemNode [137-157]
-      RootNode [144-137]
-        ParaNode [144-137]
+      RootNode [120-137]
+        BulletListNode [120-137]
+          ListItemNode [122-137]
+            RootNode [122-137]
+              SuperNode [122-137]
+                TextNode [122-136] 'one more level'
+    ListItemNode [144-177]
+      RootNode [144-159]
+        ParaNode [144-159]
           SuperNode [144-156]
             TextNode [144-156] 'nothing more'
-    ListItemNode [157-178]
-      RootNode [160-157]
-        ParaNode [160-157]
-          SuperNode [160-177]
-            TextNode [160-165] 'multi'
-            SimpleNode [165-166] Linebreak
-            TextNode [166-177] ' paragraph'
-  ParaNode [181-195]
-    SuperNode [183-193]
-      TextNode [183-192] 'list item'
-      SpecialTextNode [192-193] '!'
-  DefinitionListNode [195-219]
-    DefinitionTermNode [195-200]
-      TextNode [195-198] 'And'
-    DefinitionNode [200-218]
-      RootNode [204-200]
-        SuperNode [204-200]
-          TextNode [204-216] 'a definition'
-          SpecialTextNode [216-217] '!'
-  ParaNode [219-231]
-    SuperNode [219-229]
-      TextNode [219-229] 'Everything'
-  VerbatimNode [231-262] 'is expected\nto be fine\n'
+      RootNode [162-177]
+        VerbatimNode [162-177] 'Some code!\n'
+    ListItemNode [180-200]
+      RootNode [180-200]
+        ParaNode [180-200]
+          SuperNode [180-197]
+            TextNode [180-185] 'multi'
+            SimpleNode [185-186] Linebreak
+            TextNode [186-197] ' paragraph'
+  ParaNode [201-215]
+    SuperNode [203-213]
+      TextNode [203-212] 'list item'
+      SpecialTextNode [212-213] '!'
+  DefinitionListNode [215-293]
+    DefinitionTermNode [215-220]
+      TextNode [215-218] 'And'
+    DefinitionNode [224-238]
+      RootNode [224-238]
+        SuperNode [224-238]
+          TextNode [224-236] 'a definition'
+          SpecialTextNode [236-237] '!'
+    DefinitionTermNode [241-253]
+      TextNode [241-252] 'Another one'
+    DefinitionNode [257-294]
+      ParaNode [257-267]
+        SuperNode [257-267]
+          TextNode [257-266] 'With more'
+      RootNode [272-294]
+        ParaNode [272-294]
+          SuperNode [272-291]
+            TextNode [272-290] 'than one paragraph'
+            SpecialTextNode [290-291] '!'
+  ParaNode [293-305]
+    SuperNode [293-303]
+      TextNode [293-303] 'Everything'
+  VerbatimNode [305-336] 'is expected\nto be fine\n'

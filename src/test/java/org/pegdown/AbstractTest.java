@@ -65,7 +65,7 @@ public abstract class AbstractTest {
         String actualHtml = new ToHtmlSerializer().toHtml(astRoot);
 
         // debugging I: check the parse tree
-        //assertEquals(printNodeTree(getProcessor().parser.parseInternal2(markdown)), "");
+        //assertEquals(printNodeTree(getProcessor().parser.parseToParsingResult(markdown)), "<parse tree>");
 
         // debugging II: check the AST
         //assertEquals(printTree(astRoot, new ToStringFormatter<Node>()), "");
@@ -78,14 +78,18 @@ public abstract class AbstractTest {
         assertEqualsMultiline(actualHtml, expectedOutput);
     }
     
+    @SuppressWarnings( {"ConstantConditions"})
     protected void testAST(String testName) {        
-        char[] markdown = FileUtils.readAllCharsFromResource(testName + ".text");        
+        String markdown = FileUtils.readAllTextFromResource(testName + ".text").replace("\r\n", "\n");
         Preconditions.checkState(markdown != null, "Test not found");
         
         String expectedAst = FileUtils.readAllTextFromResource(testName + ".ast.text");
         assertNotNull(expectedAst);
         
-        RootNode astRoot = getProcessor().parseMarkdown(markdown);
+        RootNode astRoot = getProcessor().parseMarkdown(markdown.toCharArray());
+        
+        // check parse tree
+        //assertEquals(printNodeTree(getProcessor().parser.parseToParsingResult(markdown)), "<parse tree>");
 
         assertEqualsMultiline(printTree(astRoot, new ToStringFormatter<Node>()), expectedAst);
     }

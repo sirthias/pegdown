@@ -22,8 +22,6 @@ import org.parboiled.BaseParser;
 import org.parboiled.Context;
 import org.parboiled.Rule;
 import org.parboiled.annotations.*;
-import org.parboiled.buffers.DefaultInputBuffer;
-import org.parboiled.buffers.InputBuffer;
 import org.parboiled.common.ArrayBuilder;
 import org.parboiled.common.ImmutableList;
 import org.parboiled.common.StringUtils;
@@ -130,7 +128,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 ),
                 // trigger a recursive parsing run on the inner source we just built
                 // and attach the root of the inner parses AST
-                push(new BlockQuoteNode(parseInternal(inner).getChildren()))
+                push(new BlockQuoteNode(withIndicesShifted(parseInternal(inner), (Integer)peek()).getChildren()))
         );
     }
 
@@ -335,7 +333,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
         StringBuilderVar temp = new StringBuilderVar();
         Var<Boolean> tight = new Var<Boolean>(false);
         Var<SuperNode> tightFirstItem = new Var<SuperNode>();
-        return NodeSequence(
+        return Sequence(
+                push(getContext().getCurrentIndex()),
                 FirstOf(CrossedOut(BlankLine(), block), tight.set(true)),
                 CrossedOut(itemStart, block), Line(block),
                 ZeroOrMore(
@@ -348,6 +347,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         fixFirstItem((SuperNode) peek(1)) &&
                                 push(itemNodeCreator.create(parseListBlock(block.appended("\n\n")))),
                 ZeroOrMore(
+                        push(getContext().getCurrentIndex()),
                         FirstOf(Sequence(CrossedOut(BlankLine(), block), tight.set(false)), tight.set(true)),
                         CrossedOut(Indent(), block),
                         FirstOf(
@@ -358,19 +358,13 @@ public class Parser extends BaseParser<Object> implements Extensions {
                                 (tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
                                         push(parseListBlock(block.appended("\n\n")))
                         ) && addAsChild()
-                )
+                ),
+                setListItemIndices()
         );
     }
     
     public Rule CrossedOut(Rule rule, StringBuilderVar block) {
         return Sequence(rule, appendCrossed(block));
-    }
-    
-    boolean appendCrossed(StringBuilderVar block) {
-        for (int i = 0; i < matchLength(); i++) {
-            block.append(CROSSED_OUT);
-        }
-        return true;
     }
     
     public Rule DoubleIndentedBlocks(StringBuilderVar block) {
@@ -407,13 +401,38 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 )
         );
     }
+    
+    public Rule Enumerator() {
+        return Sequence(NonindentSpace(), OneOrMore(Digit()), '.', OneOrMore(Spacechar()));
+    }
+
+    public Rule Bullet() {
+        return Sequence(TestNot(HorizontalRule()), NonindentSpace(), AnyOf("+*-"), OneOrMore(Spacechar()));
+    }
+    
+    //************* LIST ITEM ACTIONS ****************
+
+    boolean appendCrossed(StringBuilderVar block) {
+        for (int i = 0; i < matchLength(); i++) {
+            block.append(CROSSED_OUT);
+        }
+        return true;
+    }
 
     Node parseListBlock(StringBuilderVar block) {
         Context<Object> context = getContext();
         Node innerRoot = parseInternal(block);
         setContext(context); // we need to save and restore the context since we might be recursing
         block.clearContents();
-        return innerRoot;
+        return withIndicesShifted(innerRoot, (Integer) context.getValueStack().pop());
+    }
+    
+    Node withIndicesShifted(Node node, int delta) {
+        ((AbstractNode) node).shiftIndices(delta);
+        for (Node subNode : node.getChildren()) {
+            withIndicesShifted(subNode, delta);
+        }
+        return node;
     }
 
     boolean fixFirstItem(SuperNode listNode) {
@@ -433,12 +452,12 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return true;
     }
     
-    public Rule Enumerator() {
-        return Sequence(NonindentSpace(), OneOrMore(Digit()), '.', OneOrMore(Spacechar()));
-    }
-
-    public Rule Bullet() {
-        return Sequence(TestNot(HorizontalRule()), NonindentSpace(), AnyOf("+*-"), OneOrMore(Spacechar()));
+    boolean setListItemIndices() {
+        SuperNode listItem = (SuperNode) getContext().getValueStack().peek();
+        List<Node> children = listItem.getChildren();
+        listItem.setStartIndex(children.get(0).getStartIndex());
+        listItem.setEndIndex(children.get(children.size()-1).getEndIndex());
+        return true;
     }
 
     //************* HTML BLOCK ****************
@@ -546,7 +565,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public Rule TerminalEndline() {
-        return NodeSequence(Sp(), Newline(), EOI, push(new TextNode("\n")));
+        return NodeSequence(Sp(), Newline(), Test(EOI), push(new TextNode("\n")));
     }
 
     public Rule NormalEndline() {
@@ -1171,21 +1190,9 @@ public class Parser extends BaseParser<Object> implements Extensions {
         AbstractNode node = (AbstractNode) peek();
         node.setStartIndex((Integer)pop(1));
         node.setEndIndex(getContext().getCurrentIndex());
-        if (node instanceof BlockQuoteNode || node instanceof ListItemNode || node instanceof DefinitionNode) {
-            for (Node subNode : node.getChildren()) {
-                shiftSubTreeIndices(subNode, node.getStartIndex());
-            }
-        }
         return true;
     }
     
-    public void shiftSubTreeIndices(Node node, int delta) {
-        ((AbstractNode) node).shiftIndices(delta);
-        for (Node subNode : node.getChildren()) {
-            shiftSubTreeIndices(subNode, delta);
-        }
-    }
-
     public boolean addAsChild() {
         SuperNode parent = (SuperNode) peek(1);
         List<Node> children = parent.getChildren();
@@ -1220,7 +1227,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     // called for inner parses for list items and blockquotes
     public RootNode parseInternal(StringBuilderVar block) {
         char[] chars = block.getChars();
-        int[] ixMap = new int[chars.length]; // map of cleaned indices to original indices
+        int[] ixMap = new int[chars.length + 1]; // map of cleaned indices to original indices
         
         // strip out CROSSED_OUT characters and build index map
         StringBuilder clean = new StringBuilder();
@@ -1231,6 +1238,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 clean.append(c);
             }
         }
+        ixMap[clean.length()] = chars.length;
         
         // run inner parse
         char[] cleaned = new char[clean.length()];
@@ -1251,7 +1259,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public RootNode parseInternal(char[] source) {
-        ParsingResult<Node> result = parseRunnerProvider.get(Root()).run(source);
+        ParsingResult<Node> result = parseToParsingResult(source);
         if (result.hasErrors()) {
             throw new RuntimeException("Internal error during markdown parsing:\n--- ParseErrors ---\n" +
                     printParseErrors(result)/* +
@@ -1260,6 +1268,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
             );
         }
         return (RootNode) result.resultValue;
+    }
+    
+    ParsingResult<Node> parseToParsingResult(char[] source) {
+        return parseRunnerProvider.get(Root()).run(source);
     }
 
     private interface SuperNodeCreator {
