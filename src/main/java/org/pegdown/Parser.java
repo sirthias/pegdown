@@ -770,7 +770,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         TestNot(
                                 FirstOf(
                                         '>',
-                                        Sequence(Optional(AnyOf(".,;:)}]")), FirstOf(Spacechar(), Newline()))
+                                        Sequence(Optional(AnyOf(".,;:)}]\"'")), FirstOf(Spacechar(), Newline()))
                                 )
                         ) :
                         TestNot('>'),
