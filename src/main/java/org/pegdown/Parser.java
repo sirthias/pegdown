@@ -1132,22 +1132,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     public Rule SingleQuoted() {
         return NodeSequence(
-                SingleQuoteStart(),
+                !Character.isLetter(getContext().getInputBuffer().charAt(getContext().getCurrentIndex() - 1)),
+                '\'',
                 push(new QuotedNode(QuotedNode.Type.Single)),
                 OneOrMore(TestNot(SingleQuoteEnd()), Inline(), addAsChild()),
                 SingleQuoteEnd()
-        );
-    }
-
-    public Rule SingleQuoteStart() {
-        return Sequence(
-                '\'',
-                TestNot(AnyOf(")!],.;:-? \t\n")),
-                TestNot(
-                        // do not convert the English apostrophes as in it's, I've, I'll, etc...
-                        FirstOf('s', 't', "m", "ve", "ll", "re"),
-                        TestNot(Alphanumeric())
-                )
         );
     }
 
