@@ -1,6 +1,6 @@
 repositories.remote << 'http://repo1.maven.org/maven2'
 repositories.remote << 'http://scala-tools.org/repo-releases'
-repositories.remote << 'http://scala-tools.org/repo-snapshots'
+#repositories.remote << 'http://scala-tools.org/repo-snapshots'
 
 #upload_to = 'scala_tools_releases'
 upload_to = 'scala_tools_snapshots'
@@ -32,7 +32,7 @@ define 'pegdown' do
   
   meta_inf << file('NOTICE')
                                     
-  PARBOILED_VERSION = '0.12.0-SNAPSHOT'
+  PARBOILED_VERSION = '1.0.0'
   PARBOILED = [
           "org.parboiled:parboiled-core:jar:#{PARBOILED_VERSION}",
           "org.parboiled:parboiled-core:jar:sources:#{PARBOILED_VERSION}",
