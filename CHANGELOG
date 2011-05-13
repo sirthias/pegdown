@@ -1,3 +1,18 @@
+Version 1.0.0 (2011-05-13)
+--------------------------
+- Closed #3 (PhpMarkdownExtra-style definition lists)
+- closed #14 (superfluous paragraph breaks)
+- Closed #15 (email obfuscation)
+- Closed #16 (PhpMarkdownExtra-style fenced code blocks)
+- Closed #17 ('nofollow' links)
+- Added buffer indices to AST nodes, enabling markdown syntax highlighting
+- Removed tabstop expansion (prevented proper AST node index building)
+- Improved single quoting rules for Smartypants extension
+- Completely refactored list parsing for code size, performance and simplicity
+- Fixed small problem with AutoLink delimiters
+- Upgraded to parboiled 1.0.0
+
+
 Version 0.9.2 (2011-04-06)
 --------------------------
 - Fix: special characters not encoded correctly in plain text sections
