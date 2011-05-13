@@ -18,12 +18,10 @@
 
 package org.pegdown.ast;
 
-import java.util.List;
-
 public class OrderedListNode extends SuperNode {
 
-    public OrderedListNode(List<Node> children) {
-        super(children);
+    public OrderedListNode(Node child) {
+        super(child);
     }
 
     @Override

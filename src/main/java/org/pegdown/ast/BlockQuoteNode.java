@@ -18,10 +18,12 @@
 
 package org.pegdown.ast;
 
+import java.util.List;
+
 public class BlockQuoteNode extends SuperNode {
 
-    public BlockQuoteNode(Node child) {
-        super(child);
+    public BlockQuoteNode(List<Node> children) {
+        super(children);
     }
 
     @Override

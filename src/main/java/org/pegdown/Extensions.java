@@ -66,14 +66,30 @@ public interface Extensions {
     static final int AUTOLINKS = 0x10;
 
     /**
-     * Enables table support similar to what Multimarkdown offers.
+     * Table support similar to what Multimarkdown offers.
      *
-     * @see <a href="http://fletcherpenney.net/multimarkdown/users_guide/multimarkdown_syntax_guide/">MultiMarkdown</a>
+     * @see <a href="http://fletcherpenney.net/multimarkdown/users_guide/">MultiMarkdown</a>
      */
     static final int TABLES = 0x20;
+    
+    /**
+     * PHP Markdown Extra style definition lists.
+     * Additionally supports the small extension proposed in the article referenced below.
+     *
+     * @see <a href="http://michelf.com/projects/php-markdown/extra/#def-list">PHP Markdown Extra</a>
+     * @see <a href="http://www.justatheory.com/computers/markup/modest-markdown-proposal.html">Extension proposal</a>
+     */
+    static final int DEFINITIONS = 0x40;
 
     /**
-     * All available extensions not including the HTML SUPPRESSION options.
+     * PHP Markdown Extra style fenced code blocks.
+     *
+     * @see <a href="http://michelf.com/projects/php-markdown/extra/#fenced-code-blocks">PHP Markdown Extra</a>
+     */
+    static final int FENCED_CODE_BLOCKS = 0x80;
+
+    /**
+     * All available extensions excluding the HTML SUPPRESSION and NO_FOLLOW_LINKS options.
      */
     static final int ALL = 0x0000FFFF;
 
@@ -91,5 +107,10 @@ public interface Extensions {
      * Suppresses HTML blocks as well as inline HTML tags. Both will be accepted in the input but not be contained in the output.
      */
     static final int SUPPRESS_ALL_HTML = 0x00030000;
+    
+    /**
+     * Suppresses HTML blocks as well as inline HTML tags. Both will be accepted in the input but not be contained in the output.
+     */
+    static final int NO_FOLLOW_LINKS = 0x00040000;
 
 }

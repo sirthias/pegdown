@@ -47,10 +47,18 @@ public class Benchmark {
         }
         time(start);
 
-        System.out.print("Parsing benchmark file 100 times... :");
-        start = System.currentTimeMillis();
+        System.out.print("Parsing benchmark file 100 times (w/o Extensions)... :");
         char[] markdown = FileUtils.readAllCharsFromResource("benchmark.text");
         Preconditions.checkNotNull(markdown, "benchmark file not found");
+        start = System.currentTimeMillis();
+        for (int i = 0; i < 100; i++) {
+            processor.markdownToHtml(markdown);
+        }
+        time(start);
+        
+        System.out.print("Parsing benchmark file 100 times (with all Extensions)... :");
+        processor = new PegDownProcessor(Extensions.ALL);
+        start = System.currentTimeMillis();
         for (int i = 0; i < 100; i++) {
             processor.markdownToHtml(markdown);
         }

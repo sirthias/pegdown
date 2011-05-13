@@ -18,30 +18,10 @@
 
 package org.pegdown.ast;
 
-public class RefLinkNode extends LinkNode {
-    private String separatorSpace;
-    private SuperNode referenceKey;
+public class DefinitionNode extends SuperNode {
 
-    public RefLinkNode(Node child, boolean nofollow) {
-        super(child, nofollow);
-    }
-
-    public String getSeparatorSpace() {
-        return separatorSpace;
-    }
-
-    public boolean setSeparatorSpace(String separatorSpace) {
-        this.separatorSpace = separatorSpace;
-        return true;
-    }
-
-    public SuperNode getReferenceKey() {
-        return referenceKey;
-    }
-
-    public boolean setReferenceKey(SuperNode referenceKey) {
-        this.referenceKey = referenceKey;
-        return true;
+    public DefinitionNode(Node child) {
+        super(child);
     }
 
     @Override

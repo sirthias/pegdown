@@ -30,7 +30,6 @@ import org.pegdown.ast.RootNode;
  * @see <a href="http://www.parboiled.org/">parboiled.org</a>
  */
 public class PegDownProcessor {
-    public final int tabstop;
     public final Parser parser;
 
     /**
@@ -46,28 +45,16 @@ public class PegDownProcessor {
      * @param options the flags of the extensions to enable as a bitmask
      */
     public PegDownProcessor(int options) {
-        this(options, 4);
-    }
-
-    /**
-     * Creates a new processor instance with the given {@link org.pegdown.Extensions}.
-     *
-     * @param options the flags of the extensions to enable as a bitmask
-     * @param tabstop the number of spaces in a tab
-     */
-    public PegDownProcessor(int options, int tabstop) {
-        this(Parboiled.createParser(Parser.class, options), tabstop);
+        this(Parboiled.createParser(Parser.class, options));
     }
 
     /**
      * Creates a new processor instance using the given Parser and tabstop width.
      *
      * @param parser the parser instance to use
-     * @param tabstop the number of spaces in a tab 
      */
-    public PegDownProcessor(Parser parser, int tabstop) {
+    public PegDownProcessor(Parser parser) {
         this.parser = parser;
-        this.tabstop = tabstop;
     }
 
     /**
@@ -102,36 +89,16 @@ public class PegDownProcessor {
     }
 
     /**
-     * Performs tabstop expansion and adds two trailing newlines.
+     * Adds two trailing newlines.
      *
-     * @param markDownSource the markdown source to process
+     * @param source the markdown source to process
      * @return the processed source
      */
-    public char[] prepareSource(char[] markDownSource) {
-        StringBuilder sb = new StringBuilder(markDownSource.length + 2);
-        int charsToTab = tabstop;
-        for (char c : markDownSource) {
-            switch (c) {
-                case '\t':
-                    while (charsToTab > 0) {
-                        sb.append(' ');
-                        charsToTab--;
-                    }
-                    break;
-                case '\n':
-                    sb.append('\n');
-                    charsToTab = tabstop;
-                    break;
-                default:
-                    sb.append(c);
-                    charsToTab--;
-            }
-            if (charsToTab == 0) charsToTab = tabstop;
-        }
-        sb.append('\n');
-        sb.append('\n');
-        char[] buf = new char[sb.length()];
-        sb.getChars(0, buf.length, buf, 0);
-        return buf;
+    public char[] prepareSource(char[] source) {
+        char[] src = new char[source.length + 2];
+        System.arraycopy(source, 0, src, 0, source.length);
+        src[source.length] = '\n';
+        src[source.length + 1] = '\n';
+        return src;
     }
 }

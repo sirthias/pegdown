@@ -23,6 +23,7 @@ import org.pegdown.ast.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 import static org.parboiled.common.Preconditions.checkArgNotNull;
@@ -35,6 +36,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     private TableNode currentTableNode;
     private int currentTableColumn;
     private boolean inTableHeader;
+    private Random random = new Random(0x2626); // for email obfuscation 
 
     public String toHtml(RootNode astRoot) {
         checkArgNotNull(astRoot, "astRoot");
@@ -67,7 +69,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     public void visit(AutoLinkNode node) {
         printer.print("<a href=\"")
                 .printEncoded(node.getText(), this)
-                .print("\">")
+                .print(node.isNofollow() ? "\" rel=\"nofollow\">" : "\">")
                 .printEncoded(node.getText(), this)
                 .print("</a>");
     }
@@ -84,6 +86,18 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         printTag(node, "code");
     }
 
+    public void visit(DefinitionListNode node) {
+        printIndentedTag(node, "dl");
+    }
+
+    public void visit(DefinitionNode node) {
+        printTag(node, "dd");
+    }
+
+    public void visit(DefinitionTermNode node) {
+        printTag(node, "dt");
+    }
+
     public void visit(EmphNode node) {
         printTag(node, "em");
     }
@@ -98,6 +112,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
             if (node.getTitle() != null) {
                 printer.print(" title=\"").printEncoded(node.getTitle(), this).print('"');
             }
+            if (node.isNofollow()) printer.print(" rel=\"nofollow\"");
             printer.print('>');
             visitChildren(node);
             printer.print("</a>");
@@ -109,20 +124,23 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     }
 
     public void visit(HtmlBlockNode node) {
-        printer.println().print(node.getText());
+        String text = node.getText();
+        if (!text.isEmpty()) printer.println();
+        printer.print(text);
     }
 
     public void visit(InlineHtmlNode node) {
         printer.print(node.getText());
     }
 
-    public void visit(LooseListItemNode node) {
-        printIndentedTag(node, "li");
+    public void visit(ListItemNode node) {
+        printer.println();
+        printTag(node, "li");
     }
 
     public void visit(MailLinkNode node) {
-        printer.print("<a href=\"mailto:").printEncoded(node.getText(), this).print("\">")
-                .printEncoded(node.getText(), this)
+        printer.print("<a href=\"mailto:").print(obfuscate(node.getText())).print("\">")
+                .print(obfuscate(node.getText()))
                 .print("</a>");
     }
 
@@ -189,6 +207,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
             if (refNode.getTitle() != null) {
                 printer.print(" title=\"").printEncoded(refNode.getTitle(), this).print('"');
             }
+            if (node.isNofollow()) printer.print(" rel=\"nofollow\"");
             printer.print('>');
             visitChildren(node);
             printer.print("</a>");
@@ -213,7 +232,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
                 printer.println().print("<hr/>");
                 break;
             case Linebreak:
-                printer.print("<br/>").println();
+                printer.print("<br/>");
                 break;
             case Nbsp:
                 printer.print("&nbsp;");
@@ -280,15 +299,15 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         printIndentedTag(node, "tr");
     }
 
-    public void visit(TightListItemNode node) {
-        printTag(node, "li");
-    }
-
     public void visit(VerbatimNode node) {
-        printer
-                .println().print("<pre><code>")
-                .printEncoded(node.getText(), this)
-                .print("</code></pre>");
+        printer.println().print("<pre><code>");
+        String text = node.getText();
+        while(text.charAt(0) == '\n') {
+            printer.print("<br/>");
+            text = text.substring(1);
+        }
+        printer.printEncoded(text, this);
+        printer.print("</code></pre>");
     }
 
     public void visit(TextNode node) {
@@ -352,7 +371,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     }
 
     private void printIndentedTag(SuperNode node, String tag) {
-        printer.println().print('<').print(tag).print('>').indent(+2).println();
+        printer.println().print('<').print(tag).print('>').indent(+2);
         visitChildren(node);
         printer.indent(-2).println().print('<').print('/').print(tag).print('>');
     }
@@ -365,7 +384,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         printer = priorPrinter;
         return result;
     }
-    
+
     private String normalize(String string) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < string.length(); i++) {
@@ -377,6 +396,27 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
                     continue;
             }
             sb.append(Character.toLowerCase(c));
+        }
+        return sb.toString();
+    }
+  
+    private String obfuscate(String email) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < email.length(); i++) {
+            char c = email.charAt(i);
+            switch (random.nextInt(5)) {
+                case 0:
+                case 1:
+                    sb.append("&#").append((int) c).append(';');
+                    break;
+                case 2:
+                case 3:
+                    sb.append("&#x").append(Integer.toHexString(c)).append(';');
+                    break;
+                case 4:
+                    String encoded = encode(c);
+                    if (encoded != null) sb.append(encoded); else sb.append(c);
+            }
         }
         return sb.toString();
     }

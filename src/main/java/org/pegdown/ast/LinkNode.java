@@ -18,34 +18,24 @@
 
 package org.pegdown.ast;
 
-public class RefLinkNode extends LinkNode {
-    private String separatorSpace;
-    private SuperNode referenceKey;
+public abstract class LinkNode extends SuperNode {
+    private boolean image;
+    private boolean nofollow;
 
-    public RefLinkNode(Node child, boolean nofollow) {
-        super(child, nofollow);
+    public LinkNode(Node child, boolean nofollow) {
+        super(child);
+        this.nofollow = nofollow;
     }
 
-    public String getSeparatorSpace() {
-        return separatorSpace;
+    public boolean getImage() {
+        return image;
     }
 
-    public boolean setSeparatorSpace(String separatorSpace) {
-        this.separatorSpace = separatorSpace;
-        return true;
+    public boolean makeImage() {
+        return image = true;
     }
 
-    public SuperNode getReferenceKey() {
-        return referenceKey;
-    }
-
-    public boolean setReferenceKey(SuperNode referenceKey) {
-        this.referenceKey = referenceKey;
-        return true;
-    }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
+    public boolean isNofollow() {
+        return nofollow;
     }
 }

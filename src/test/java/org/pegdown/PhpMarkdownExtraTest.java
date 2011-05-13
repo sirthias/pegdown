@@ -22,7 +22,9 @@ import org.testng.annotations.Test;
 
 public class PhpMarkdownExtraTest extends AbstractTest {
 
-    private final PegDownProcessor processor = new PegDownProcessor(Extensions.ALL & ~Extensions.SMARTYPANTS);
+    private final PegDownProcessor processor = new PegDownProcessor(
+            Extensions.ALL & ~Extensions.SMARTYPANTS & ~Extensions.HARDWRAPS
+    );
 
     @Override
     public PegDownProcessor getProcessor() {
@@ -32,6 +34,8 @@ public class PhpMarkdownExtraTest extends AbstractTest {
     @Test
     public void phpMarkdownExtraTests() throws Exception {
         test("PhpMarkdownExtra/Abbr");
+        test("PhpMarkdownExtra/Definition_Lists");
+        test("PhpMarkdownExtra/Fenced_Code_Blocks");
         test("PhpMarkdownExtra/Tables");
     }
 

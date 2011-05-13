@@ -18,15 +18,8 @@
 
 package org.pegdown.ast;
 
-public class TightListItemNode extends SuperNode {
+public class DefinitionTermNode extends SuperNode {
 
-    public TightListItemNode() {
-    }
-
-    public TightListItemNode(Node firstChild) {
-        super(firstChild);
-    }
-    
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

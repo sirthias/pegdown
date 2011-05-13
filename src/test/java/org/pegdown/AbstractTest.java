@@ -43,6 +43,7 @@ public abstract class AbstractTest {
 
     @BeforeClass
     public void setup() {
+        tidy.setTabsize(4);
         tidy.setPrintBodyOnly(true);
         tidy.setShowWarnings(false);
         tidy.setQuiet(true);
@@ -58,14 +59,14 @@ public abstract class AbstractTest {
     }
 
     protected void test(String testName, String expectedOutput) {
-        char[] markdown = FileUtils.readAllCharsFromResource(testName + ".text");
+        char[] markdown = FileUtils.readAllCharsFromResource(testName + ".md");
         Preconditions.checkState(markdown != null, "Test not found");
         
         RootNode astRoot = getProcessor().parseMarkdown(markdown);
         String actualHtml = new ToHtmlSerializer().toHtml(astRoot);
 
         // debugging I: check the parse tree
-        //assertEquals(printNodeTree(getProcessor().parser.parseInternal2(markdown)), "");
+        //assertEquals(printNodeTree(getProcessor().parser.parseToParsingResult(markdown)), "<parse tree>");
 
         // debugging II: check the AST
         //assertEquals(printTree(astRoot, new ToStringFormatter<Node>()), "");
@@ -78,14 +79,18 @@ public abstract class AbstractTest {
         assertEqualsMultiline(actualHtml, expectedOutput);
     }
     
+    @SuppressWarnings( {"ConstantConditions"})
     protected void testAST(String testName) {        
-        char[] markdown = FileUtils.readAllCharsFromResource(testName + ".text");        
+        String markdown = FileUtils.readAllTextFromResource(testName + ".md").replace("\r\n", "\n");
         Preconditions.checkState(markdown != null, "Test not found");
         
-        String expectedAst = FileUtils.readAllTextFromResource(testName + ".ast.text");
+        String expectedAst = FileUtils.readAllTextFromResource(testName + ".ast");
         assertNotNull(expectedAst);
         
-        RootNode astRoot = getProcessor().parseMarkdown(markdown);
+        RootNode astRoot = getProcessor().parseMarkdown(markdown.toCharArray());
+        
+        // check parse tree
+        //assertEquals(printNodeTree(getProcessor().parser.parseToParsingResult(markdown)), "<parse tree>");
 
         assertEqualsMultiline(printTree(astRoot, new ToStringFormatter<Node>()), expectedAst);
     }

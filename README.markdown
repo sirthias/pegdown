@@ -11,16 +11,19 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * SMARTS: Beautifys apostrophes, ellipsises ("..." and ". . .") and dashes ("--" and "---")
 * QUOTES: Beautifys single quotes, double quotes and double angle quotes (&laquo; and &raquo;)
 * SMARTYPANTS: Convenience extension enabling both, SMARTS and QUOTES, at once.
-* ABBREVIATIONS: Support for abbreviations in the way of [PHP Markdown Extra][].
-* HARDWRAPS: Enables alternative handling of newlines, see [Github-flavoured-Markdown][]
-* AUTOLINKS: Enables plain (undelimited) autolinks the way [Github-flavoured-Markdown][] implements them.
-* TABLES: Enables support for tables similar to [MultiMarkdown][] (which is in turn like the [PHP Markdown Extra][] tables, but with colspan support).
+* ABBREVIATIONS: Abbreviations in the way of [PHP Markdown Extra][].
+* HARDWRAPS: Alternative handling of newlines, see [Github-flavoured-Markdown][]
+* AUTOLINKS: Plain (undelimited) autolinks the way [Github-flavoured-Markdown][] implements them.
+* TABLES: Tables similar to [MultiMarkdown][] (which is in turn like the [PHP Markdown Extra][] tables, but with colspan support).
+* DEFINITION LISTS: Definition lists in the way of [PHP Markdown Extra][]. 
+* FENCED CODE BLOCKS: Fenced Code Blocks in the way of [PHP Markdown Extra][].
 * HTML BLOCK SUPPRESSION: Suppresses the output of HTML blocks.
 * INLINE HTML SUPPRESSION: Suppresses the output of inline HTML elements.
+* NO_FOLLOW_LINKS: Attaches a `rel="nofollow"` attribute to all generated HTML links.
 
 Note: _pegdown_ differs from the original Markdown in that it ignores in-word emphasis as in
 
-    > my_file.txt
+    > my_cool_file.txt
     > 2*3*4=5
 
 Currently this "extension" cannot be switched off.
@@ -32,7 +35,7 @@ Installation
 You have two options:
 
 * Download the JAR for the latest version from the [download page][].
-  _pegdown_ 0.9.2 has a dependency on [parboiled for Java][parboiled], version 0.11.1.
+  _pegdown_ 1.0.0 has only one dependency: [parboiled for Java][parboiled], version 1.0.0.
    
 * Point your Maven-compatible build tool to the repository at <http://scala-tools.org/repo-releases>,
   group id "**org.pegdown**", artifact "**pegdown**".    
@@ -57,6 +60,15 @@ be fast. Also, you can reuse an existing [PegDownProcessor][] instance as often 
 concurrent accesses, since neither the [PegDownProcessor][] nor the underlying parser is thread-safe.
 
 See <http://sirthias.github.com/pegdown/api> for the pegdown API documation.
+
+
+IDE Support
+-----------
+
+The excellent [idea-markdown plugin](https://github.com/nicoulaj/idea-markdown) for IntelliJ IDEA, RubyMine, PhpStorm,
+WebStorm, PyCharm and appCode uses _pegdown_ as its underlying parsing engine.
+The plugin gives you proper syntax-highlighting for markdown source and shows you exactly, how _pegdown_ will parse your
+texts.
 
 
 Hacking on pegdown

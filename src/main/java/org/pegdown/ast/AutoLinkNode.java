@@ -19,11 +19,17 @@
 package org.pegdown.ast;
 
 public class AutoLinkNode extends TextNode {
+    private boolean nofollow;
 
-    public AutoLinkNode(String text) {
+    public AutoLinkNode(String text, boolean nofollow) {
         super(text);
+        this.nofollow = nofollow;
     }
-    
+
+    public boolean isNofollow() {
+        return nofollow;
+    }
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
