@@ -18,13 +18,12 @@
 
 package org.pegdown.ast;
 
-public class ExpLinkNode extends SuperNode {
+public class ExpLinkNode extends LinkNode {
     private String url;
     private String title;
-    private boolean image;
 
-    public ExpLinkNode(Node child) {
-        super(child);
+    public ExpLinkNode(Node child, boolean nofollow) {
+        super(child, nofollow);
     }
 
     public String getUrl() {
@@ -45,14 +44,6 @@ public class ExpLinkNode extends SuperNode {
         return true;
     }
 
-    public boolean getImage() {
-        return image;
-    }
-
-    public boolean makeImage() {
-        return image = true;
-    }
-    
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

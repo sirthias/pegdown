@@ -69,7 +69,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     public void visit(AutoLinkNode node) {
         printer.print("<a href=\"")
                 .printEncoded(node.getText(), this)
-                .print("\">")
+                .print(node.isNofollow() ? "\" rel=\"nofollow\">" : "\">")
                 .printEncoded(node.getText(), this)
                 .print("</a>");
     }
@@ -112,6 +112,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
             if (node.getTitle() != null) {
                 printer.print(" title=\"").printEncoded(node.getTitle(), this).print('"');
             }
+            if (node.isNofollow()) printer.print(" rel=\"nofollow\"");
             printer.print('>');
             visitChildren(node);
             printer.print("</a>");
@@ -206,6 +207,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
             if (refNode.getTitle() != null) {
                 printer.print(" title=\"").printEncoded(refNode.getTitle(), this).print('"');
             }
+            if (node.isNofollow()) printer.print(" rel=\"nofollow\"");
             printer.print('>');
             visitChildren(node);
             printer.print("</a>");

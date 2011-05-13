@@ -24,7 +24,6 @@ import org.parboiled.Rule;
 import org.parboiled.annotations.*;
 import org.parboiled.common.ArrayBuilder;
 import org.parboiled.common.ImmutableList;
-import org.parboiled.common.StringUtils;
 import org.parboiled.parserunners.ParseRunner;
 import org.parboiled.parserunners.ReportingParseRunner;
 import org.parboiled.support.ParsingResult;
@@ -684,7 +683,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule ExplicitLink() {
         Var<ExpLinkNode> node = new Var<ExpLinkNode>();
         return Sequence(
-                push(node.setAndGet(new ExpLinkNode(popAsNode()))),
+                push(node.setAndGet(new ExpLinkNode(popAsNode(), ext(NO_FOLLOW_LINKS)))),
                 Spn1(), '(', Sp(),
                 Source(node),
                 Spn1(), Optional(Title(node)),
@@ -695,7 +694,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule ReferenceLink() {
         Var<RefLinkNode> node = new Var<RefLinkNode>();
         return Sequence(
-                push(node.setAndGet(new RefLinkNode(popAsNode()))),
+                push(node.setAndGet(new RefLinkNode(popAsNode(), ext(NO_FOLLOW_LINKS)))),
                 FirstOf(
                         // regular reference link
                         Sequence(Spn1(), node.get().setSeparatorSpace(match()),
@@ -752,7 +751,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule AutoLinkUrl() {
         return Sequence(
                 Sequence(OneOrMore(Letter()), "://", AutoLinkEnd()),
-                push(new AutoLinkNode(match()))
+                push(new AutoLinkNode(match(), ext(NO_FOLLOW_LINKS)))
         );
     }
 

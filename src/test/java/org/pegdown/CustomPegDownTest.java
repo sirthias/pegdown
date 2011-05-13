@@ -25,6 +25,7 @@ import org.parboiled.parserunners.ParseRunner;
 import org.parboiled.parserunners.TracingParseRunner;
 import org.pegdown.ast.Node;
 import org.testng.annotations.Test;
+import static org.pegdown.Extensions.*;
 
 public class CustomPegDownTest extends AbstractTest {
 
@@ -38,7 +39,7 @@ public class CustomPegDownTest extends AbstractTest {
             ), 4
     );*/
     
-    private PegDownProcessor processor = new PegDownProcessor(Extensions.ALL);
+    private PegDownProcessor processor = new PegDownProcessor(ALL);
 
     @Override
     public PegDownProcessor getProcessor() {
@@ -65,7 +66,7 @@ public class CustomPegDownTest extends AbstractTest {
     
     @Test(dependsOnMethods = "testASTIndices")
     public void customPegDownTests2() {
-        processor = new PegDownProcessor(Extensions.NONE);
+        processor = new PegDownProcessor(NONE);
         test("pegdown/Special Chars");
     }
 
@@ -80,7 +81,7 @@ public class CustomPegDownTest extends AbstractTest {
                 "</div>\n" +
                 "\n");
 
-        processor = new PegDownProcessor(Extensions.SUPPRESS_INLINE_HTML);
+        processor = new PegDownProcessor(SUPPRESS_INLINE_HTML);
         test("pegdown/HTML suppression", "" +
                 "<h1>HTML SUPPRESSION</h1>\n" +
                 "<p>This is a paragraph containing a strong inline HTML element\n" +
@@ -90,19 +91,25 @@ public class CustomPegDownTest extends AbstractTest {
                 "</div>\n" +
                 "\n");
 
-        processor = new PegDownProcessor(Extensions.SUPPRESS_HTML_BLOCKS);
+        processor = new PegDownProcessor(SUPPRESS_HTML_BLOCKS);
         test("pegdown/HTML suppression", "" +
                 "<h1>HTML <b>SUPPRESSION</b></h1>\n" +
                 "<p>This is a paragraph containing a <strong>strong</strong> inline\n" +
                 "HTML element and:</p>\n" +
                 "\n");
 
-        processor = new PegDownProcessor(Extensions.SUPPRESS_ALL_HTML);
+        processor = new PegDownProcessor(SUPPRESS_ALL_HTML);
         test("pegdown/HTML suppression", "" +
                 "<h1>HTML SUPPRESSION</h1>\n" +
                 "<p>This is a paragraph containing a strong inline HTML element\n" +
                 "and:</p>\n" +
                 "\n");
+    }
+    
+    @Test(dependsOnMethods = "customPegDownTests2")
+    public void testNoFollowLinks() {
+        processor = new PegDownProcessor((ALL + NO_FOLLOW_LINKS) & ~HARDWRAPS);
+        test("pegdown/No Follow Links");
     }
 
 }

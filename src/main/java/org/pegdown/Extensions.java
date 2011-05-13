@@ -89,7 +89,7 @@ public interface Extensions {
     static final int FENCED_CODE_BLOCKS = 0x80;
 
     /**
-     * All available extensions not including the HTML SUPPRESSION options.
+     * All available extensions excluding the HTML SUPPRESSION and NO_FOLLOW_LINKS options.
      */
     static final int ALL = 0x0000FFFF;
 
@@ -107,5 +107,10 @@ public interface Extensions {
      * Suppresses HTML blocks as well as inline HTML tags. Both will be accepted in the input but not be contained in the output.
      */
     static final int SUPPRESS_ALL_HTML = 0x00030000;
+    
+    /**
+     * Suppresses HTML blocks as well as inline HTML tags. Both will be accepted in the input but not be contained in the output.
+     */
+    static final int NO_FOLLOW_LINKS = 0x00040000;
 
 }
