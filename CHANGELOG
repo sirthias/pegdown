@@ -1,3 +1,7 @@
+Version 1.0.1 (2011-05-17)
+--------------------------
+- Fixed #18 (code blocks in list items split by lines) 
+
 Version 1.0.0 (2011-05-13)
 --------------------------
 - Closed #3 (PhpMarkdownExtra-style definition lists)
