@@ -379,7 +379,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 Indent(), TestNot(BlankLine()), block.append("    "), Line(block),
                 ZeroOrMore(
-                        OneOrMore(BlankLine(), line.append(match())),
+                        ZeroOrMore(BlankLine(), line.append(match())),
                         CrossedOut(Indent(), line), Indent(), line.append("    "), Line(line),
                         block.append(line.getString()) && line.clearContents()
                 )
