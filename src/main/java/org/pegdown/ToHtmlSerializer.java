@@ -29,14 +29,14 @@ import java.util.TreeMap;
 import static org.parboiled.common.Preconditions.checkArgNotNull;
 
 public class ToHtmlSerializer implements Visitor, Printer.Encoder {
-    private Printer printer = new Printer();
-    private final Map<String, ReferenceNode> references = new HashMap<String, ReferenceNode>();
-    private final Map<String, String> abbreviations = new HashMap<String, String>();
+    protected Printer printer = new Printer();
+    protected final Map<String, ReferenceNode> references = new HashMap<String, ReferenceNode>();
+    protected final Map<String, String> abbreviations = new HashMap<String, String>();
 
-    private TableNode currentTableNode;
-    private int currentTableColumn;
-    private boolean inTableHeader;
-    private Random random = new Random(0x2626); // for email obfuscation 
+    protected TableNode currentTableNode;
+    protected int currentTableColumn;
+    protected boolean inTableHeader;
+    protected Random random = new Random(0x2626); // for email obfuscation 
 
     public String toHtml(RootNode astRoot) {
         checkArgNotNull(astRoot, "astRoot");
@@ -351,32 +351,32 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
 
     // helpers
 
-    private void visitChildren(SuperNode node) {
+    protected void visitChildren(SuperNode node) {
         for (Node child : node.getChildren()) {
             child.accept(this);
         }
     }
 
-    private void printTag(TextNode node, String tag) {
+    protected void printTag(TextNode node, String tag) {
         printer
                 .print('<').print(tag).print('>')
                 .printEncoded(node.getText(), this)
                 .print('<').print('/').print(tag).print('>');
     }
 
-    private void printTag(SuperNode node, String tag) {
+    protected void printTag(SuperNode node, String tag) {
         printer.print('<').print(tag).print('>');
         visitChildren(node);
         printer.print('<').print('/').print(tag).print('>');
     }
 
-    private void printIndentedTag(SuperNode node, String tag) {
+    protected void printIndentedTag(SuperNode node, String tag) {
         printer.println().print('<').print(tag).print('>').indent(+2);
         visitChildren(node);
         printer.indent(-2).println().print('<').print('/').print(tag).print('>');
     }
 
-    private String printToString(Runnable runnable) {
+    protected String printToString(Runnable runnable) {
         Printer priorPrinter = printer;
         printer = new Printer();
         runnable.run();
@@ -385,7 +385,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         return result;
     }
 
-    private String normalize(String string) {
+    protected String normalize(String string) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < string.length(); i++) {
             char c = string.charAt(i);
@@ -400,7 +400,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         return sb.toString();
     }
   
-    private String obfuscate(String email) {
+    protected String obfuscate(String email) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < email.length(); i++) {
             char c = email.charAt(i);
@@ -421,7 +421,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         return sb.toString();
     }
     
-    public void printWithAbbreviations(String string) {
+    protected void printWithAbbreviations(String string) {
         Map<Integer, Map.Entry<String, String>> expansions = null;
 
         for (Map.Entry<String, String> entry : abbreviations.entrySet()) {
