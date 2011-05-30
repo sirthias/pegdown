@@ -125,7 +125,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
 
     public void visit(HtmlBlockNode node) {
         String text = node.getText();
-        if (!text.isEmpty()) printer.println();
+        if (text.length() > 0) printer.println();
         printer.print(text);
     }
 
