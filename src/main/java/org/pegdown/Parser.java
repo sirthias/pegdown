@@ -47,14 +47,14 @@ import static org.parboiled.common.StringUtils.repeat;
 @SuppressWarnings( {"InfiniteRecursion"})
 public class Parser extends BaseParser<Object> implements Extensions {
     
-    private static final char CROSSED_OUT = '\uffff';
+    protected static final char CROSSED_OUT = '\uffff';
 
     public interface ParseRunnerProvider {
         ParseRunner<Node> get(Rule rule);
     }
 
-    private final int options;
-    private final ParseRunnerProvider parseRunnerProvider;
+    protected final int options;
+    protected final ParseRunnerProvider parseRunnerProvider;
     final List<AbbreviationNode> abbreviations = new ArrayList<AbbreviationNode>();
     final List<ReferenceNode> references = new ArrayList<ReferenceNode>();
 
@@ -527,7 +527,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Arrays.binarySearch(HTML_TAGS, string) >= 0;
     }
 
-    private static final String[] HTML_TAGS = new String[] {
+    protected static final String[] HTML_TAGS = new String[] {
             "address", "blockquote", "center", "dd", "dir", "div", "dl", "dt", "fieldset", "form", "frameset", "h1",
             "h2", "h3", "h4", "h5", "h6", "hr", "isindex", "li", "menu", "noframes", "noscript", "ol", "p", "pre",
             "script", "style", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul"
@@ -1247,7 +1247,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return rootNode;
     }
 
-    private void fixIndices(Node node, int[] ixMap) {
+    protected void fixIndices(Node node, int[] ixMap) {
         ((AbstractNode) node).mapIndices(ixMap);
         for (Node subNode : node.getChildren()) {
             fixIndices(subNode, ixMap);
@@ -1270,7 +1270,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return parseRunnerProvider.get(Root()).run(source);
     }
 
-    private interface SuperNodeCreator {
+    protected interface SuperNodeCreator {
         SuperNode create(Node child);
     }
 }
