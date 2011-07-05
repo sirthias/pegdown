@@ -47,14 +47,14 @@ import static org.parboiled.common.StringUtils.repeat;
 @SuppressWarnings( {"InfiniteRecursion"})
 public class Parser extends BaseParser<Object> implements Extensions {
     
-    private static final char CROSSED_OUT = '\uffff';
+    protected static final char CROSSED_OUT = '\uffff';
 
     public interface ParseRunnerProvider {
         ParseRunner<Node> get(Rule rule);
     }
 
-    private final int options;
-    private final ParseRunnerProvider parseRunnerProvider;
+    protected final int options;
+    protected final ParseRunnerProvider parseRunnerProvider;
     final List<AbbreviationNode> abbreviations = new ArrayList<AbbreviationNode>();
     final List<ReferenceNode> references = new ArrayList<ReferenceNode>();
 
@@ -169,10 +169,12 @@ public class Parser extends BaseParser<Object> implements Extensions {
     @Cached
     public Rule CodeFence(Var<Integer> markerLength) {
         return Sequence(
-                NOrMore('~', 3),
+                FirstOf(NOrMore('~', 3), NOrMore('`', 3)),
                 (markerLength.isSet() && matchLength() == markerLength.get()) ||
                         (markerLength.isNotSet() && markerLength.set(matchLength())),
-                Sp(), Newline()
+                Sp(),
+                ZeroOrMore(TestNot(Newline()), ANY), // GFM code type identifier
+                Newline()
         );
     }
     
@@ -527,7 +529,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Arrays.binarySearch(HTML_TAGS, string) >= 0;
     }
 
-    private static final String[] HTML_TAGS = new String[] {
+    protected static final String[] HTML_TAGS = new String[] {
             "address", "blockquote", "center", "dd", "dir", "div", "dl", "dt", "fieldset", "form", "frameset", "h1",
             "h2", "h3", "h4", "h5", "h6", "hr", "isindex", "li", "menu", "noframes", "noscript", "ol", "p", "pre",
             "script", "style", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul"
@@ -552,8 +554,16 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     @MemoMismatches
     public Rule Inline() {
+        return FirstOf(Link(), NonLinkInline());
+    }
+
+    public Rule NonAutoLinkInline() {
+        return FirstOf(NonAutoLink(), NonLinkInline());
+    }
+
+    public Rule NonLinkInline() {
         return FirstOf(new ArrayBuilder<Rule>()
-                .add(Link(), Str(), Endline(), UlOrStarLine(), Space(), StrongOrEmph(), Image(), Code(), InlineHtml(),
+                .add(Str(), Endline(), UlOrStarLine(), Space(), StrongOrEmph(), Image(), Code(), InlineHtml(),
                         Entity(), EscapedChar())
                 .addNonNulls(ext(QUOTES) ? new Rule[] {SingleQuoted(), DoubleQuoted(), DoubleAngleQuoted()} : null)
                 .addNonNulls(ext(SMARTS) ? new Rule[] {Smarts()} : null)
@@ -680,6 +690,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
         );
     }
 
+    public Rule NonAutoLink() {
+        return NodeSequence(Sequence(Label(), FirstOf(ExplicitLink(), ReferenceLink())));
+    }
+
     public Rule ExplicitLink() {
         Var<ExpLinkNode> node = new Var<ExpLinkNode>();
         return Sequence(
@@ -783,7 +797,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 '[',
                 push(new SuperNode()),
-                OneOrMore(TestNot(']'), Inline(), addAsChild()),
+                OneOrMore(TestNot(']'), NonAutoLinkInline(), addAsChild()),
                 ']'
         );
     }
@@ -1247,7 +1261,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return rootNode;
     }
 
-    private void fixIndices(Node node, int[] ixMap) {
+    protected void fixIndices(Node node, int[] ixMap) {
         ((AbstractNode) node).mapIndices(ixMap);
         for (Node subNode : node.getChildren()) {
             fixIndices(subNode, ixMap);
@@ -1270,7 +1284,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return parseRunnerProvider.get(Root()).run(source);
     }
 
-    private interface SuperNodeCreator {
+    protected interface SuperNodeCreator {
         SuperNode create(Node child);
     }
 }

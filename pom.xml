@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.pegdown</groupId>
   <artifactId>pegdown</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <inceptionYear>2010</inceptionYear>
   <licenses>
     <license>
@@ -12,16 +12,43 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.5</source>
+          <target>1.5</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>org.parboiled</groupId>
       <artifactId>parboiled-core</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.parboiled</groupId>
       <artifactId>parboiled-java</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
+    </dependency>
+    <dependency>
+        <groupId>net.sf.jtidy</groupId>
+        <artifactId>jtidy</artifactId>
+        <version>r938</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.testng</groupId>
+        <artifactId>testng</artifactId>
+        <version>5.14.10</version>
+        <scope>test</scope>
     </dependency>
   </dependencies>
   <repositories>
