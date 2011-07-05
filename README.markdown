@@ -16,7 +16,7 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * AUTOLINKS: Plain (undelimited) autolinks the way [Github-flavoured-Markdown][] implements them.
 * TABLES: Tables similar to [MultiMarkdown][] (which is in turn like the [PHP Markdown Extra][] tables, but with colspan support).
 * DEFINITION LISTS: Definition lists in the way of [PHP Markdown Extra][]. 
-* FENCED CODE BLOCKS: Fenced Code Blocks in the way of [PHP Markdown Extra][].
+* FENCED CODE BLOCKS: Fenced Code Blocks in the way of [PHP Markdown Extra][] or [Github-flavoured-Markdown][].
 * HTML BLOCK SUPPRESSION: Suppresses the output of HTML blocks.
 * INLINE HTML SUPPRESSION: Suppresses the output of inline HTML elements.
 * NO_FOLLOW_LINKS: Attaches a `rel="nofollow"` attribute to all generated HTML links.
@@ -35,7 +35,7 @@ Installation
 You have two options:
 
 * Download the JAR for the latest version from the [download page][].
-  _pegdown_ 1.0.0 has only one dependency: [parboiled for Java][parboiled], version 1.0.0.
+  _pegdown_ 1.0.2 has only one dependency: [parboiled for Java][parboiled], version 1.0.1.
    
 * Point your Maven-compatible build tool to the repository at <http://scala-tools.org/repo-releases>,
   group id "**org.pegdown**", artifact "**pegdown**".    
