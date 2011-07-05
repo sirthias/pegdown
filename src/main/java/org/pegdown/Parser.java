@@ -552,8 +552,16 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     @MemoMismatches
     public Rule Inline() {
+        return FirstOf(Link(), NonLinkInline());
+    }
+
+    public Rule NonAutoLinkInline() {
+        return FirstOf(NonAutoLink(), NonLinkInline());
+    }
+
+    public Rule NonLinkInline() {
         return FirstOf(new ArrayBuilder<Rule>()
-                .add(Link(), Str(), Endline(), UlOrStarLine(), Space(), StrongOrEmph(), Image(), Code(), InlineHtml(),
+                .add(Str(), Endline(), UlOrStarLine(), Space(), StrongOrEmph(), Image(), Code(), InlineHtml(),
                         Entity(), EscapedChar())
                 .addNonNulls(ext(QUOTES) ? new Rule[] {SingleQuoted(), DoubleQuoted(), DoubleAngleQuoted()} : null)
                 .addNonNulls(ext(SMARTS) ? new Rule[] {Smarts()} : null)
@@ -680,6 +688,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
         );
     }
 
+    public Rule NonAutoLink() {
+        return NodeSequence(Sequence(Label(), FirstOf(ExplicitLink(), ReferenceLink())));
+    }
+
     public Rule ExplicitLink() {
         Var<ExpLinkNode> node = new Var<ExpLinkNode>();
         return Sequence(
@@ -783,7 +795,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 '[',
                 push(new SuperNode()),
-                OneOrMore(TestNot(']'), Inline(), addAsChild()),
+                OneOrMore(TestNot(']'), NonAutoLinkInline(), addAsChild()),
                 ']'
         );
     }
