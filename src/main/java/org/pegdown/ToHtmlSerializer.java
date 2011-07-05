@@ -302,12 +302,18 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     public void visit(VerbatimNode node) {
         printer.println().print("<pre><code>");
         String text = node.getText();
+        text = transformVerbatimText(text);
+        printer.printEncoded(text, this);
+        printer.print("</code></pre>");
+    }
+
+    public String transformVerbatimText(String text) {
+        // transform all initial newlines to HTML breaks
         while(text.charAt(0) == '\n') {
             printer.print("<br/>");
             text = text.substring(1);
         }
-        printer.printEncoded(text, this);
-        printer.print("</code></pre>");
+        return text;
     }
 
     public void visit(TextNode node) {
