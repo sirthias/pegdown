@@ -53,6 +53,7 @@ public class CustomPegDownTest extends AbstractTest {
         test("pegdown/Bug_in_0.8.5.1");
         test("pegdown/Bug_in_0.8.5.4");
         test("pegdown/Bug_in_1.0.0");
+        test("pegdown/GFM_Fenced_Code_Blocks");
         test("pegdown/Linebreaks");
         test("pegdown/Parens_in_URL");
         test("pegdown/Quoted Blockquote");

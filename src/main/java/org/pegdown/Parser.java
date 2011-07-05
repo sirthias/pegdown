@@ -169,10 +169,12 @@ public class Parser extends BaseParser<Object> implements Extensions {
     @Cached
     public Rule CodeFence(Var<Integer> markerLength) {
         return Sequence(
-                NOrMore('~', 3),
+                FirstOf(NOrMore('~', 3), NOrMore('`', 3)),
                 (markerLength.isSet() && matchLength() == markerLength.get()) ||
                         (markerLength.isNotSet() && markerLength.set(matchLength())),
-                Sp(), Newline()
+                Sp(),
+                ZeroOrMore(TestNot(Newline()), ANY), // GFM code type identifier
+                Newline()
         );
     }
     
