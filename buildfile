@@ -8,7 +8,7 @@ upload_to = 'scala_tools_snapshots'
 url, user, pass = Buildr.settings.user[upload_to].values_at('url', 'user', 'pass')
 repositories.release_to = { :url => url, :username => user, :password => pass }
 
-VERSION_NUMBER = '1.1.0-SNAPSHOT'
+VERSION_NUMBER = '1.0.2'
 
 desc 'The pegdown project'
 define 'pegdown' do
