@@ -22,8 +22,8 @@ public class RefLinkNode extends LinkNode {
     private String separatorSpace;
     private SuperNode referenceKey;
 
-    public RefLinkNode(Node child, boolean nofollow) {
-        super(child, nofollow);
+    public RefLinkNode(Node child) {
+        super(child);
     }
 
     public String getSeparatorSpace() {

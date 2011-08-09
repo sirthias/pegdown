@@ -22,8 +22,8 @@ public class ExpLinkNode extends LinkNode {
     private String url;
     private String title;
 
-    public ExpLinkNode(Node child, boolean nofollow) {
-        super(child, nofollow);
+    public ExpLinkNode(Node child) {
+        super(child);
     }
 
     public String getUrl() {

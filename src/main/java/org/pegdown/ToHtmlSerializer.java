@@ -29,14 +29,20 @@ import java.util.TreeMap;
 import static org.parboiled.common.Preconditions.checkArgNotNull;
 
 public class ToHtmlSerializer implements Visitor, Printer.Encoder {
+
     protected Printer printer = new Printer();
     protected final Map<String, ReferenceNode> references = new HashMap<String, ReferenceNode>();
     protected final Map<String, String> abbreviations = new HashMap<String, String>();
+    protected final NoFollow noFollow;
 
     protected TableNode currentTableNode;
     protected int currentTableColumn;
     protected boolean inTableHeader;
-    protected Random random = new Random(0x2626); // for email obfuscation 
+    protected Random random = new Random(0x2626); // for email obfuscation
+
+    public ToHtmlSerializer(NoFollow noFollow) {
+        this.noFollow = noFollow;
+    }
 
     public String toHtml(RootNode astRoot) {
         checkArgNotNull(astRoot, "astRoot");
@@ -69,7 +75,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     public void visit(AutoLinkNode node) {
         printer.print("<a href=\"")
                 .printEncoded(node.getText(), this)
-                .print(node.isNofollow() ? "\" rel=\"nofollow\">" : "\">")
+                .print(noFollow.noFollow(node) ? "\" rel=\"nofollow\">" : "\">")
                 .printEncoded(node.getText(), this)
                 .print("</a>");
     }
@@ -112,7 +118,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
             if (node.getTitle() != null) {
                 printer.print(" title=\"").printEncoded(node.getTitle(), this).print('"');
             }
-            if (node.isNofollow()) printer.print(" rel=\"nofollow\"");
+            if (noFollow.noFollow(node)) printer.print(" rel=\"nofollow\"");
             printer.print('>');
             visitChildren(node);
             printer.print("</a>");
@@ -207,7 +213,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
             if (refNode.getTitle() != null) {
                 printer.print(" title=\"").printEncoded(refNode.getTitle(), this).print('"');
             }
-            if (node.isNofollow()) printer.print(" rel=\"nofollow\"");
+            if (noFollow.noFollow(node)) printer.print(" rel=\"nofollow\"");
             printer.print('>');
             visitChildren(node);
             printer.print("</a>");

@@ -20,11 +20,9 @@ package org.pegdown.ast;
 
 public abstract class LinkNode extends SuperNode {
     private boolean image;
-    private boolean nofollow;
 
-    public LinkNode(Node child, boolean nofollow) {
+    public LinkNode(Node child) {
         super(child);
-        this.nofollow = nofollow;
     }
 
     public boolean getImage() {
@@ -33,9 +31,5 @@ public abstract class LinkNode extends SuperNode {
 
     public boolean makeImage() {
         return image = true;
-    }
-
-    public boolean isNofollow() {
-        return nofollow;
     }
 }
