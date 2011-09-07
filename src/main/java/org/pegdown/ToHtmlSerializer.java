@@ -307,6 +307,14 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         printer.print("</code></pre>");
     }
 
+    public void visit(WikiLinkNode node) {
+        printer.print("<a href=\"")
+                .printEncoded(node.getUrl(), this)
+                .print(node.isNofollow() ? "\" rel=\"nofollow\">" : "\">")
+                .printEncoded(node.getText(), this)
+                .print("</a>");
+    }
+
     public String transformVerbatimText(String text) {
         // transform all initial newlines to HTML breaks
         while(text.charAt(0) == '\n') {

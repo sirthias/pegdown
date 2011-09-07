@@ -59,6 +59,7 @@ public class CustomPegDownTest extends AbstractTest {
         test("pegdown/Quoted Blockquote");
         test("pegdown/Smartypants");
         test("pegdown/Tables");
+        test("pegdown/Wikilinks");
     }
     
     @Test(dependsOnMethods = "customPegDownTests")

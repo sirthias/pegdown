@@ -89,6 +89,13 @@ public interface Extensions {
     static final int FENCED_CODE_BLOCKS = 0x80;
 
     /**
+     * Converts GitHub wiki-links to regular links.
+     *
+     * @see <a href="http://github.github.com/github-flavored-markdown">Github-flavored-Markdown</a>
+     */
+    static final int WIKILINKS = 0x100;
+
+    /**
      * All available extensions excluding the HTML SUPPRESSION and NO_FOLLOW_LINKS options.
      */
     static final int ALL = 0x0000FFFF;
