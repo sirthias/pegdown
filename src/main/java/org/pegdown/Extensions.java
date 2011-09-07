@@ -26,7 +26,7 @@ public interface Extensions {
     static final int NONE = 0x00;
 
     /**
-     * Pretty ellipsises, dashes and apostrophes.
+     * Pretty ellipses, dashes and apostrophes.
      */
     static final int SMARTS = 0x01;
 
@@ -57,8 +57,8 @@ public interface Extensions {
     static final int HARDWRAPS = 0x08;
 
     /**
-     * Enables plain autolinks the way github flavoures markdown implements them.
-     * With this extension enabled pegdown will intelligently recognize URLs and email adresses
+     * Enables plain autolinks the way github flavoured markdown implements them.
+     * With this extension enabled pegdown will intelligently recognize URLs and email addresses
      * without any further delimiters and mark them as the respective link type.
      *
      * @see <a href="http://github.github.com/github-flavored-markdown">Github-flavored-Markdown</a>
