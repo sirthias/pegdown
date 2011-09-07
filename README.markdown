@@ -95,7 +95,7 @@ tool [peg-markdown](http://github.com/jgm/peg-markdown).
 License
 -------
 
-_pegdown_ is licensed under [APL 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+_pegdown_ is licensed under [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 
 Patch Policy
