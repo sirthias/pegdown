@@ -683,10 +683,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
     @MemoMismatches
     public Rule Link() {
         return NodeSequence(
-                FirstOf(
-                        ext(WIKILINKS) ? WikiLink() : NOTHING,
-                        Sequence(Label(), FirstOf(ExplicitLink(), ReferenceLink())),
-                        AutoLink()
+                FirstOf(new ArrayBuilder<Rule>()
+                    .addNonNulls(ext(WIKILINKS) ? new Rule[] {WikiLink()} : null)
+                    .add(Sequence(Label(), FirstOf(ExplicitLink(), ReferenceLink())))
+                    .add(AutoLink())
+                    .get()
                 )
         );
     }
@@ -766,8 +767,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule WikiLink() {
         return Sequence(
             "[[",
-            OneOrMore(TestNot(']'), ANY), // Not sure ANY is appropriate here, but certainly some symbols and whitespace are
-            push(new WikiLinkNode(match(), ext(NO_FOLLOW_LINKS))),
+            OneOrMore(TestNot(']'), ANY), // might have to restrict from ANY
+            push(new WikiLinkNode(match())),
             "]]"
         );
     }

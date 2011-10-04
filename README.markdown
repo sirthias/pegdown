@@ -20,7 +20,7 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * HTML BLOCK SUPPRESSION: Suppresses the output of HTML blocks.
 * INLINE HTML SUPPRESSION: Suppresses the output of inline HTML elements.
 * NO_FOLLOW_LINKS: Attaches a `rel="nofollow"` attribute to all generated HTML links.
-* WIKILINKS: Support Github-style wiki links to relative HTML files.
+* WIKILINKS: Support [[Wiki-style links]] with a customizable URL rendering logic.
 
 Note: _pegdown_ differs from the original Markdown in that it ignores in-word emphasis as in
 

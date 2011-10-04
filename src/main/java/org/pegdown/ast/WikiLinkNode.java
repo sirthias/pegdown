@@ -18,34 +18,10 @@
 
 package org.pegdown.ast;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+public class WikiLinkNode extends TextNode {
 
-public class WikiLinkNode
-    extends TextNode {
-    private boolean nofollow;
-    private String url;
-
-    public WikiLinkNode(String page, boolean nofollow) {
-        super(page);
-        String s;
-        try {
-            s = URLEncoder.encode(page.replace(' ', '-'), "UTF-8");
-        }
-        catch (UnsupportedEncodingException e) {
-            s = page;
-        }
-        this.url = "./" + s + ".html";
-        this.nofollow = nofollow;
-    }
-
-    public boolean isNofollow() {
-        return nofollow;
-    }
-
-    public String getUrl()
-    {
-        return url;
+    public WikiLinkNode(String text) {
+        super(text);
     }
 
     @Override

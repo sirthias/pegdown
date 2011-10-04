@@ -82,6 +82,18 @@ public class PegDownProcessor {
      * Converts the given markdown source to HTML.
      *
      * @param markdownSource the markdown source to convert
+     * @param noFollow the NoFollow to use
+     * @param wikiLinkFormat the WikiLinkFormat to use
+     * @return the HTML
+     */
+    public String markdownToHtml(String markdownSource, NoFollow noFollow, WikiLinkFormat wikiLinkFormat) {
+        return markdownToHtml(markdownSource.toCharArray(), noFollow, wikiLinkFormat);
+    }
+
+    /**
+     * Converts the given markdown source to HTML.
+     *
+     * @param markdownSource the markdown source to convert
      * @return the HTML
      */
     public String markdownToHtml(char[] markdownSource) {
@@ -96,8 +108,20 @@ public class PegDownProcessor {
      * @return the HTML
      */
     public String markdownToHtml(char[] markdownSource, NoFollow noFollow) {
+        return markdownToHtml(markdownSource,  noFollow, WikiLinkFormat.DEFAULT);
+    }
+
+    /**
+     * Converts the given markdown source to HTML.
+     *
+     * @param markdownSource the markdown source to convert
+     * @param noFollow the NoFollow to use
+     * @param wikiLinkFormat the WikiLinkFormat to use
+     * @return the HTML
+     */
+    public String markdownToHtml(char[] markdownSource, NoFollow noFollow, WikiLinkFormat wikiLinkFormat) {
         RootNode astRoot = parseMarkdown(markdownSource);
-        return new ToHtmlSerializer(noFollow).toHtml(astRoot);
+        return new ToHtmlSerializer(noFollow, wikiLinkFormat).toHtml(astRoot);
     }
 
     /**

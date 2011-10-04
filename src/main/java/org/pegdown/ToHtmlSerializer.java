@@ -34,14 +34,16 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     protected final Map<String, ReferenceNode> references = new HashMap<String, ReferenceNode>();
     protected final Map<String, String> abbreviations = new HashMap<String, String>();
     protected final NoFollow noFollow;
+    protected final WikiLinkFormat wikiLinkFormat;
 
     protected TableNode currentTableNode;
     protected int currentTableColumn;
     protected boolean inTableHeader;
     protected Random random = new Random(0x2626); // for email obfuscation
 
-    public ToHtmlSerializer(NoFollow noFollow) {
+    public ToHtmlSerializer(NoFollow noFollow, WikiLinkFormat wikiLinkFormat) {
         this.noFollow = noFollow;
+        this.wikiLinkFormat = wikiLinkFormat;
     }
 
     public String toHtml(RootNode astRoot) {
@@ -315,8 +317,8 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
 
     public void visit(WikiLinkNode node) {
         printer.print("<a href=\"")
-                .printEncoded(node.getUrl(), this)
-                .print(node.isNofollow() ? "\" rel=\"nofollow\">" : "\">")
+                .printEncoded(wikiLinkFormat.url(node), this)
+                .print(noFollow.noFollow(node) ? "\" rel=\"nofollow\">" : "\">")
                 .printEncoded(node.getText(), this)
                 .print("</a>");
     }

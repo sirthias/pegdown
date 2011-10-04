@@ -71,7 +71,7 @@ public abstract class AbstractTest {
         Preconditions.checkState(markdown != null, "Test not found");
         
         RootNode astRoot = getProcessor().parseMarkdown(markdown);
-        String actualHtml = new ToHtmlSerializer(noFollow).toHtml(astRoot);
+        String actualHtml = new ToHtmlSerializer(noFollow, WikiLinkFormat.DEFAULT).toHtml(astRoot);
 
         // debugging I: check the parse tree
         //assertEquals(printNodeTree(getProcessor().parser.parseToParsingResult(markdown)), "<parse tree>");
