@@ -27,7 +27,7 @@ import org.pegdown.ast.Node;
 import org.testng.annotations.Test;
 import static org.pegdown.Extensions.*;
 
-public class CustomPegDownTest extends AbstractTest {
+public class PegDownTest extends AbstractTest {
 
     /*private final PegDownProcessor processor = new PegDownProcessor(
             Parboiled.createParser(Parser.class, Extensions.ALL,

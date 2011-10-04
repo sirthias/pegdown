@@ -1243,10 +1243,6 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return (String) pop();
     }
 
-    public TextNode popAsTextNode() {
-        return (TextNode) pop();
-    }
-
     public boolean ext(int extension) {
         return (options & extension) > 0;
     }
