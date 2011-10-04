@@ -50,6 +50,7 @@ public interface Visitor {
     void visit(TableNode node);
     void visit(TableRowNode node);
     void visit(VerbatimNode node);
+    void visit(WikiLinkNode node);
 
     void visit(TextNode node);
     void visit(SuperNode node);
