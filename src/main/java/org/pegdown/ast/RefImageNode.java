@@ -18,11 +18,11 @@
 
 package org.pegdown.ast;
 
-public class RefLinkNode extends SuperNode {
+public class RefImageNode extends SuperNode {
     public final String separatorSpace;
     public final SuperNode referenceKey;
 
-    public RefLinkNode(SuperNode referenceKey, String separatorSpace, Node child) {
+    public RefImageNode(SuperNode referenceKey, String separatorSpace, Node child) {
         super(child);
         this.separatorSpace = separatorSpace;
         this.referenceKey = referenceKey;

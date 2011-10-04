@@ -18,18 +18,18 @@
 
 package org.pegdown.ast;
 
-public abstract class LinkNode extends SuperNode {
-    private boolean image;
+public class ExpImageNode extends SuperNode {
+    public final String url;
+    public final String title;
 
-    public LinkNode(Node child) {
+    public ExpImageNode(String title, String url, Node child) {
         super(child);
+        this.url = url;
+        this.title = title;
     }
 
-    public boolean getImage() {
-        return image;
-    }
-
-    public boolean makeImage() {
-        return image = true;
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

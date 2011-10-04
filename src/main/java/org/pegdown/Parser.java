@@ -673,10 +673,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule Image() {
         return NodeSequence(
                 '!', Label(),
-                FirstOf(
-                        Sequence(ExplicitLink(), ((ExpLinkNode) peek()).makeImage()),
-                        Sequence(ReferenceLink(), ((RefLinkNode) peek()).makeImage())
-                )
+                FirstOf(ExplicitLink(true), ReferenceLink(true))
         );
     }
 
@@ -685,7 +682,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return NodeSequence(
                 FirstOf(new ArrayBuilder<Rule>()
                     .addNonNulls(ext(WIKILINKS) ? new Rule[] {WikiLink()} : null)
-                    .add(Sequence(Label(), FirstOf(ExplicitLink(), ReferenceLink())))
+                    .add(Sequence(Label(), FirstOf(ExplicitLink(false), ReferenceLink(false))))
                     .add(AutoLink())
                     .get()
                 )
@@ -693,43 +690,48 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public Rule NonAutoLink() {
-        return NodeSequence(Sequence(Label(), FirstOf(ExplicitLink(), ReferenceLink())));
+        return NodeSequence(Sequence(Label(), FirstOf(ExplicitLink(false), ReferenceLink(false))));
     }
 
-    public Rule ExplicitLink() {
-        Var<ExpLinkNode> node = new Var<ExpLinkNode>();
+    @Cached
+    public Rule ExplicitLink(boolean image) {
         return Sequence(
-                push(node.setAndGet(new ExpLinkNode(popAsNode()))),
                 Spn1(), '(', Sp(),
-                Source(node),
-                Spn1(), Optional(Title(node)),
-                Sp(), ')'
+                LinkSource(),
+                Spn1(), FirstOf(LinkTitle(), push("")),
+                Sp(), ')',
+                push(image ?
+                  new ExpImageNode(popAsString(), popAsString(), popAsNode()) :
+                  new ExpLinkNode(popAsString(), popAsString(), popAsNode())
+                )
         );
     }
 
-    public Rule ReferenceLink() {
-        Var<RefLinkNode> node = new Var<RefLinkNode>();
+    public Rule ReferenceLink(boolean image) {
         return Sequence(
-                push(node.setAndGet(new RefLinkNode(popAsNode()))),
                 FirstOf(
-                        // regular reference link
-                        Sequence(Spn1(), node.get().setSeparatorSpace(match()),
-                                Label(), node.get().setReferenceKey((SuperNode) pop())),
-
-                        // implicit reference link
-                        Sequence(Spn1(), node.get().setSeparatorSpace(match()), "[]"),
-
-                        node.get().setSeparatorSpace(null) // implicit referencelink without trailing []
+                        Sequence(
+                                Spn1(), push(match()),
+                                FirstOf(
+                                        Label(), // regular reference link
+                                        Sequence("[]", push(null)) // implicit reference link
+                                )
+                        ),
+                        Sequence(push(null), push(null)) // implicit referencelink without trailing []
+                ),
+                push(image ?
+                  new RefImageNode((SuperNode)popAsNode(), popAsString(), popAsNode()) :
+                  new RefLinkNode((SuperNode)popAsNode(), popAsString(), popAsNode())
                 )
         );
     }
 
     @Cached
-    public Rule Source(Var<ExpLinkNode> node) {
+    public Rule LinkSource() {
         StringBuilderVar url = new StringBuilderVar();
         return FirstOf(
-                Sequence('(', Source(node), ')'),
-                Sequence('<', Source(node), '>'),
+                Sequence('(', LinkSource(), ')'),
+                Sequence('<', LinkSource(), '>'),
                 Sequence(
                         OneOrMore(
                                 FirstOf(
@@ -737,21 +739,21 @@ public class Parser extends BaseParser<Object> implements Extensions {
                                         Sequence(TestNot(AnyOf("()>")), Nonspacechar(), url.append(matchedChar()))
                                 )
                         ),
-                        node.get().setUrl(url.getString())
+                        push(url.getString())
                 ),
-                EMPTY
+                push("")
         );
     }
 
-    public Rule Title(Var<ExpLinkNode> node) {
-        return FirstOf(Title('\'', node), Title('"', node));
+    public Rule LinkTitle() {
+        return FirstOf(LinkTitle('\''), LinkTitle('"'));
     }
 
-    public Rule Title(char delimiter, Var<ExpLinkNode> node) {
+    public Rule LinkTitle(char delimiter) {
         return Sequence(
                 delimiter,
                 ZeroOrMore(TestNot(delimiter, Sp(), FirstOf(')', Newline())), NotNewline(), ANY),
-                node.get().setTitle(match()),
+                push(match()),
                 delimiter
         );
     }
@@ -1235,6 +1237,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
     
     public Node popAsNode() {
         return (Node) pop();
+    }
+
+    public String popAsString() {
+        return (String) pop();
     }
 
     public TextNode popAsTextNode() {

@@ -109,11 +109,4 @@ public class CustomPegDownTest extends AbstractTest {
                 "and:</p>\n" +
                 "\n");
     }
-    
-    @Test(dependsOnMethods = "customPegDownTests2")
-    public void testNoFollowLinks() {
-        processor = new PegDownProcessor(ALL & ~HARDWRAPS);
-        test("pegdown/No Follow Links", NoFollow.ALWAYS);
-    }
-
 }

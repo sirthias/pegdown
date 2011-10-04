@@ -52,26 +52,17 @@ public abstract class AbstractTest {
     protected abstract PegDownProcessor getProcessor();
 
     protected void test(String testName) {
-        test(testName, NoFollow.NEVER);
-    }
-
-    protected void test(String testName, NoFollow noFollow) {
         String expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html");
         assertNotNull(expectedUntidy);
-
-        test(testName, tidy(expectedUntidy), noFollow);
+        test(testName, tidy(expectedUntidy));
     }
 
     protected void test(String testName, String expectedOutput) {
-        test(testName, expectedOutput, NoFollow.NEVER);
-    }
-
-    protected void test(String testName, String expectedOutput, NoFollow noFollow) {
         char[] markdown = FileUtils.readAllCharsFromResource(testName + ".md");
         Preconditions.checkState(markdown != null, "Test not found");
         
         RootNode astRoot = getProcessor().parseMarkdown(markdown);
-        String actualHtml = new ToHtmlSerializer(noFollow, WikiLinkFormat.DEFAULT).toHtml(astRoot);
+        String actualHtml = new ToHtmlSerializer(new LinkRenderer()).toHtml(astRoot);
 
         // debugging I: check the parse tree
         //assertEquals(printNodeTree(getProcessor().parser.parseToParsingResult(markdown)), "<parse tree>");

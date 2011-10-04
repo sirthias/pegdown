@@ -18,79 +18,33 @@
 
 package org.pegdown;
 
-import org.parboiled.common.StringUtils;
-
-import java.util.LinkedList;
-
 /**
  * Encapsulates basic string output functionality.
  */
 public class Printer {
+    public final StringBuilder sb;
+    public int indent;
 
-    public interface Encoder {
-
-        /**
-         * Returns a string representation for the given character or null, if the character does not have to be encoded.
-         *
-         * @param c the character
-         * @return a string or null
-         */
-        String encode(char c);
+    public Printer() {
+        this(new StringBuilder());
     }
 
-    private final StringBuilder sb = new StringBuilder();
-    private int indent;
-    private LinkedList<Encoder> priorEncoders;
-    private Encoder encoder;
+    public Printer(StringBuilder sb) {
+        this.sb = sb;
+    }
 
     public Printer indent(int delta) {
         indent += delta;
         return this;
     }
 
-    public Printer startEncoding(Encoder encoder) {
-        if (this.encoder != null) {
-            if (priorEncoders == null) priorEncoders = new LinkedList<Encoder>();
-            priorEncoders.addFirst(this.encoder);
-        }
-        this.encoder = encoder;
-        return this;
-    }
-
-    public Printer stopEncoding() {
-        encoder = priorEncoders == null || priorEncoders.isEmpty() ? null : priorEncoders.removeFirst();
-        return this;
-    }
-    
-    public Printer printEncoded(String string, Encoder encoder) {
-        return startEncoding(encoder).print(string).stopEncoding();
-    }
-    
-    public Printer printEncoded(char c, Encoder encoder) {
-        return startEncoding(encoder).print(c).stopEncoding();
-    }
-
     public Printer print(String string) {
-        if (StringUtils.isNotEmpty(string)) {
-            if (encoder != null) {
-                for (int i = 0; i < string.length(); i++) {
-                    if (encoder.encode(string.charAt(i)) != null) {
-                        // we have at least one character that needs encoding, so do it one by one
-                        for (i = 0; i < string.length(); i++) {
-                            char c = string.charAt(i);
-                            String encoded = encoder.encode(c);
-                            if (encoded != null) {
-                                sb.append(encoded);
-                            } else {
-                                sb.append(c);
-                            }
-                        }
-                        return this;
-                    }
-                }
-            }
-            sb.append(string);
-        }
+        sb.append(string);
+        return this;
+    }
+
+    public Printer printEncoded(String string) {
+        FastEncoder.encode(string, sb);
         return this;
     }
 

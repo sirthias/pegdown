@@ -71,23 +71,11 @@ public class PegDownProcessor {
      * Converts the given markdown source to HTML.
      *
      * @param markdownSource the markdown source to convert
-     * @param noFollow the NoFollow to use
+     * @param linkRenderer the LinkRenderer to use
      * @return the HTML
      */
-    public String markdownToHtml(String markdownSource, NoFollow noFollow) {
-        return markdownToHtml(markdownSource.toCharArray(), noFollow);
-    }
-
-    /**
-     * Converts the given markdown source to HTML.
-     *
-     * @param markdownSource the markdown source to convert
-     * @param noFollow the NoFollow to use
-     * @param wikiLinkFormat the WikiLinkFormat to use
-     * @return the HTML
-     */
-    public String markdownToHtml(String markdownSource, NoFollow noFollow, WikiLinkFormat wikiLinkFormat) {
-        return markdownToHtml(markdownSource.toCharArray(), noFollow, wikiLinkFormat);
+    public String markdownToHtml(String markdownSource, LinkRenderer linkRenderer) {
+        return markdownToHtml(markdownSource.toCharArray(), linkRenderer);
     }
 
     /**
@@ -97,31 +85,19 @@ public class PegDownProcessor {
      * @return the HTML
      */
     public String markdownToHtml(char[] markdownSource) {
-        return markdownToHtml(markdownSource, NoFollow.NEVER);
+        return markdownToHtml(markdownSource, new LinkRenderer());
     }
 
     /**
      * Converts the given markdown source to HTML.
      *
      * @param markdownSource the markdown source to convert
-     * @param noFollow the NoFollow to use
+     * @param linkRenderer the LinkRenderer to use
      * @return the HTML
      */
-    public String markdownToHtml(char[] markdownSource, NoFollow noFollow) {
-        return markdownToHtml(markdownSource,  noFollow, WikiLinkFormat.DEFAULT);
-    }
-
-    /**
-     * Converts the given markdown source to HTML.
-     *
-     * @param markdownSource the markdown source to convert
-     * @param noFollow the NoFollow to use
-     * @param wikiLinkFormat the WikiLinkFormat to use
-     * @return the HTML
-     */
-    public String markdownToHtml(char[] markdownSource, NoFollow noFollow, WikiLinkFormat wikiLinkFormat) {
+    public String markdownToHtml(char[] markdownSource, LinkRenderer linkRenderer) {
         RootNode astRoot = parseMarkdown(markdownSource);
-        return new ToHtmlSerializer(noFollow, wikiLinkFormat).toHtml(astRoot);
+        return new ToHtmlSerializer(linkRenderer).toHtml(astRoot);
     }
 
     /**

@@ -28,6 +28,7 @@ public interface Visitor {
     void visit(DefinitionNode node);
     void visit(DefinitionTermNode node);
     void visit(EmphNode node);
+    void visit(ExpImageNode node);
     void visit(ExpLinkNode node);
     void visit(HeaderNode node);
     void visit(HtmlBlockNode node);
@@ -38,6 +39,7 @@ public interface Visitor {
     void visit(ParaNode node);
     void visit(QuotedNode node);
     void visit(ReferenceNode node);
+    void visit(RefImageNode node);
     void visit(RefLinkNode node);
     void visit(RootNode node);
     void visit(SimpleNode node);
