@@ -643,7 +643,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 EmphOrStrongOpen(chars),
                 push(new SuperNode()),
-                OneOrMore(TestNot(EmphOrStrongClose(chars)), NotNewline(), Inline(), addAsChild()),
+                OneOrMore(TestNot(EmphOrStrongClose(chars)), Inline(), addAsChild()),
                 EmphOrStrongClose(chars)
         );
     }

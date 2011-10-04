@@ -71,6 +71,7 @@ public class CustomPegDownTest extends AbstractTest {
     @Test(dependsOnMethods = "testASTIndices")
     public void customPegDownTests2() {
         processor = new PegDownProcessor(NONE);
+        test("pegdown/Emph_With_Linebreaks");
         test("pegdown/Special Chars");
     }
 
