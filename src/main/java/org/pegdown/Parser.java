@@ -684,6 +684,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule Link() {
         return NodeSequence(
                 FirstOf(
+                        ext(WIKILINKS) ? WikiLink() : NOTHING,
                         Sequence(Label(), FirstOf(ExplicitLink(), ReferenceLink())),
                         AutoLink()
                 )
@@ -759,6 +760,15 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 ext(AUTOLINKS) ? Optional('<') : Ch('<'),
                 FirstOf(AutoLinkUrl(), AutoLinkEmail()),
                 ext(AUTOLINKS) ? Optional('>') : Ch('>')
+        );
+    }
+
+    public Rule WikiLink() {
+        return Sequence(
+            "[[",
+            OneOrMore(TestNot(']'), ANY), // Not sure ANY is appropriate here, but certainly some symbols and whitespace are
+            push(new WikiLinkNode(match(), ext(NO_FOLLOW_LINKS))),
+            "]]"
         );
     }
 

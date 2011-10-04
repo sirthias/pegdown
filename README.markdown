@@ -8,8 +8,8 @@ _pegdown_ is nearly 100% compatible with the original Markdown specification and
 On top of the standard Markdown feature set _pegdown_ implements a number of extensions similar to what other popular Markdown processors offer.  
 Currently _pegdown_ supports the following extensions over standard Markdown:
 
-* SMARTS: Beautifys apostrophes, ellipsises ("..." and ". . .") and dashes ("--" and "---")
-* QUOTES: Beautifys single quotes, double quotes and double angle quotes (&laquo; and &raquo;)
+* SMARTS: Beautifies apostrophes, ellipses ("..." and ". . .") and dashes ("--" and "---")
+* QUOTES: Beautifies single quotes, double quotes and double angle quotes (&laquo; and &raquo;)
 * SMARTYPANTS: Convenience extension enabling both, SMARTS and QUOTES, at once.
 * ABBREVIATIONS: Abbreviations in the way of [PHP Markdown Extra][].
 * HARDWRAPS: Alternative handling of newlines, see [Github-flavoured-Markdown][]
@@ -20,6 +20,7 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * HTML BLOCK SUPPRESSION: Suppresses the output of HTML blocks.
 * INLINE HTML SUPPRESSION: Suppresses the output of inline HTML elements.
 * NO_FOLLOW_LINKS: Attaches a `rel="nofollow"` attribute to all generated HTML links.
+* WIKILINKS: Support Github-style wiki links to relative HTML files.
 
 Note: _pegdown_ differs from the original Markdown in that it ignores in-word emphasis as in
 
@@ -95,7 +96,7 @@ tool [peg-markdown](http://github.com/jgm/peg-markdown).
 License
 -------
 
-_pegdown_ is licensed under [APL 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+_pegdown_ is licensed under [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 
 Patch Policy
