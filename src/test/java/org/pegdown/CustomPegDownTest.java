@@ -49,6 +49,7 @@ public class CustomPegDownTest extends AbstractTest {
     @Test
     public void customPegDownTests() {
         test("pegdown/Abbreviations");
+        test("pegdown/AttributeWithUnderScore");
         test("pegdown/Autolinks");
         test("pegdown/Bug_in_0.8.5.1");
         test("pegdown/Bug_in_0.8.5.4");

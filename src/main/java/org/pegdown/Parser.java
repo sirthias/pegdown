@@ -893,7 +893,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     public Rule HtmlAttribute() {
         return Sequence(
-                OneOrMore(FirstOf(Alphanumeric(), '-')),
+                OneOrMore(FirstOf(Alphanumeric(), '-', '_')),
                 Spn1(),
                 Optional('=', Spn1(), FirstOf(Quoted(), OneOrMore(TestNot('>'), Nonspacechar()))),
                 Spn1()
