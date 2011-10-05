@@ -54,7 +54,6 @@ public abstract class AbstractTest {
     protected void test(String testName) {
         String expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html");
         assertNotNull(expectedUntidy);
-
         test(testName, tidy(expectedUntidy));
     }
 
@@ -63,7 +62,7 @@ public abstract class AbstractTest {
         Preconditions.checkState(markdown != null, "Test not found");
         
         RootNode astRoot = getProcessor().parseMarkdown(markdown);
-        String actualHtml = new ToHtmlSerializer().toHtml(astRoot);
+        String actualHtml = new ToHtmlSerializer(new LinkRenderer()).toHtml(astRoot);
 
         // debugging I: check the parse tree
         //assertEquals(printNodeTree(getProcessor().parser.parseToParsingResult(markdown)), "<parse tree>");

@@ -1,3 +1,14 @@
+Version 1.1.0 (2011-10-05)
+--------------------------
+- Upgraded to parboiled 1.0.2
+- Introduced LinkRenderer layer for easy customization of HTML link rendering
+- Added support for [[Wiki-style]] links, thx to Brett Porter
+- Fixed #27 (Missing emphasis when paragraph has multiple lines)
+- Fixed #28 (Parser not fully extensible)
+- Fixed #32, #33 (HTML tags with attribute names containing underscores are not recognized as tags, thx to Edward Samson)
+- Fixed #34 (Pathologically slow parsing when strong and italics emphasis are applied together)
+
+
 Version 1.0.2 (2011-07-05)
 --------------------------
 - Simplify custom extensions by making `private` fields/methods of ToHtmlSerializer and Parser `protected`
@@ -7,9 +18,11 @@ Version 1.0.2 (2011-07-05)
 - Fixed broken Java 1.5 compatibility (thx to Julien Nicoulaud)
 - Fixed maven build: add testng and jtidy deps for tests, and configure the compiler plugin for java 5 (thx to Lukas Theussl)
 
+
 Version 1.0.1 (2011-05-17)
 --------------------------
 - Fixed #18 (code blocks in list items split by lines)
+
 
 Version 1.0.0 (2011-05-13)
 --------------------------

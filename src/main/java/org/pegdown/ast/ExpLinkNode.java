@@ -18,30 +18,14 @@
 
 package org.pegdown.ast;
 
-public class ExpLinkNode extends LinkNode {
-    private String url;
-    private String title;
+public class ExpLinkNode extends SuperNode {
+    public final String url;
+    public final String title;
 
-    public ExpLinkNode(Node child, boolean nofollow) {
-        super(child, nofollow);
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public boolean setUrl(String url) {
+    public ExpLinkNode(String title, String url, Node child) {
+        super(child);
         this.url = url;
-        return true;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public boolean setTitle(String title) {
         this.title = title;
-        return true;
     }
 
     @Override

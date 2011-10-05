@@ -18,14 +18,10 @@
 
 package org.pegdown.ast;
 
-public class RefLinkNode extends SuperNode {
-    public final String separatorSpace;
-    public final SuperNode referenceKey;
+public class WikiLinkNode extends TextNode {
 
-    public RefLinkNode(SuperNode referenceKey, String separatorSpace, Node child) {
-        super(child);
-        this.separatorSpace = separatorSpace;
-        this.referenceKey = referenceKey;
+    public WikiLinkNode(String text) {
+        super(text);
     }
 
     @Override

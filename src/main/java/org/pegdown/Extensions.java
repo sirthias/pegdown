@@ -26,7 +26,7 @@ public interface Extensions {
     static final int NONE = 0x00;
 
     /**
-     * Pretty ellipsises, dashes and apostrophes.
+     * Pretty ellipses, dashes and apostrophes.
      */
     static final int SMARTS = 0x01;
 
@@ -57,8 +57,8 @@ public interface Extensions {
     static final int HARDWRAPS = 0x08;
 
     /**
-     * Enables plain autolinks the way github flavoures markdown implements them.
-     * With this extension enabled pegdown will intelligently recognize URLs and email adresses
+     * Enables plain autolinks the way github flavoured markdown implements them.
+     * With this extension enabled pegdown will intelligently recognize URLs and email addresses
      * without any further delimiters and mark them as the respective link type.
      *
      * @see <a href="http://github.github.com/github-flavored-markdown">Github-flavored-Markdown</a>
@@ -89,6 +89,13 @@ public interface Extensions {
     static final int FENCED_CODE_BLOCKS = 0x80;
 
     /**
+     * Support [[Wiki-style links]]. URL rendering is performed by the active {@link LinkRenderer}.
+     *
+     * @see <a href="http://github.github.com/github-flavored-markdown">Github-flavored-Markdown</a>
+     */
+    static final int WIKILINKS = 0x100;
+
+    /**
      * All available extensions excluding the HTML SUPPRESSION and NO_FOLLOW_LINKS options.
      */
     static final int ALL = 0x0000FFFF;
@@ -107,10 +114,4 @@ public interface Extensions {
      * Suppresses HTML blocks as well as inline HTML tags. Both will be accepted in the input but not be contained in the output.
      */
     static final int SUPPRESS_ALL_HTML = 0x00030000;
-    
-    /**
-     * Suppresses HTML blocks as well as inline HTML tags. Both will be accepted in the input but not be contained in the output.
-     */
-    static final int NO_FOLLOW_LINKS = 0x00040000;
-
 }

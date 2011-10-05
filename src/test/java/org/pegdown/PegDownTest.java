@@ -27,7 +27,7 @@ import org.pegdown.ast.Node;
 import org.testng.annotations.Test;
 import static org.pegdown.Extensions.*;
 
-public class CustomPegDownTest extends AbstractTest {
+public class PegDownTest extends AbstractTest {
 
     /*private final PegDownProcessor processor = new PegDownProcessor(
             Parboiled.createParser(Parser.class, Extensions.ALL,
@@ -49,6 +49,7 @@ public class CustomPegDownTest extends AbstractTest {
     @Test
     public void customPegDownTests() {
         test("pegdown/Abbreviations");
+        test("pegdown/AttributeWithUnderScore");
         test("pegdown/Autolinks");
         test("pegdown/Bug_in_0.8.5.1");
         test("pegdown/Bug_in_0.8.5.4");
@@ -59,6 +60,7 @@ public class CustomPegDownTest extends AbstractTest {
         test("pegdown/Quoted Blockquote");
         test("pegdown/Smartypants");
         test("pegdown/Tables");
+        test("pegdown/Wikilinks");
     }
     
     @Test(dependsOnMethods = "customPegDownTests")
@@ -69,6 +71,7 @@ public class CustomPegDownTest extends AbstractTest {
     @Test(dependsOnMethods = "testASTIndices")
     public void customPegDownTests2() {
         processor = new PegDownProcessor(NONE);
+        test("pegdown/Emph_With_Linebreaks");
         test("pegdown/Special Chars");
     }
 
@@ -107,11 +110,4 @@ public class CustomPegDownTest extends AbstractTest {
                 "and:</p>\n" +
                 "\n");
     }
-    
-    @Test(dependsOnMethods = "customPegDownTests2")
-    public void testNoFollowLinks() {
-        processor = new PegDownProcessor((ALL + NO_FOLLOW_LINKS) & ~HARDWRAPS);
-        test("pegdown/No Follow Links");
-    }
-
 }

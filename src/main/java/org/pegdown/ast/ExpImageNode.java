@@ -18,24 +18,18 @@
 
 package org.pegdown.ast;
 
-public abstract class LinkNode extends SuperNode {
-    private boolean image;
-    private boolean nofollow;
+public class ExpImageNode extends SuperNode {
+    public final String url;
+    public final String title;
 
-    public LinkNode(Node child, boolean nofollow) {
+    public ExpImageNode(String title, String url, Node child) {
         super(child);
-        this.nofollow = nofollow;
+        this.url = url;
+        this.title = title;
     }
 
-    public boolean getImage() {
-        return image;
-    }
-
-    public boolean makeImage() {
-        return image = true;
-    }
-
-    public boolean isNofollow() {
-        return nofollow;
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -23,20 +23,24 @@ import org.pegdown.ast.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.TreeMap;
 
 import static org.parboiled.common.Preconditions.checkArgNotNull;
 
-public class ToHtmlSerializer implements Visitor, Printer.Encoder {
+public class ToHtmlSerializer implements Visitor {
+
     protected Printer printer = new Printer();
     protected final Map<String, ReferenceNode> references = new HashMap<String, ReferenceNode>();
     protected final Map<String, String> abbreviations = new HashMap<String, String>();
+    protected final LinkRenderer linkRenderer;
 
     protected TableNode currentTableNode;
     protected int currentTableColumn;
     protected boolean inTableHeader;
-    protected Random random = new Random(0x2626); // for email obfuscation 
+
+    public ToHtmlSerializer(LinkRenderer linkRenderer) {
+        this.linkRenderer = linkRenderer;
+    }
 
     public String toHtml(RootNode astRoot) {
         checkArgNotNull(astRoot, "astRoot");
@@ -63,15 +67,10 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     }
 
     public void visit(AbbreviationNode node) {
-
     }
 
     public void visit(AutoLinkNode node) {
-        printer.print("<a href=\"")
-                .printEncoded(node.getText(), this)
-                .print(node.isNofollow() ? "\" rel=\"nofollow\">" : "\">")
-                .printEncoded(node.getText(), this)
-                .print("</a>");
+        printLink(linkRenderer.render(node));
     }
 
     public void visit(BlockQuoteNode node) {
@@ -102,21 +101,13 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         printTag(node, "em");
     }
 
+    public void visit(ExpImageNode node) {
+        printImageTag(node, node.url);
+    }
+
     public void visit(ExpLinkNode node) {
-        if (node.getImage()) {
-            printer.print("<img src=\"").printEncoded(node.getUrl(), this).print("\"  alt=\"").startEncoding(this);
-            visitChildren(node);
-            printer.stopEncoding().print("\"/>");
-        } else {
-            printer.print("<a href=\"").printEncoded(node.getUrl(), this).print('"');
-            if (node.getTitle() != null) {
-                printer.print(" title=\"").printEncoded(node.getTitle(), this).print('"');
-            }
-            if (node.isNofollow()) printer.print(" rel=\"nofollow\"");
-            printer.print('>');
-            visitChildren(node);
-            printer.print("</a>");
-        }
+        String text = printChildrenToString(node);
+        printLink(linkRenderer.render(node, text));
     }
 
     public void visit(HeaderNode node) {
@@ -139,9 +130,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     }
 
     public void visit(MailLinkNode node) {
-        printer.print("<a href=\"mailto:").print(obfuscate(node.getText())).print("\">")
-                .print(obfuscate(node.getText()))
-                .print("</a>");
+        printLink(linkRenderer.render(node));
     }
 
     public void visit(OrderedListNode node) {
@@ -176,42 +165,32 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         // reference nodes are not printed
     }
 
-    public void visit(final RefLinkNode node) {
-        String key = printToString(new Runnable() {
-            public void run() {
-                SuperNode keyNode = node.getReferenceKey() != null ? node.getReferenceKey() : node;
-                visitChildren(keyNode);
-            }
-        });
-
-        ReferenceNode refNode = key != null ? references.get(normalize(key)) : null;
-        if (refNode == null) {
-            // "fake" reference link
-            printer.print('[');
-            visitChildren(node);
-            printer.print(']');
-            if (node.getSeparatorSpace() != null) {
-                printer.print(node.getSeparatorSpace()).print('[');
-                if (node.getReferenceKey() != null) node.getReferenceKey().accept(this);
+    public void visit(RefImageNode node) {
+        String text = printChildrenToString(node);
+        String key = node.referenceKey != null ? printChildrenToString(node.referenceKey) : text;
+        ReferenceNode refNode = references.get(normalize(key));
+        if (refNode == null) { // "fake" reference image link
+            printer.print("![").print(text).print(']');
+            if (node.separatorSpace != null) {
+                printer.print(node.separatorSpace).print('[');
+                if (node.referenceKey != null) printer.print(key);
                 printer.print(']');
             }
-            return;
-        }
+        } else printImageTag(node, refNode.getUrl());
+    }
 
-        if (node.getImage()) {
-            printer.print("<img src=\"").printEncoded(refNode.getUrl(), this).print("\"  alt=\"").startEncoding(this);
-            visitChildren(node);
-            printer.stopEncoding().print("\"/>");
-        } else {
-            printer.print("<a href=\"").printEncoded(refNode.getUrl(), this).print('"');
-            if (refNode.getTitle() != null) {
-                printer.print(" title=\"").printEncoded(refNode.getTitle(), this).print('"');
+    public void visit(RefLinkNode node) {
+        String text = printChildrenToString(node);
+        String key = node.referenceKey != null ? printChildrenToString(node.referenceKey) : text;
+        ReferenceNode refNode = references.get(normalize(key));
+        if (refNode == null) { // "fake" reference link
+            printer.print('[').print(text).print(']');
+            if (node.separatorSpace != null) {
+                printer.print(node.separatorSpace).print('[');
+                if (node.referenceKey != null) printer.print(key);
+                printer.print(']');
             }
-            if (node.isNofollow()) printer.print(" rel=\"nofollow\"");
-            printer.print('>');
-            visitChildren(node);
-            printer.print("</a>");
-        }
+        } else printLink(linkRenderer.render(node, refNode.getUrl(), refNode.getTitle(), text));
     }
 
     public void visit(SimpleNode node) {
@@ -302,18 +281,17 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     public void visit(VerbatimNode node) {
         printer.println().print("<pre><code>");
         String text = node.getText();
-        text = transformVerbatimText(text);
-        printer.printEncoded(text, this);
-        printer.print("</code></pre>");
-    }
-
-    public String transformVerbatimText(String text) {
-        // transform all initial newlines to HTML breaks
+        // print HTML breaks for all initial newlines
         while(text.charAt(0) == '\n') {
             printer.print("<br/>");
             text = text.substring(1);
         }
-        return text;
+        printer.printEncoded(text);
+        printer.print("</code></pre>");
+    }
+
+    public void visit(WikiLinkNode node) {
+        printLink(linkRenderer.render(node));
     }
 
     public void visit(TextNode node) {
@@ -325,7 +303,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     }
 
     public void visit(SpecialTextNode node) {
-        printer.printEncoded(node.getText(), this);
+        printer.printEncoded(node.getText());
     }
 
     public void visit(SuperNode node) {
@@ -337,24 +315,6 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         throw new RuntimeException("Not implemented");
     }
 
-    // Printer.Encoder
-
-    public String encode(char c) {
-        switch (c) {
-            case '&':
-                return "&amp;";
-            case '<':
-                return "&lt;";
-            case '>':
-                return "&gt;";
-            case '"':
-                return "&quot;";
-            case '\'':
-                return "&#39;";
-        }
-        return null;
-    }
-
     // helpers
 
     protected void visitChildren(SuperNode node) {
@@ -364,10 +324,9 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
     }
 
     protected void printTag(TextNode node, String tag) {
-        printer
-                .print('<').print(tag).print('>')
-                .printEncoded(node.getText(), this)
-                .print('<').print('/').print(tag).print('>');
+        printer.print('<').print(tag).print('>');
+        printer.printEncoded(node.getText());
+        printer.print('<').print('/').print(tag).print('>');
     }
 
     protected void printTag(SuperNode node, String tag) {
@@ -382,10 +341,28 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         printer.indent(-2).println().print('<').print('/').print(tag).print('>');
     }
 
-    protected String printToString(Runnable runnable) {
+    protected void printImageTag(SuperNode imageNode, String url) {
+        printer.print("<img src=\"").print(url).print("\"  alt=\"")
+                .printEncoded(printChildrenToString(imageNode)).print("\"/>");
+    }
+
+    protected void printLink(LinkRenderer.Rendering rendering) {
+        printer.print('<').print('a');
+        printAttribute("href", rendering.href);
+        for (LinkRenderer.Attribute attr : rendering.attributes) {
+            printAttribute(attr.name, attr.value);
+        }
+        printer.print('>').print(rendering.text).print("</a>");
+    }
+
+    private void printAttribute(String name, String value) {
+        printer.print(' ').print(name).print('=').print('"').print(value).print('"');
+    }
+
+    protected String printChildrenToString(SuperNode node) {
         Printer priorPrinter = printer;
         printer = new Printer();
-        runnable.run();
+        visitChildren(node);
         String result = printer.getString();
         printer = priorPrinter;
         return result;
@@ -405,28 +382,7 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
         }
         return sb.toString();
     }
-  
-    protected String obfuscate(String email) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < email.length(); i++) {
-            char c = email.charAt(i);
-            switch (random.nextInt(5)) {
-                case 0:
-                case 1:
-                    sb.append("&#").append((int) c).append(';');
-                    break;
-                case 2:
-                case 3:
-                    sb.append("&#x").append(Integer.toHexString(c)).append(';');
-                    break;
-                case 4:
-                    String encoded = encode(c);
-                    if (encoded != null) sb.append(encoded); else sb.append(c);
-            }
-        }
-        return sb.toString();
-    }
-    
+
     protected void printWithAbbreviations(String string) {
         Map<Integer, Map.Entry<String, String>> expansions = null;
 
@@ -462,15 +418,15 @@ public class ToHtmlSerializer implements Visitor, Printer.Encoder {
                 String abbr = entry.getValue().getKey();
                 String expansion = entry.getValue().getValue();
 
-                printer.printEncoded(string.substring(ix, sx), this);
+                printer.printEncoded(string.substring(ix, sx));
                 printer.print("<abbr");
                 if (StringUtils.isNotEmpty(expansion)) {
                     printer.print(" title=\"");
-                    printer.printEncoded(expansion, this);
+                    printer.printEncoded(expansion);
                     printer.print('"');
                 }
                 printer.print('>');
-                printer.printEncoded(abbr, this);
+                printer.printEncoded(abbr);
                 printer.print("</abbr>");
                 ix = sx + abbr.length();
             }

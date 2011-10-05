@@ -71,11 +71,33 @@ public class PegDownProcessor {
      * Converts the given markdown source to HTML.
      *
      * @param markdownSource the markdown source to convert
+     * @param linkRenderer the LinkRenderer to use
+     * @return the HTML
+     */
+    public String markdownToHtml(String markdownSource, LinkRenderer linkRenderer) {
+        return markdownToHtml(markdownSource.toCharArray(), linkRenderer);
+    }
+
+    /**
+     * Converts the given markdown source to HTML.
+     *
+     * @param markdownSource the markdown source to convert
      * @return the HTML
      */
     public String markdownToHtml(char[] markdownSource) {
+        return markdownToHtml(markdownSource, new LinkRenderer());
+    }
+
+    /**
+     * Converts the given markdown source to HTML.
+     *
+     * @param markdownSource the markdown source to convert
+     * @param linkRenderer the LinkRenderer to use
+     * @return the HTML
+     */
+    public String markdownToHtml(char[] markdownSource, LinkRenderer linkRenderer) {
         RootNode astRoot = parseMarkdown(markdownSource);
-        return new ToHtmlSerializer().toHtml(astRoot);
+        return new ToHtmlSerializer(linkRenderer).toHtml(astRoot);
     }
 
     /**

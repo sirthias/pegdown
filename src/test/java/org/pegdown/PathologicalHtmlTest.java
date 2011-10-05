@@ -18,6 +18,7 @@
 
 package org.pegdown;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class PathologicalHtmlTest {
@@ -25,7 +26,6 @@ public class PathologicalHtmlTest {
     @Test
     public void test() {
         // this test took about 30 seconds to complete in 0.8.5.4
-        
         String content = "" +
                 "<table border>\n" +
                 "<tr> <th>Your action <th>Partner's action <th>Your jail time <th>Partner's jail time\n" +
@@ -35,6 +35,19 @@ public class PathologicalHtmlTest {
                 "</table>\n";
         long time = System.currentTimeMillis();
         new PegDownProcessor(Extensions.SMARTYPANTS | Extensions.AUTOLINKS).markdownToHtml(content);
-        System.out.println("elapsed time: " + (System.currentTimeMillis() - time) + " milliseconds");
+        time = System.currentTimeMillis() - time;
+        Assert.assertTrue(time < 1000);
+    }
+
+    @Test
+    public void test2() {
+        // this test took about 30 seconds to complete in 1.0.2
+        String content = "" +
+                "***a*** ***b*** ***c*** ***d*** ***e*** ***f*** ***g*** ***h*** ***i*** ***f*** " +
+                "***g*** ***h*** ***i*** ***j*** ***k*** ***l*** ***m*** ***n*** ***o*** ***p***\n";
+        long time = System.currentTimeMillis();
+        new PegDownProcessor().markdownToHtml(content);
+        time = System.currentTimeMillis() - time;
+        Assert.assertTrue(time < 1000);
     }
 }
