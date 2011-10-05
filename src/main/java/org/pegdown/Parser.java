@@ -662,7 +662,6 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 TestNot(Spacechar()),
                 NotNewline(),
-                chars.length() == 1 ? TestNot(EmphOrStrong(chars + chars)) : EMPTY,
                 chars,
                 TestNot(Alphanumeric())
         );
