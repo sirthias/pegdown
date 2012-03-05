@@ -11,12 +11,12 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * SMARTS: Beautifies apostrophes, ellipses ("..." and ". . .") and dashes ("--" and "---")
 * QUOTES: Beautifies single quotes, double quotes and double angle quotes (&laquo; and &raquo;)
 * SMARTYPANTS: Convenience extension enabling both, SMARTS and QUOTES, at once.
-* ABBREVIATIONS: Abbreviations in the way of [PHP Markdown Extra].
+* ABBREVIATIONS: Abbreviations in the way of [PHP Markdown Extra](http://michelf.com/projects/php-markdown/extra/#abbr).
 * HARDWRAPS: Alternative handling of newlines, see [Github-flavoured-Markdown]
 * AUTOLINKS: Plain (undelimited) autolinks the way [Github-flavoured-Markdown] implements them.
-* TABLES: Tables similar to [MultiMarkdown] (which is in turn like the [PHP Markdown Extra] tables, but with colspan support).
-* DEFINITION LISTS: Definition lists in the way of [PHP Markdown Extra].
-* FENCED CODE BLOCKS: Fenced Code Blocks in the way of [PHP Markdown Extra] or [Github-flavoured-Markdown].
+* TABLES: Tables similar to [MultiMarkdown](http://fletcherpenney.net/multimarkdown/) (which is in turn like the [PHP Markdown Extra](http://michelf.com/projects/php-markdown/extra/#table) tables, but with colspan support).
+* DEFINITION LISTS: Definition lists in the way of [PHP Markdown Extra](http://michelf.com/projects/php-markdown/extra/#def-list).
+* FENCED CODE BLOCKS: Fenced Code Blocks in the way of [PHP Markdown Extra](http://michelf.com/projects/php-markdown/extra/#fenced-code-blocks) or [Github-flavoured-Markdown].
 * HTML BLOCK SUPPRESSION: Suppresses the output of HTML blocks.
 * INLINE HTML SUPPRESSION: Suppresses the output of inline HTML elements.
 * WIKILINKS: Support `[[Wiki-style links]]` with a customizable URL rendering logic.
@@ -62,7 +62,7 @@ underlying parboiled parser instance. However, once the first processor has been
 be fast. Also, you can reuse an existing [PegDownProcessor] instance as often as you want, as long as you prevent
 concurrent accesses, since neither the [PegDownProcessor] nor the underlying parser is thread-safe.
 
-See <http://sirthias.github.com/pegdown/api> for the pegdown API documation.
+See <http://sirthias.github.com/pegdown/api> for the pegdown API documentation.
 
 
 IDE Support
@@ -106,7 +106,6 @@ Along with any patches, please state that the patch is your original work and th
   
    [Markdown]: http://daringfireball.net/projects/markdown/ "Main Markdown site"
    [parboiled]: http://www.parboiled.org
-   [PHP Markdown Extra]: http://michelf.com/projects/php-markdown/extra/#html
    [Github-flavoured-Markdown]: http://github.github.com/github-flavored-markdown/
    [MultiMarkdown]: http://fletcherpenney.net/multimarkdown/users_guide/multimarkdown_syntax_guide/
    [Download Page]: http://github.com/sirthias/pegdown/downloads
