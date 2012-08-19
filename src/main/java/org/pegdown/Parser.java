@@ -155,27 +155,33 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule FencedCodeBlock() {
         StringBuilderVar text = new StringBuilderVar();
         Var<Integer> markerLength = new Var<Integer>();
+        StringBuilderVar codeType = new StringBuilderVar();
         return NodeSequence(
-                CodeFence(markerLength),
+                TopLevelCodeFence(markerLength, codeType),
                 TestNot(CodeFence(markerLength)), // prevent empty matches
                 ZeroOrMore(BlankLine(), text.append('\n')),
                 OneOrMore(TestNot(Newline(), CodeFence(markerLength)), ANY, text.append(matchedChar())),
                 Newline(),
-                push(new VerbatimNode(text.appended('\n').getString())),
+                push(new VerbatimNode(text.appended('\n').getString(), codeType.getString())),
                 CodeFence(markerLength)
         );
     }
-    
+
     @Cached
-    public Rule CodeFence(Var<Integer> markerLength) {
+    public Rule TopLevelCodeFence(Var<Integer> markerLength, StringBuilderVar codeType) {
         return Sequence(
                 FirstOf(NOrMore('~', 3), NOrMore('`', 3)),
                 (markerLength.isSet() && matchLength() == markerLength.get()) ||
                         (markerLength.isNotSet() && markerLength.set(matchLength())),
                 Sp(),
-                ZeroOrMore(TestNot(Newline()), ANY), // GFM code type identifier
+                ZeroOrMore(TestNot(Newline()), ANY, codeType.append(matchedChar())), // GFM code type identifier
                 Newline()
         );
+    }
+    
+    @Cached
+    public Rule CodeFence(Var<Integer> markerLength) {
+        return TopLevelCodeFence(markerLength, new StringBuilderVar());
     }
     
     public Rule HorizontalRule() {
