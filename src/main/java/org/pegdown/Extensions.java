@@ -36,11 +36,11 @@ public interface Extensions {
     static final int QUOTES = 0x02;
 
     /**
-     * All of the smartypants prettyfications. Equivalent to SMARTS || QUOTES.
+     * All of the smartypants prettyfications. Equivalent to SMARTS + QUOTES.
      * 
      * @see <a href="http://daringfireball.net/projects/smartypants/">Smartypants</a>
      */
-    static final int SMARTYPANTS = 0x03;
+    static final int SMARTYPANTS = SMARTS + QUOTES;
 
     /**
      * PHP Markdown Extra style abbreviations.
@@ -96,7 +96,7 @@ public interface Extensions {
     static final int WIKILINKS = 0x100;
 
     /**
-     * All available extensions excluding the HTML SUPPRESSION and NO_FOLLOW_LINKS options.
+     * All available extensions excluding the SUPPRESS_... options.
      */
     static final int ALL = 0x0000FFFF;
 
@@ -111,7 +111,8 @@ public interface Extensions {
     static final int SUPPRESS_INLINE_HTML = 0x00020000;
 
     /**
-     * Suppresses HTML blocks as well as inline HTML tags. Both will be accepted in the input but not be contained in the output.
+     * Suppresses HTML blocks as well as inline HTML tags.
+     * Both will be accepted in the input but not be contained in the output.
      */
     static final int SUPPRESS_ALL_HTML = 0x00030000;
 }
