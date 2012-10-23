@@ -6,6 +6,7 @@ Simple Table:
 First | Second
 ------|-------
 Cool  | Shit
+[this is the caption]
 
 Without header:
 
@@ -36,4 +37,4 @@ Content       |          *Long Cell*        ||
 Content       |   **Cell**    |         Cell |
 New section   |     More      |         Data |
 And more      |               |   And more   |
-
+[this is the caption]

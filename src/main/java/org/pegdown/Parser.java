@@ -1092,10 +1092,36 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         ),
                         addAsChild() // add the TableHeaderNode to the TableNode
                 ),
-                !node.get().getChildren().isEmpty()
                 // only accept as table if we have at least one header or at least one body
+                Optional(TableCaption(), addAsChild()),
+                !node.get().getChildren().isEmpty()
+
         );
     }
+    public Rule TableCaption() {
+        return Sequence(
+                CaptionStart(),
+                Optional(Sp()),
+                OneOrMore(CaptionInline(), addAsChild()),
+                Optional(Sp(), Optional(']'), Sp()),
+                Newline()
+        );
+    }
+
+    public Rule CaptionStart() {
+        return Sequence(
+                "[",
+                push(new TableCaptionNode())
+        );
+    }
+    public Rule CaptionInline() {
+        return Sequence(
+                TestNot(Newline()),
+                TestNot(Optional(Sp()), Optional(']'), Sp(), Newline()),
+                Inline()
+        );
+    }
+
 
     public Rule TableDivider(Var<TableNode> tableNode) {
         Var<Boolean> pipeSeen = new Var<Boolean>(Boolean.FALSE);

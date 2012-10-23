@@ -65,6 +65,6 @@ abstract class AbstractPegDownSpec extends Specification {
     out.toString
   }
 
-  def normalize(string: String) = string.replace("\r\n", "\n")
+  def normalize(string: String) = string.replace("\r\n", "\n").replace("\r", "\n")
 
 }
