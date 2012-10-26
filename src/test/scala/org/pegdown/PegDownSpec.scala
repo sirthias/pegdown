@@ -25,6 +25,7 @@ class PegDownSpec extends AbstractPegDownSpec {
         test("pegdown/Wikilinks")
 
         testAST("pegdown/AstText")
+        testAST("pegdown/GFM_Fenced_Code_Blocks")
       }
 
       "with the default parser" in {
