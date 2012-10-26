@@ -22,6 +22,7 @@ import org.parboiled.common.StringUtils;
 import org.pegdown.ast.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -231,7 +232,8 @@ public class ToHtmlSerializer implements Visitor {
 
     public void visit(TableCellNode node) {
         String tag = inTableHeader ? "th" : "td";
-        TableColumnNode column = currentTableNode.getColumns().get(currentTableColumn);
+        List<TableColumnNode> columns = currentTableNode.getColumns();
+        TableColumnNode column = columns.get(Math.min(currentTableColumn, columns.size()-1));
 
         printer.println().print('<').print(tag);
         column.accept(this);
