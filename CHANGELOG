@@ -1,3 +1,14 @@
+Version 1.2.0 (2011-10-05)
+--------------------------
+- Upgraded to parboiled 1.1.3
+- Implemented parsing timeout, closes #42
+- Fixed IndexOutOfBoundsException in ToHtmlSerializer, closes #39
+- Changed parser to not swallow backslash before non-special characters, fixes #35
+- Added test for fenced code blocks containing an empty line, closes #61
+- Migrated all tests from TestNG to specs2
+- Switched build tool from Apache Buildr to SBT
+
+
 Version 1.1.0 (2011-10-05)
 --------------------------
 - Upgraded to parboiled 1.0.2

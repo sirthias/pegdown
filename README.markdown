@@ -1,8 +1,7 @@
 Introduction
 ------------
 
-_pegdown_ is a pure Java library for clean and lightweight [Markdown] processing.
-It's implementation is based on a [parboiled] PEG parser and is therefore rather easy to understand and extend.
+_pegdown_ is a pure Java library for clean and lightweight [Markdown] processing based on a [parboiled] PEG parser.
 
 _pegdown_ is nearly 100% compatible with the original Markdown specification and fully passes the original Markdown test suite.
 On top of the standard Markdown feature set _pegdown_ implements a number of extensions similar to what other popular Markdown processors offer.  
@@ -35,11 +34,9 @@ Installation
 You have two options:
 
 * Download the JAR for the latest version from the [download page].
-  _pegdown_ 1.1.0 has only one dependency: [parboiled for Java][parboiled], version 1.0.2.
+  _pegdown_ 1.2.0 has only one dependency: [parboiled for Java][parboiled], version 1.1.3.
    
-* Point your Maven-compatible build tool to the repository at <http://scala-tools.org/repo-releases>,
-  group id "**org.pegdown**", artifact "**pegdown**".    
-  There may also be snapshot builds available at <http://scala-tools.org/repo-snapshots>. 
+* The pegdown artifact is also available from maven central with group id **org.pegdown** and artifact-id **pegdown**.
 
 
 Usage
@@ -65,23 +62,27 @@ concurrent accesses, since neither the [PegDownProcessor] nor the underlying par
 See <http://sirthias.github.com/pegdown/api> for the pegdown API documentation.
 
 
+Parsing Timeouts
+----------------
+
+Since Markdown has no official grammar and contains a number of ambiguities the parsing of Markdown source, especially
+with enabled language extensions, can be "hard" and result, in certain corner cases, in exponential parsing time.
+In order to provide a somewhat predictable behavior *pegdown* therefore supports the specification of a parsing timeout,
+which you can supply to the [PegDownProcessor] constructor.
+
+If the parser happens to run longer than the specified timeout period it terminates itself with an exception, which
+causes the `markdownToHtml` method to return `null`. Your application should then deal with this case accordingly and,
+for example, inform the user.
+
+The default timeout, if not explicitly specified, is 2 seconds.
+
+
 IDE Support
 -----------
 
-The excellent [idea-markdown plugin] for IntelliJ IDEA, RubyMine, PhpStorm, WebStorm, PyCharm and appCode uses _pegdown_ as its underlying parsing engine. The plugin gives you proper syntax-highlighting for markdown source and shows you exactly, how _pegdown_ will parse your texts.
-
-
-Hacking on pegdown
-------------------
-
-pegdown uses [Apache Buildr] for managing the build process. However, if you do not want to
-install Buildr on your machine, it should be no problem to quickly set up a project structure for the IDE of your choice
-around the sources, since they are quite compact and the dependencies are few.
-
-In order to provide custom markdown extensions to pegdown you shouldn't even have to get your hands dirty with its
-sources. A [PegDownProcessor] can be constructed around a given Parser instance, so you can supply your own.
-If you want to go that way probably want to subclass the _org.pegdown.Parser_ class and override a limited
-number of rules to inject your own extensions. Your extensions can create custom [Node] implementations, which you can process through the general `visit(Node)` method of a custom [Visitor] implementation.
+The excellent [idea-markdown plugin] for IntelliJ IDEA, RubyMine, PhpStorm, WebStorm, PyCharm and appCode uses _pegdown_
+as its underlying parsing engine. The plugin gives you proper syntax-highlighting for markdown source and shows you
+exactly, how _pegdown_ will parse your texts.
 
 
 Credits
@@ -114,5 +115,5 @@ Along with any patches, please state that the patch is your original work and th
    [Visitor]: http://www.decodified.com/pegdown/api/org/pegdown/ast/Visitor.html
    [ToHtmlSerializer]: https://github.com/sirthias/pegdown/blob/master/src/main/java/org/pegdown/ToHtmlSerializer.java
    [idea-markdown plugin]: https://github.com/nicoulaj/idea-markdown
-   [Apache Buildr]: http://buildr.apache.org
+   [SBT]: http://www.scala-sbt.org/
    [Node]: http://www.decodified.com/pegdown/api/org/pegdown/ast/Node.html
