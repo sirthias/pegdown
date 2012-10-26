@@ -53,21 +53,23 @@ public class Parser extends BaseParser<Object> implements Extensions {
         ParseRunner<Node> get(Rule rule);
     }
 
+    public static ParseRunnerProvider DefaultParseRunnerProvider =
+            new Parser.ParseRunnerProvider() {
+                public ParseRunner<Node> get(Rule rule) {
+                    return new ReportingParseRunner<Node>(rule);
+                }
+            };
+
     protected final int options;
+    protected final long maxParsingTimeInMillis;
     protected final ParseRunnerProvider parseRunnerProvider;
     final List<AbbreviationNode> abbreviations = new ArrayList<AbbreviationNode>();
     final List<ReferenceNode> references = new ArrayList<ReferenceNode>();
+    long parsingStartTimeStamp = 0L;
 
-    public Parser(Integer options) {
-        this(options, new Parser.ParseRunnerProvider() {
-            public ParseRunner<Node> get(Rule rule) {
-                return new ReportingParseRunner<Node>(rule);
-            }
-        });
-    }
-
-    public Parser(Integer options, ParseRunnerProvider parseRunnerProvider) {
+    public Parser(Integer options, Long maxParsingTimeInMillis, ParseRunnerProvider parseRunnerProvider) {
         this.options = options;
+        this.maxParsingTimeInMillis = maxParsingTimeInMillis;
         this.parseRunnerProvider = parseRunnerProvider;
     }
 
@@ -466,7 +468,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         SuperNode listItem = (SuperNode) getContext().getValueStack().peek();
         List<Node> children = listItem.getChildren();
         listItem.setStartIndex(children.get(0).getStartIndex());
-        listItem.setEndIndex(children.get(children.size()-1).getEndIndex());
+        listItem.setEndIndex(children.get(children.size() - 1).getEndIndex());
         return true;
     }
 
@@ -555,7 +557,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     @MemoMismatches
     public Rule Inline() {
-        return FirstOf(Link(), NonLinkInline());
+        return Sequence(
+                checkForParsingTimeout(),
+                FirstOf(Link(), NonLinkInline())
+        );
     }
 
     public Rule NonAutoLinkInline() {
@@ -566,8 +571,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return FirstOf(new ArrayBuilder<Rule>()
                 .add(Str(), Endline(), UlOrStarLine(), Space(), StrongOrEmph(), Image(), Code(), InlineHtml(),
                         Entity(), EscapedChar())
-                .addNonNulls(ext(QUOTES) ? new Rule[] {SingleQuoted(), DoubleQuoted(), DoubleAngleQuoted()} : null)
-                .addNonNulls(ext(SMARTS) ? new Rule[] {Smarts()} : null)
+                .addNonNulls(ext(QUOTES) ? new Rule[]{SingleQuoted(), DoubleQuoted(), DoubleAngleQuoted()} : null)
+                .addNonNulls(ext(SMARTS) ? new Rule[]{Smarts()} : null)
                 .add(Symbol())
                 .get()
         );
@@ -681,10 +686,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule Link() {
         return NodeSequence(
                 FirstOf(new ArrayBuilder<Rule>()
-                    .addNonNulls(ext(WIKILINKS) ? new Rule[] {WikiLink()} : null)
-                    .add(Sequence(Label(), FirstOf(ExplicitLink(false), ReferenceLink(false))))
-                    .add(AutoLink())
-                    .get()
+                        .addNonNulls(ext(WIKILINKS) ? new Rule[]{WikiLink()} : null)
+                        .add(Sequence(Label(), FirstOf(ExplicitLink(false), ReferenceLink(false))))
+                        .add(AutoLink())
+                        .get()
                 )
         );
     }
@@ -701,8 +706,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 Spn1(), FirstOf(LinkTitle(), push("")),
                 Sp(), ')',
                 push(image ?
-                  new ExpImageNode(popAsString(), popAsString(), popAsNode()) :
-                  new ExpLinkNode(popAsString(), popAsString(), popAsNode())
+                        new ExpImageNode(popAsString(), popAsString(), popAsNode()) :
+                        new ExpLinkNode(popAsString(), popAsString(), popAsNode())
                 )
         );
     }
@@ -1294,7 +1299,14 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
     
     ParsingResult<Node> parseToParsingResult(char[] source) {
+        parsingStartTimeStamp = System.currentTimeMillis();
         return parseRunnerProvider.get(Root()).run(source);
+    }
+
+    protected boolean checkForParsingTimeout() {
+        if (System.currentTimeMillis() - parsingStartTimeStamp > maxParsingTimeInMillis)
+            throw new ParsingTimeoutException();
+        return true;
     }
 
     protected interface SuperNodeCreator {

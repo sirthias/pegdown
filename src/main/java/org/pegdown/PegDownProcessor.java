@@ -30,26 +30,44 @@ import org.pegdown.ast.RootNode;
  * @see <a href="http://www.parboiled.org/">parboiled.org</a>
  */
 public class PegDownProcessor {
+    public static final long DEFAULT_MAX_PARSING_TIME = 2000;
+
     public final Parser parser;
 
     /**
-     * Creates a new processor instance without any enabled extensions.
+     * Creates a new processor instance without any enabled extensions and the default parsing timeout.
      */
     public PegDownProcessor() {
-        this(Extensions.NONE);
+        this(DEFAULT_MAX_PARSING_TIME);
     }
 
     /**
-     * Creates a new processor instance with the given {@link org.pegdown.Extensions}.
+     * Creates a new processor instance without any enabled extensions and the given parsing timeout.
+     */
+    public PegDownProcessor(long maxParsingTimeInMillis) {
+        this(Extensions.NONE, maxParsingTimeInMillis);
+    }
+
+    /**
+     * Creates a new processor instance with the given {@link org.pegdown.Extensions} and the default parsing timeout.
      *
      * @param options the flags of the extensions to enable as a bitmask
      */
     public PegDownProcessor(int options) {
-        this(Parboiled.createParser(Parser.class, options));
+        this(options, DEFAULT_MAX_PARSING_TIME);
     }
 
     /**
-     * Creates a new processor instance using the given Parser and tabstop width.
+     * Creates a new processor instance with the given {@link org.pegdown.Extensions} and parsing timeout.
+     *
+     * @param options the flags of the extensions to enable as a bitmask
+     */
+    public PegDownProcessor(int options, long maxParsingTimeInMillis) {
+        this(Parboiled.createParser(Parser.class, options, maxParsingTimeInMillis, Parser.DefaultParseRunnerProvider));
+    }
+
+    /**
+     * Creates a new processor instance using the given Parser.
      *
      * @param parser the parser instance to use
      */
@@ -59,6 +77,7 @@ public class PegDownProcessor {
 
     /**
      * Converts the given markdown source to HTML.
+     * If the input cannot be parsed within the configured parsing timeout the method returns null.
      *
      * @param markdownSource the markdown source to convert
      * @return the HTML
@@ -69,6 +88,7 @@ public class PegDownProcessor {
 
     /**
      * Converts the given markdown source to HTML.
+     * If the input cannot be parsed within the configured parsing timeout the method returns null.
      *
      * @param markdownSource the markdown source to convert
      * @param linkRenderer the LinkRenderer to use
@@ -80,6 +100,7 @@ public class PegDownProcessor {
 
     /**
      * Converts the given markdown source to HTML.
+     * If the input cannot be parsed within the configured parsing timeout the method returns null.
      *
      * @param markdownSource the markdown source to convert
      * @return the HTML
@@ -90,18 +111,24 @@ public class PegDownProcessor {
 
     /**
      * Converts the given markdown source to HTML.
+     * If the input cannot be parsed within the configured parsing timeout the method returns null.
      *
      * @param markdownSource the markdown source to convert
      * @param linkRenderer the LinkRenderer to use
      * @return the HTML
      */
     public String markdownToHtml(char[] markdownSource, LinkRenderer linkRenderer) {
-        RootNode astRoot = parseMarkdown(markdownSource);
-        return new ToHtmlSerializer(linkRenderer).toHtml(astRoot);
+        try {
+            RootNode astRoot = parseMarkdown(markdownSource);
+            return new ToHtmlSerializer(linkRenderer).toHtml(astRoot);
+        } catch(ParsingTimeoutException e) {
+            return null;
+        }
     }
 
     /**
      * Parses the given markdown source and returns the root node of the generated Abstract Syntax Tree.
+     * If the input cannot be parsed within the configured parsing timeout the method throws a ParsingTimeoutException.
      *
      * @param markdownSource the markdown source to convert
      * @return the AST root

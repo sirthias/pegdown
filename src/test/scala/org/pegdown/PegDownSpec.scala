@@ -92,4 +92,4 @@ class PegDownSpec extends AbstractPegDownSpec {
 
 }
 
-class CustomParser extends Parser(ALL)
+class CustomParser extends Parser(ALL, 1000, Parser.DefaultParseRunnerProvider)
