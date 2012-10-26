@@ -986,7 +986,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public Rule EscapedChar() {
-        return NodeSequence('\\', NotNewline(), ANY, push(new SpecialTextNode(match())));
+        return NodeSequence('\\', AnyOf("*_`&[]<>!#\\'\".+-(){}:|~"), push(new SpecialTextNode(match())));
     }
 
     public Rule Symbol() {
