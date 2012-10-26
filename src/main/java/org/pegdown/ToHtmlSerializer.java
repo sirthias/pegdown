@@ -279,7 +279,11 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public void visit(VerbatimNode node) {
-        printer.println().print("<pre><code>");
+        printer.println().print("<pre><code");
+        if (!StringUtils.isEmpty(node.getType())) {
+            printAttribute("class", node.getType());
+        }
+        printer.print(">");
         String text = node.getText();
         // print HTML breaks for all initial newlines
         while(text.charAt(0) == '\n') {

@@ -20,12 +20,23 @@ package org.pegdown.ast;
 
 public class VerbatimNode extends TextNode {
 
+    private final String type;
+
     public VerbatimNode(String text) {
+        this(text, "");
+    }
+    
+    public VerbatimNode(String text, String type) {
         super(text);
+        this.type = type;
     }
     
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
+    }
+
+    public String getType() {
+        return type;
     }
 }
