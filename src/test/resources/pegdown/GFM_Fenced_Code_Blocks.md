@@ -21,4 +21,14 @@ And another one, this time with an empty line:
    data.crud.isDirty(); // true
 ```
 
-and some more content....
+and here is another one:
+
+```java
+public static String message(@PropertyKey(resourceBundle = BUNDLE_NAME) String key, Object... params) {
+    return CommonBundle.message(BUNDLE, key, params);
+}
+
+public static String messageOrBlank(@PropertyKey(resourceBundle = BUNDLE_NAME) String key, Object... params) {
+    return CommonBundle.messageOrDefault(BUNDLE, key, "", params);
+}
+```

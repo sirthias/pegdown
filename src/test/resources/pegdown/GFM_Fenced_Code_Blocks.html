@@ -23,5 +23,16 @@ class Example(name: String) {
 </code>
 </pre>
 
-<p>and some more content&hellip;.</p>
+<p>and here is another one:</p>
+<pre>
+<code class="java">
+public static String message(@PropertyKey(resourceBundle = BUNDLE_NAME) String key, Object... params) {
+    return CommonBundle.message(BUNDLE, key, params);
+}
+
+public static String messageOrBlank(@PropertyKey(resourceBundle = BUNDLE_NAME) String key, Object... params) {
+    return CommonBundle.messageOrDefault(BUNDLE, key, "", params);
+}
+</code>
+</pre>
 

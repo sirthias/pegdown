@@ -1,4 +1,4 @@
-RootNode [0-434]
+RootNode [0-786]
   ParaNode [0-22]
     SuperNode [0-20]
       TextNode [0-19] 'A fenced code block'
@@ -9,8 +9,8 @@ RootNode [0-434]
       TextNode [100-145] 'And another one, this time with an empty line'
       SpecialTextNode [145-146] ':'
   VerbatimNode [148-406] '   var model = ko.sync.Model({\n       dataStore: store,\n       dataTable: table,\n       fields: {counter: 0}\n   });\n\n   var data = ko.sync.use({}, model);\n   data.crud.isDirty(); // false\n   data.counter(1);\n   data.crud.isDirty(); // true\n'
-  ParaNode [407-434]
-    SuperNode [407-432]
-      TextNode [407-428] 'and some more content'
-      SimpleNode [428-431] Ellipsis
-      SpecialTextNode [431-432] '.'
+  ParaNode [407-433]
+    SuperNode [407-431]
+      TextNode [407-430] 'and here is another one'
+      SpecialTextNode [430-431] ':'
+  VerbatimNode [433-786] 'public static String message(@PropertyKey(resourceBundle = BUNDLE_NAME) String key, Object... params) {\n    return CommonBundle.message(BUNDLE, key, params);\n}\n\npublic static String messageOrBlank(@PropertyKey(resourceBundle = BUNDLE_NAME) String key, Object... params) {\n    return CommonBundle.messageOrDefault(BUNDLE, key, "", params);\n}\n'
