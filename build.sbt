@@ -33,10 +33,12 @@ scalaVersion := "2.9.2"
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 libraryDependencies   ++= Seq(
-  "org.parboiled" % "parboiled-java" % "1.1.3",
+  "org.parboiled" % "parboiled-java" % "1.1.4",
   "net.sf.jtidy" % "jtidy" % "r938" % "test",
   "org.specs2" %% "specs2" % "1.12.2" % "test"
 )
+
+resolvers += Opts.resolver.sonatypeReleases
 
 // publishing
 
