@@ -28,14 +28,14 @@ javacOptions in doc := Seq(
   "-encoding", "utf8"
 )
 
-scalaVersion := "2.9.2"
+scalaVersion := "2.9.3"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
 libraryDependencies   ++= Seq(
-  "org.parboiled" % "parboiled-java" % "1.1.4",
+  "org.parboiled" % "parboiled-java" % "1.1.5",
   "net.sf.jtidy" % "jtidy" % "r938" % "test",
-  "org.specs2" %% "specs2" % "1.12.2" % "test"
+  "org.specs2" %% "specs2" % "1.12.4.1" % "test"
 )
 
 resolvers += Opts.resolver.sonatypeReleases
