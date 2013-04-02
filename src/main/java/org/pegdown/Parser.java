@@ -32,6 +32,7 @@ import org.parboiled.support.StringVar;
 import org.parboiled.support.Var;
 import org.pegdown.ast.*;
 import org.pegdown.ast.SimpleNode.Type;
+import org.pegdown.plugins.PegDownPlugins;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,14 +64,20 @@ public class Parser extends BaseParser<Object> implements Extensions {
     protected final int options;
     protected final long maxParsingTimeInMillis;
     protected final ParseRunnerProvider parseRunnerProvider;
+    protected final PegDownPlugins plugins;
     final List<AbbreviationNode> abbreviations = new ArrayList<AbbreviationNode>();
     final List<ReferenceNode> references = new ArrayList<ReferenceNode>();
     long parsingStartTimeStamp = 0L;
 
-    public Parser(Integer options, Long maxParsingTimeInMillis, ParseRunnerProvider parseRunnerProvider) {
+    public Parser(Integer options, Long maxParsingTimeInMillis, ParseRunnerProvider parseRunnerProvider, PegDownPlugins plugins) {
         this.options = options;
         this.maxParsingTimeInMillis = maxParsingTimeInMillis;
         this.parseRunnerProvider = parseRunnerProvider;
+        this.plugins = plugins;
+    }
+
+    public Parser(Integer options, Long maxParsingTimeInMillis, ParseRunnerProvider parseRunnerProvider) {
+        this(options, maxParsingTimeInMillis, parseRunnerProvider, PegDownPlugins.NONE);
     }
 
     public RootNode parse(char[] source) {
@@ -98,6 +105,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 ZeroOrMore(BlankLine()),
                 FirstOf(new ArrayBuilder<Rule>()
+                        .add(plugins.getBlockPluginRules())
                         .add(BlockQuote(), Verbatim())
                         .addNonNulls(ext(ABBREVIATIONS) ? Abbreviation() : null)
                         .add(Reference(), HorizontalRule(), Heading(), OrderedList(), BulletList(), HtmlBlock())
@@ -569,6 +577,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     public Rule NonLinkInline() {
         return FirstOf(new ArrayBuilder<Rule>()
+                .add(plugins.getInlinePluginRules())
                 .add(Str(), Endline(), UlOrStarLine(), Space(), StrongOrEmph(), Image(), Code(), InlineHtml(),
                         Entity(), EscapedChar())
                 .addNonNulls(ext(QUOTES) ? new Rule[]{SingleQuoted(), DoubleQuoted(), DoubleAngleQuoted()} : null)

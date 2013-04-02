@@ -12,9 +12,8 @@ import ast.Node
 abstract class AbstractPegDownSpec extends Specification {
 
   def test(testName: String)(implicit processor: PegDownProcessor) {
-    val expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html")
-    require(expectedUntidy != null, "Test '" + testName + "' not found")
-    test(testName, tidy(expectedUntidy))
+    implicit val htmlSerializer = new ToHtmlSerializer(new LinkRenderer)
+    testWithSerializer(testName)
   }
 
   def test(testName: String, expectedOutput: String, htmlSerializer: ToHtmlSerializer = null)(implicit processor: PegDownProcessor) {
@@ -37,6 +36,12 @@ abstract class AbstractPegDownSpec extends Specification {
     // tidy up html for fair equality test
     val tidyHtml = tidy(actualHtml)
     normalize(tidyHtml) === normalize(expectedOutput)
+  }
+
+  def testWithSerializer(testName: String)(implicit processor: PegDownProcessor, htmlSerializer: ToHtmlSerializer) {
+    val expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html")
+    require(expectedUntidy != null, "Test '" + testName + "' not found")
+    test(testName, tidy(expectedUntidy), htmlSerializer)
   }
 
   def testAST(testName: String)(implicit processor: PegDownProcessor) {

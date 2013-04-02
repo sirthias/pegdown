@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.parboiled.Parboiled;
 import org.pegdown.ast.RootNode;
+import org.pegdown.plugins.PegDownPlugins;
 
 /**
  * A clean and lightweight Markdown-to-HTML filter based on a PEG parser implemented with parboiled.
@@ -57,16 +58,38 @@ public class PegDownProcessor {
      * @param options the flags of the extensions to enable as a bitmask
      */
     public PegDownProcessor(int options) {
-        this(options, DEFAULT_MAX_PARSING_TIME);
+        this(options, DEFAULT_MAX_PARSING_TIME, PegDownPlugins.NONE);
     }
 
     /**
      * Creates a new processor instance with the given {@link org.pegdown.Extensions} and parsing timeout.
      *
      * @param options the flags of the extensions to enable as a bitmask
+     * @param maxParsingTimeInMillis the parsing timeout
      */
     public PegDownProcessor(int options, long maxParsingTimeInMillis) {
-        this(Parboiled.createParser(Parser.class, options, maxParsingTimeInMillis, Parser.DefaultParseRunnerProvider));
+        this(options, maxParsingTimeInMillis, PegDownPlugins.NONE);
+    }
+
+    /**
+     * Creates a new processor instance with the given {@link org.pegdown.Extensions} and plugins.
+     *
+     * @param options the flags of the extensions to enable as a bitmask
+     * @param plugins the plugins to use
+     */
+    public PegDownProcessor(int options, PegDownPlugins plugins) {
+        this(options, DEFAULT_MAX_PARSING_TIME, plugins);
+    }
+
+    /**
+     * Creates a new processor instance with the given {@link org.pegdown.Extensions}, parsing timeout and plugins.
+     *
+     * @param options the flags of the extensions to enable as a bitmask
+     * @param maxParsingTimeInMillis the parsing timeout
+     * @param plugins the plugins to use
+     */
+    public PegDownProcessor(int options, long maxParsingTimeInMillis, PegDownPlugins plugins) {
+        this(Parboiled.createParser(Parser.class, options, maxParsingTimeInMillis, Parser.DefaultParseRunnerProvider, plugins));
     }
 
     /**

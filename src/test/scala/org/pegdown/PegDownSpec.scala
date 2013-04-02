@@ -1,11 +1,13 @@
 package org.pegdown
 
+import ast.{Visitor, Node}
 import org.parboiled.Parboiled
 import Extensions._
 import org.pegdown.ast.VerbatimNode
 import org.parboiled.common.FileUtils
 import java.util.Collections
 import scala.collection.immutable.HashMap
+import plugins.{ToHtmlSerializerPlugin, PegDownPlugins}
 
 
 class PegDownSpec extends AbstractPegDownSpec {
@@ -107,6 +109,32 @@ class PegDownSpec extends AbstractPegDownSpec {
         serializerMap.put(VerbatimSerializer.DEFAULT, new CustomVerbatimSerializer)
         runWithSerializerMap("pegdown/GFM_Fenced_Code_Blocks", serializerMap, "_reversed_all")
       }
+    }
+
+    "allow custom plugins" in {
+      import scala.collection.JavaConversions._
+      implicit val processor = new PegDownProcessor(Parboiled.createParser[Parser, AnyRef](classOf[Parser],
+        new java.lang.Integer(ALL), new java.lang.Long(1000), Parser.DefaultParseRunnerProvider,
+        PegDownPlugins.builder().withPlugin(classOf[PluginParser]).build()))
+      implicit val htmlSerializer = new ToHtmlSerializer(new LinkRenderer, List(new ToHtmlSerializerPlugin {
+        def visit(node: Node, visitor: Visitor, printer: Printer) = node match {
+          case blockPlugin: BlockPluginNode => {
+            printer.print("<div class=\"blockplugin\">")
+            printer.print(blockPlugin.getText)
+            printer.print("</div>")
+            true
+          }
+          case inlinePlugin: InlinePluginNode => {
+            printer.print("<span class=\"inlineplugin\">")
+            printer.print(inlinePlugin.getText)
+            printer.print("</span>")
+            true
+          }
+          case _ => false
+        }
+      }))
+
+      testWithSerializer("pegdown/Plugins")
     }
   }
 

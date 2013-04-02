@@ -20,12 +20,12 @@ package org.pegdown;
 
 import org.parboiled.common.StringUtils;
 import org.pegdown.ast.*;
+import org.pegdown.plugins.ToHtmlSerializerPlugin;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.TreeMap;
 
 import static org.parboiled.common.Preconditions.checkArgNotNull;
@@ -36,6 +36,7 @@ public class ToHtmlSerializer implements Visitor {
     protected final Map<String, ReferenceNode> references = new HashMap<String, ReferenceNode>();
     protected final Map<String, String> abbreviations = new HashMap<String, String>();
     protected final LinkRenderer linkRenderer;
+    protected final List<ToHtmlSerializerPlugin> plugins;
 
     protected TableNode currentTableNode;
     protected int currentTableColumn;
@@ -44,16 +45,26 @@ public class ToHtmlSerializer implements Visitor {
     protected Map<String, VerbatimSerializer> verbatimSerializers;
 
     public ToHtmlSerializer(LinkRenderer linkRenderer) {
+        this(linkRenderer, Collections.<ToHtmlSerializerPlugin>emptyList());
+    }
+
+    public ToHtmlSerializer(LinkRenderer linkRenderer, List<ToHtmlSerializerPlugin> plugins) {
         this.linkRenderer = linkRenderer;
+        this.plugins = plugins;
         this.verbatimSerializers = Collections.<String, VerbatimSerializer>singletonMap(VerbatimSerializer.DEFAULT, DefaultVerbatimSerializer.INSTANCE);
     }
 
     public ToHtmlSerializer(final LinkRenderer linkRenderer, final Map<String, VerbatimSerializer> verbatimSerializers) {
+        this(linkRenderer, verbatimSerializers, Collections.<ToHtmlSerializerPlugin>emptyList());
+    }
+
+    public ToHtmlSerializer(final LinkRenderer linkRenderer, final Map<String, VerbatimSerializer> verbatimSerializers, final List<ToHtmlSerializerPlugin> plugins) {
         this.linkRenderer = linkRenderer;
         this.verbatimSerializers = new HashMap<String, VerbatimSerializer>(verbatimSerializers);
         if(!this.verbatimSerializers.containsKey(VerbatimSerializer.DEFAULT)) {
             this.verbatimSerializers.put(VerbatimSerializer.DEFAULT, DefaultVerbatimSerializer.INSTANCE);
         }
+        this.plugins = plugins;
     }
 
     public String toHtml(RootNode astRoot) {
@@ -338,8 +349,13 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public void visit(Node node) {
+        for (ToHtmlSerializerPlugin plugin : plugins) {
+            if (plugin.visit(node, this, printer)) {
+                return;
+            }
+        }
         // override this method for processing custom Node implementations
-        throw new RuntimeException("Not implemented");
+        throw new RuntimeException("Don't know how to handle node " + node);
     }
 
     // helpers
