@@ -21,9 +21,11 @@ package org.pegdown;
 import org.parboiled.common.StringUtils;
 import org.pegdown.ast.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.TreeMap;
 
 import static org.parboiled.common.Preconditions.checkArgNotNull;
@@ -39,8 +41,19 @@ public class ToHtmlSerializer implements Visitor {
     protected int currentTableColumn;
     protected boolean inTableHeader;
 
+    protected Map<String, VerbatimSerializer> verbatimSerializers;
+
     public ToHtmlSerializer(LinkRenderer linkRenderer) {
         this.linkRenderer = linkRenderer;
+        this.verbatimSerializers = Collections.<String, VerbatimSerializer>singletonMap(VerbatimSerializer.DEFAULT, DefaultVerbatimSerializer.INSTANCE);
+    }
+
+    public ToHtmlSerializer(final LinkRenderer linkRenderer, final Map<String, VerbatimSerializer> verbatimSerializers) {
+        this.linkRenderer = linkRenderer;
+        this.verbatimSerializers = new HashMap<String, VerbatimSerializer>(verbatimSerializers);
+        if(!this.verbatimSerializers.containsKey(VerbatimSerializer.DEFAULT)) {
+            this.verbatimSerializers.put(VerbatimSerializer.DEFAULT, DefaultVerbatimSerializer.INSTANCE);
+        }
     }
 
     public String toHtml(RootNode astRoot) {
@@ -287,19 +300,16 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public void visit(VerbatimNode node) {
-        printer.println().print("<pre><code");
-        if (!StringUtils.isEmpty(node.getType())) {
-            printAttribute("class", node.getType());
+        VerbatimSerializer serializer = lookupSerializer(node.getType());
+        serializer.serialize(node, printer);
+    }
+
+    private VerbatimSerializer lookupSerializer(final String type) {
+        if (type != null && verbatimSerializers.containsKey(type)) {
+            return verbatimSerializers.get(type);
+        } else {
+            return verbatimSerializers.get(VerbatimSerializer.DEFAULT);
         }
-        printer.print(">");
-        String text = node.getText();
-        // print HTML breaks for all initial newlines
-        while(text.charAt(0) == '\n') {
-            printer.print("<br/>");
-            text = text.substring(1);
-        }
-        printer.printEncoded(text);
-        printer.print("</code></pre>");
     }
 
     public void visit(WikiLinkNode node) {

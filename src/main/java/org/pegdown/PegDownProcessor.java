@@ -18,6 +18,9 @@
 
 package org.pegdown;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.parboiled.Parboiled;
 import org.pegdown.ast.RootNode;
 
@@ -98,6 +101,10 @@ public class PegDownProcessor {
         return markdownToHtml(markdownSource.toCharArray(), linkRenderer);
     }
 
+	public String markdownToHtml(String markdownSource, LinkRenderer linkRenderer, Map<String, VerbatimSerializer> verbatimSerializerMap) {
+		return markdownToHtml(markdownSource.toCharArray(), linkRenderer, verbatimSerializerMap);
+	}
+
     /**
      * Converts the given markdown source to HTML.
      * If the input cannot be parsed within the configured parsing timeout the method returns null.
@@ -118,9 +125,13 @@ public class PegDownProcessor {
      * @return the HTML
      */
     public String markdownToHtml(char[] markdownSource, LinkRenderer linkRenderer) {
+	    return markdownToHtml(markdownSource, linkRenderer, Collections.<String, VerbatimSerializer>emptyMap());
+    }
+
+	public String markdownToHtml(char[] markdownSource, LinkRenderer linkRenderer, Map<String, VerbatimSerializer> verbatimSerializerMap) {
         try {
             RootNode astRoot = parseMarkdown(markdownSource);
-            return new ToHtmlSerializer(linkRenderer).toHtml(astRoot);
+            return new ToHtmlSerializer(linkRenderer, verbatimSerializerMap).toHtml(astRoot);
         } catch(ParsingTimeoutException e) {
             return null;
         }

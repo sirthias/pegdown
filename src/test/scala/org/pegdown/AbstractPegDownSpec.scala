@@ -17,12 +17,13 @@ abstract class AbstractPegDownSpec extends Specification {
     test(testName, tidy(expectedUntidy))
   }
 
-  def test(testName: String, expectedOutput: String)(implicit processor: PegDownProcessor) {
+  def test(testName: String, expectedOutput: String, htmlSerializer: ToHtmlSerializer = null)(implicit processor: PegDownProcessor) {
     val markdown = FileUtils.readAllCharsFromResource(testName + ".md")
     require(markdown != null, "Test '" + testName + "' not found")
 
     val astRoot = processor.parseMarkdown(markdown)
-    val actualHtml = new ToHtmlSerializer(new LinkRenderer).toHtml(astRoot)
+
+    val actualHtml = Option(htmlSerializer).getOrElse(new ToHtmlSerializer(new LinkRenderer)).toHtml(astRoot)
 
     // debugging I: check the parse tree
     //assertEquals(printNodeTree(getProcessor().parser.parseToParsingResult(markdown)), "<parse tree>");

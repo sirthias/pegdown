@@ -2,6 +2,10 @@ package org.pegdown
 
 import org.parboiled.Parboiled
 import Extensions._
+import org.pegdown.ast.VerbatimNode
+import org.parboiled.common.FileUtils
+import java.util.Collections
+import scala.collection.immutable.HashMap
 
 
 class PegDownSpec extends AbstractPegDownSpec {
@@ -11,7 +15,7 @@ class PegDownSpec extends AbstractPegDownSpec {
     "pass the custom pegdown tests for all extensions" in {
       def runSuite(implicit processor: PegDownProcessor) {
         test("pegdown/Abbreviations")
-        test("pegdown/AttributeWithUnderScore")
+        test("pegdown/AttributeWithUnderscore")
         test("pegdown/Autolinks")
         test("pegdown/Bug_in_0.8.5.1")
         test("pegdown/Bug_in_0.8.5.4")
@@ -88,8 +92,39 @@ class PegDownSpec extends AbstractPegDownSpec {
         )(new PegDownProcessor(SUPPRESS_ALL_HTML))
       }
     }
+
+    "pass the custom verbatim-serializer test" in {
+      def runWithSerializerMap(testName: String, verbatimSerializerMap: java.util.Map[String, VerbatimSerializer], suffix: String) {
+        val expectedUntidy = FileUtils.readAllTextFromResource(testName + suffix + ".html")
+        require(expectedUntidy != null, "Test '" + testName + "' not found")
+        test(testName, tidy(expectedUntidy), new ToHtmlSerializer(new LinkRenderer, verbatimSerializerMap))(new PegDownProcessor(FENCED_CODE_BLOCKS))
+      }
+      "without specifying default" in {
+        runWithSerializerMap("pegdown/GFM_Fenced_Code_Blocks", Collections.singletonMap("scala", new CustomVerbatimSerializer), "_reversed_scala")
+      }
+      "with specifying default" in {
+        val serializerMap = new java.util.HashMap[String, VerbatimSerializer]
+        serializerMap.put(VerbatimSerializer.DEFAULT, new CustomVerbatimSerializer)
+        runWithSerializerMap("pegdown/GFM_Fenced_Code_Blocks", serializerMap, "_reversed_all")
+      }
+    }
   }
 
 }
 
 class CustomParser extends Parser(ALL, 1000, Parser.DefaultParseRunnerProvider)
+
+class CustomVerbatimSerializer extends VerbatimSerializer {
+  def serialize(node: VerbatimNode, printer: Printer) {
+    printer.print("<pre>")
+    printer.println()
+    printer.print("<code class=\"reversed-" + node.getType + "\">")
+    printer.println()
+    printer.print(node.getText.reverse)
+    printer.println()
+    printer.print("</code>")
+    printer.println()
+    printer.print("</pre>")
+    printer.println()
+  }
+}
