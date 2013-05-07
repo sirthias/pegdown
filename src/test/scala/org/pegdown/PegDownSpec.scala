@@ -22,6 +22,7 @@ class PegDownSpec extends AbstractPegDownSpec {
         test("pegdown/Parens_in_URL")
         test("pegdown/Quoted Blockquote")
         test("pegdown/Smartypants")
+        test("pegdown/Strikethrough")
         test("pegdown/Tables")
         test("pegdown/Wikilinks")
 

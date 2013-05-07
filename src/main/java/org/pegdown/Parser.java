@@ -573,6 +573,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         Entity(), EscapedChar())
                 .addNonNulls(ext(QUOTES) ? new Rule[]{SingleQuoted(), DoubleQuoted(), DoubleAngleQuoted()} : null)
                 .addNonNulls(ext(SMARTS) ? new Rule[]{Smarts()} : null)
+                .addNonNulls(ext(STRIKETHROUGH) ? new Rule[]{Strike()} : null)
                 .add(Symbol())
                 .get()
         );
@@ -611,10 +612,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     @MemoMismatches
     public Rule UlOrStarLine() {
-        // This keeps the parser from getting bogged down on long strings of '*' or '_',
-        // or strings of '*' or '_' with space on each side:
+        // This keeps the parser from getting bogged down on long strings of '*', '_' or '~',
+        // or strings of '*', '_' or '~' with space on each side:
         return NodeSequence(
-                FirstOf(CharLine('_'), CharLine('*')),
+                FirstOf(CharLine('_'), CharLine('*'), CharLine('~')),
                 push(new TextNode(match()))
         );
     }
@@ -641,6 +642,13 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return NodeSequence(
                 FirstOf(EmphOrStrong("**"), EmphOrStrong("__")),
                 push(new StrongNode(popAsNode().getChildren()))
+        );
+    }
+
+    public Rule Strike() {
+        return NodeSequence(
+                EmphOrStrong("~~"),
+                push(new StrikeNode(popAsNode().getChildren()))
         );
     }
 

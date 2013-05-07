@@ -226,6 +226,10 @@ public class ToHtmlSerializer implements Visitor {
         printTag(node, "strong");
     }
 
+    public void visit(StrikeNode node) {
+        printTag(node, "del");
+    }
+
     public void visit(TableBodyNode node) {
         printIndentedTag(node, "tbody");
     }

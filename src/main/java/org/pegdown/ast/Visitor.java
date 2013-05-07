@@ -44,6 +44,7 @@ public interface Visitor {
     void visit(RootNode node);
     void visit(SimpleNode node);
     void visit(SpecialTextNode node);
+    void visit(StrikeNode node);
     void visit(StrongNode node);
     void visit(TableBodyNode node);
     void visit(TableCaptionNode node);
