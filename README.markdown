@@ -50,7 +50,7 @@ to `markdownToHtml`.
 
 You can also use pegdown only for the actual parsing of the Markdown source and do the serialization to the
 target format (e.g. XML) yourself. To do this just call the `parseMarkdown` method of the [PegDownProcessor] to obtain
-the root node of the Astract Syntax Tree for the document.
+the root node of the Abstract Syntax Tree for the document.
 With a custom [Visitor] implementation you can do whatever serialization you want. As an example you might want to
 take a look at the [sources of the ToHtmlSerializer][ToHtmlSerializer].
 
