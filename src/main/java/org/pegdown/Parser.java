@@ -554,7 +554,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 Sequence(Endline(), Test(Inline()))
         );
     }
-
+    
     @MemoMismatches
     public Rule Inline() {
         return Sequence(
@@ -631,29 +631,41 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public Rule Emph() {
-        return NodeSequence(
-                FirstOf(EmphOrStrong("*"), EmphOrStrong("_")),
-                push(new EmphNode(popAsNode().getChildren()))
-        );
+        return FirstOf( EmphOrStrong("*"), EmphOrStrong("_") );
     }
 
     public Rule Strong() {
-        return NodeSequence(
-                FirstOf(EmphOrStrong("**"), EmphOrStrong("__")),
-                push(new StrongNode(popAsNode().getChildren()))
-        );
+        return FirstOf( EmphOrStrong("**"), EmphOrStrong("__") );
     }
 
     @Cached
-    public Rule EmphOrStrong(String chars) {
+    public Rule EmphOrStrong(String chars) {    
         return Sequence(
+                Test(mayEnterEmphOrStrong(chars)),
                 EmphOrStrongOpen(chars),
-                push(new SuperNode()),
-                OneOrMore(TestNot(EmphOrStrongClose(chars)), Inline(), addAsChild()),
-                EmphOrStrongClose(chars)
+                push(new StrongEmphSuperNode(chars)),                
+                OneOrMore(
+                 TestNot(EmphOrStrongClose(chars)),
+                 Inline(),
+                 FirstOf(
+                  Sequence(
+                   //if current inline ends with a closing char for a current strong node: 
+                   Test(isStrongCloseCharStolen( chars )),
+                   //and composes a valid strong close:
+                   chars.substring(0, 1),
+                   //which is not followed by another closing char (e.g. in __strong _nestedemph___):
+                   TestNot(chars.substring(0, 1)),
+                   //degrade current inline emph to unclosed and mark current strong node for closing
+                   stealBackStrongCloseChar() 
+                  ),
+                  addAsChild()
+                 )
+                ),
+                Optional(Sequence(EmphOrStrongClose(chars), setClosed()))
         );
-    }
 
+    }
+    
     public Rule EmphOrStrongOpen(String chars) {
         return Sequence(
                 TestNot(CharLine(chars.charAt(0))),
@@ -666,12 +678,145 @@ public class Parser extends BaseParser<Object> implements Extensions {
     @Cached
     public Rule EmphOrStrongClose(String chars) {
         return Sequence(
-                TestNot(Spacechar()),
-                NotNewline(),
-                chars,
-                TestNot(Alphanumeric())
+                Test(isLegalEmphOrStrongClosePos()),
+                FirstOf(
+                 Sequence(
+                  Test(ValidEmphOrStrongCloseNode.class.equals( peek(0).getClass() )),
+                  drop()
+                 ),
+                 Sequence(
+                  TestNot(Spacechar()),
+                  NotNewline(),
+                  chars,
+                  TestNot(Alphanumeric())                
+                )
+               )
         );
+    
     }
+    
+    /**
+     * This method checks if the parser can enter an emph or strong sequence
+     * Emph only allows Strong as direct child, Strong only allows Emph as 
+     * direct child.
+     */
+    protected boolean mayEnterEmphOrStrong(String chars){
+        if( !isLegalEmphOrStrongStartPos() ){
+            return false;
+        }
+
+        Object parent = peek(1);        
+        boolean isStrong = ( chars.length()==2 );
+        
+        if( StrongEmphSuperNode.class.equals( parent.getClass() ) ){
+            if( ((StrongEmphSuperNode) parent).isStrong() == isStrong )
+                return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * This method checks if current position is a legal start position for a
+     * strong or emph sequence by checking the last parsed character(-sequence).
+     */
+    protected boolean isLegalEmphOrStrongStartPos(){
+        if( currentIndex() == 0 )
+            return true;
+
+        Object lastItem = peek();
+        Class<?> lastClass = lastItem.getClass();
+
+        SuperNode supernode;
+        while( SuperNode.class.equals(lastClass) || StrongEmphSuperNode.class.equals(lastClass)) {
+            supernode = (SuperNode) lastItem;
+
+            if(supernode.getChildren().size() < 1 )
+                return true;
+            
+            lastItem = supernode.getChildren().get( supernode.getChildren().size()-1 );
+            lastClass = lastItem.getClass();
+        }
+        
+        return     ( TextNode.class.equals(lastClass) && ( (TextNode) lastItem).getText().endsWith(" ") )
+                || ( SimpleNode.class.equals(lastClass) )
+                || ( java.lang.Integer.class.equals(lastClass) );
+    }
+    
+    /**
+     * Mark the current StrongEmphSuperNode as closed sequence
+     */
+    protected boolean setClosed(){
+        StrongEmphSuperNode node = (StrongEmphSuperNode) peek();
+        node.setClosed(true);
+        return true;
+    }
+    
+    /**
+     * This method checks if current parent is a strong parent based on param `chars`. If so, it checks if the 
+     * latest inline node to be added as child does not end with a closing character of the parent. When this
+     * is true, a next test should check if the closing character(s) of the child should become (part of) the
+     * closing character(s) of the parent.
+     */
+    protected boolean isStrongCloseCharStolen( String chars ){
+        if(chars.length() < 2 )
+            return false;
+
+        Object childClass = peek().getClass();
+        
+        //checks if last `inline` to be added as child is not a StrongEmphSuperNode
+        //that eats up a closing character for the parent StrongEmphSuperNode
+        if( StrongEmphSuperNode.class.equals( childClass ) ){
+            StrongEmphSuperNode child = (StrongEmphSuperNode) peek();
+            if (!child.isClosed())
+                return false;
+
+            if( child.getChars().endsWith( chars.substring(0, 1) ) ){
+                //The nested child ends with closing char for the parent, allow stealing it back
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Steals the last close char by marking a previously closed emph/strong node as unclosed.
+     */
+    protected boolean stealBackStrongCloseChar(){        
+        StrongEmphSuperNode child = (StrongEmphSuperNode) peek();
+        child.setClosed(false);
+        addAsChild();
+        //signal parser to close StrongEmphSuperNode in next check for close char
+        push(new ValidEmphOrStrongCloseNode());
+        return true;
+    }
+    
+    /**
+     * This method checks if the last parsed character or sequence is a valid prefix for a closing char for
+     * an emph or strong sequence.
+     */
+    protected boolean isLegalEmphOrStrongClosePos(){
+        Object lastItem = peek();
+        if ( StrongEmphSuperNode.class.equals( lastItem.getClass() ) ){
+            List<Node> children = ((StrongEmphSuperNode) lastItem).getChildren();
+        
+            if(children.size() < 1)
+                return true;
+
+            lastItem = children.get( children.size()-1 );
+            Class<?> lastClass = lastItem.getClass();
+            
+            if( TextNode.class.equals(lastClass) )
+                return !((TextNode) lastItem).getText().endsWith(" ");
+
+            if( SimpleNode.class.equals(lastClass) )
+                return !((SimpleNode) lastItem).getType().equals(SimpleNode.Type.Linebreak);
+            
+        }
+        return true;
+    }
+    
 
     //************* LINKS ****************
 
@@ -1338,4 +1483,5 @@ public class Parser extends BaseParser<Object> implements Extensions {
     protected interface SuperNodeCreator {
         SuperNode create(Node child);
     }
+
 }

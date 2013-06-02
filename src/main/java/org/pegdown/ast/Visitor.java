@@ -27,7 +27,6 @@ public interface Visitor {
     void visit(DefinitionListNode node);
     void visit(DefinitionNode node);
     void visit(DefinitionTermNode node);
-    void visit(EmphNode node);
     void visit(ExpImageNode node);
     void visit(ExpLinkNode node);
     void visit(HeaderNode node);
@@ -44,7 +43,7 @@ public interface Visitor {
     void visit(RootNode node);
     void visit(SimpleNode node);
     void visit(SpecialTextNode node);
-    void visit(StrongNode node);
+    void visit(StrongEmphSuperNode node);
     void visit(TableBodyNode node);
     void visit(TableCaptionNode node);
     void visit(TableCellNode node);
