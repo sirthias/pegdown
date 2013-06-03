@@ -688,7 +688,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                   TestNot(Spacechar()),
                   NotNewline(),
                   chars,
-                  TestNot(Alphanumeric())                
+                  FirstOf((chars.length()==2),TestNot(Alphanumeric()))  
                 )
                )
         );
@@ -728,7 +728,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         Class<?> lastClass = lastItem.getClass();
 
         SuperNode supernode;
-        while( SuperNode.class.equals(lastClass) || StrongEmphSuperNode.class.equals(lastClass)) {
+        while( SuperNode.class.isAssignableFrom(lastClass) ) {
             supernode = (SuperNode) lastItem;
 
             if(supernode.getChildren().size() < 1 )
