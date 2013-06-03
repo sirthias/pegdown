@@ -4,10 +4,10 @@ RootNode [0-439]
   ParaNode [12-53]
     SuperNode [12-50]
       TextNode [12-17] 'This '
-      EmphNode [17-21]
+      StrongEmphSuperNode [17-21]
         TextNode [18-20] 'is'
       TextNode [21-24] ' a '
-      StrongNode [24-34]
+      StrongEmphSuperNode [24-34]
         TextNode [26-32] 'simple'
       TextNode [34-35] ' '
       SpecialTextNode [35-36] '&'

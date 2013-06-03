@@ -631,11 +631,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public Rule Emph() {
-        return FirstOf( EmphOrStrong("*"), EmphOrStrong("_") );
+        return NodeSequence( FirstOf( EmphOrStrong("*"), EmphOrStrong("_") ) );
     }
 
     public Rule Strong() {
-        return FirstOf( EmphOrStrong("**"), EmphOrStrong("__") );
+        return NodeSequence( FirstOf( EmphOrStrong("**"), EmphOrStrong("__") ) );
     }
 
     @Cached
@@ -688,7 +688,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                   TestNot(Spacechar()),
                   NotNewline(),
                   chars,
-                  FirstOf((chars.length()==2),TestNot(Alphanumeric()))  
+                  FirstOf((chars.length()==2),TestNot(Alphanumeric()))                
                 )
                )
         );
@@ -701,18 +701,17 @@ public class Parser extends BaseParser<Object> implements Extensions {
      * direct child.
      */
     protected boolean mayEnterEmphOrStrong(String chars){
-        if( !isLegalEmphOrStrongStartPos() ){
+    	if( !isLegalEmphOrStrongStartPos() ){
             return false;
         }
 
-        Object parent = peek(1);        
+        Object parent = peek(2);        
         boolean isStrong = ( chars.length()==2 );
         
         if( StrongEmphSuperNode.class.equals( parent.getClass() ) ){
             if( ((StrongEmphSuperNode) parent).isStrong() == isStrong )
                 return false;
         }
-        
         return true;
     }
     
@@ -724,7 +723,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         if( currentIndex() == 0 )
             return true;
 
-        Object lastItem = peek();
+        Object lastItem = peek(1);
         Class<?> lastClass = lastItem.getClass();
 
         SuperNode supernode;
@@ -737,7 +736,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
             lastItem = supernode.getChildren().get( supernode.getChildren().size()-1 );
             lastClass = lastItem.getClass();
         }
-        
+                
         return     ( TextNode.class.equals(lastClass) && ( (TextNode) lastItem).getText().endsWith(" ") )
                 || ( SimpleNode.class.equals(lastClass) )
                 || ( java.lang.Integer.class.equals(lastClass) );
