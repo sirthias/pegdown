@@ -33,7 +33,7 @@ Installation
 
 You have two options:
 
-* Download the JAR for the latest version from the [download page].
+* Download the JAR for the latest version from [here](http://repo1.maven.org/maven2/org/pegdown/pegdown/).
   _pegdown_ 1.3.0 has only one dependency: [parboiled for Java][parboiled], version 1.1.5.
    
 * The pegdown artifact is also available from maven central with group id **org.pegdown** and artifact-id **pegdown**.
@@ -109,7 +109,6 @@ Along with any patches, please state that the patch is your original work and th
    [parboiled]: http://www.parboiled.org
    [Github-flavoured-Markdown]: http://github.github.com/github-flavored-markdown/
    [MultiMarkdown]: http://fletcherpenney.net/multimarkdown/users_guide/multimarkdown_syntax_guide/
-   [Download Page]: http://github.com/sirthias/pegdown/downloads
    [PegDownProcessor]: http://www.decodified.com/pegdown/api/org/pegdown/PegDownProcessor.html
    [LinkRenderer]: http://www.decodified.com/pegdown/api/org/pegdown/LinkRenderer.html
    [Visitor]: http://www.decodified.com/pegdown/api/org/pegdown/ast/Visitor.html
