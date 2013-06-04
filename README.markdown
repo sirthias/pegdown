@@ -34,7 +34,7 @@ Installation
 You have two options:
 
 * Download the JAR for the latest version from the [download page].
-  _pegdown_ 1.2.0 has only one dependency: [parboiled for Java][parboiled], version 1.1.3.
+  _pegdown_ 1.3.0 has only one dependency: [parboiled for Java][parboiled], version 1.1.5.
    
 * The pegdown artifact is also available from maven central with group id **org.pegdown** and artifact-id **pegdown**.
 
