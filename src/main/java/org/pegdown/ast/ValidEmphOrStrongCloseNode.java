@@ -20,13 +20,17 @@ package org.pegdown.ast;
 
 import java.util.List;
 
-public class EmphNode extends SuperNode {
+import org.parboiled.common.ImmutableList;
 
-    public EmphNode(List<Node> children) {
-        super(children);
+public class ValidEmphOrStrongCloseNode extends AbstractNode {
+
+    public ValidEmphOrStrongCloseNode() {
     }
 
-    @Override
+    public List<Node> getChildren() {
+        return ImmutableList.of();
+    }
+    
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

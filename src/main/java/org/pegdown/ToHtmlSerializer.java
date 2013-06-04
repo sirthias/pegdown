@@ -98,10 +98,6 @@ public class ToHtmlSerializer implements Visitor {
         printTag(node, "dt");
     }
 
-    public void visit(EmphNode node) {
-        printTag(node, "em");
-    }
-
     public void visit(ExpImageNode node) {
         printImageTag(node, node.url);
     }
@@ -221,9 +217,18 @@ public class ToHtmlSerializer implements Visitor {
                 throw new IllegalStateException();
         }
     }
-
-    public void visit(StrongNode node) {
-        printTag(node, "strong");
+    
+    public void visit(StrongEmphSuperNode node) {
+    	if(node.isClosed()){
+    		if(node.isStrong())
+    			printTag(node, "strong");
+    		else
+    			printTag(node, "em"); 
+    	} else {
+	    	//sequence was not closed, treat open chars as ordinary chars
+	    	printer.print(node.getChars());
+	    	visitChildren(node);
+    	}
     }
 
     public void visit(TableBodyNode node) {
