@@ -1,3 +1,8 @@
+Version 1.4.0 (2013-06-23)
+--------------------------
+- Added basic plugin support (see #77, thx to James Roper and also Jakub Jirutka)
+
+
 Version 1.3.0 (2013-06-04)
 --------------------------
 - Upgraded to parboiled 1.1.5
