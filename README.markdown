@@ -4,7 +4,7 @@ Introduction
 _pegdown_ is a pure Java library for clean and lightweight [Markdown] processing based on a [parboiled] PEG parser.
 
 _pegdown_ is nearly 100% compatible with the original Markdown specification and fully passes the original Markdown test suite.
-On top of the standard Markdown feature set _pegdown_ implements a number of extensions similar to what other popular Markdown processors offer.  
+On top of the standard Markdown feature set _pegdown_ implements a number of extensions similar to what other popular Markdown processors offer. You can also extend _pegdown_ by your own plugins!
 Currently _pegdown_ supports the following extensions over standard Markdown:
 
 * SMARTS: Beautifies apostrophes, ellipses ("..." and ". . .") and dashes ("--" and "---")
@@ -62,6 +62,18 @@ concurrent accesses, since neither the [PegDownProcessor] nor the underlying par
 See <http://sirthias.github.com/pegdown/api> for the pegdown API documentation.
 
 
+Plugins
+-------
+
+Since parsing and serialisation are two different things, there are two different plugin mechanisms, one for the parser, and one for the [ToHtmlSerializer]. Most plugins would probably implement both, but it is possible that a plugin might just implement the parser plugin interface.
+
+For the parser, there are two plugin points, one for inline plugins (inside a paragraph), and one for block plugins. These are provided to the parser using the [PegDownPlugins] class. For convenience of use, this comes with its own builder. You can either pass individual rules to this builder (which is what you probably would do if you were using Scala rules), but you can also pass it a parboiled Java parser class which implements either [InlinePluginParser] or [BlockPluginParser] or both. [PegDownPlugins] will enhance this parser for you, so as a user of a plugin you just need to pass the class to it (and the arguments for that classes constructor, if any). To implement the plugin, you would write a normal parboiled parser, and implement the appropriate parser plugin interface. You can extend the pegdown parser, this is useful if you want to reuse any of its rules.
+
+For the serializer, there is [ToHtmlSerializerPlugin] interface. It is called when a node that the [ToHtmlSerializer] doesn't know how to process is encountered (i.e. one produced by a parser plugin). Its `accept` method is passed the node, the visitor (so if the node contains child nodes, they can be rendered using the parent), and the printer for the plugin to print to. The `accept` method returns true if it knew how to handle the node, or false if otherwise, and the [ToHtmlSerializer] loops through each plugin, breaking when it reaches one that returns true, and if it finds none, throws an exception like it used to.
+
+As an very simple example you might want to take a look at the [sources of the PluginParser test class][PluginParser].
+
+
 Parsing Timeouts
 ----------------
 
@@ -116,3 +128,8 @@ Along with any patches, please state that the patch is your original work and th
    [idea-markdown plugin]: https://github.com/nicoulaj/idea-markdown
    [SBT]: http://www.scala-sbt.org/
    [Node]: http://www.decodified.com/pegdown/api/org/pegdown/ast/Node.html
+   [PegDownPlugins]: http://github.com/sirthias/pegdown/blob/master/src/main/java/org/pegdown/plugins/PegDownPlugins.java
+   [InlinePluginParser]: http://github.com/sirthias/pegdown/blob/master/src/main/java/org/pegdown/plugins/InlinePluginParser.java
+   [BlockPluginParser]: http://github.com/sirthias/pegdown/blob/master/src/main/java/org/pegdown/plugins/BlockPluginParser.java
+   [ToHtmlSerializerPlugin]: http://github.com/sirthias/pegdown/blob/master/src/main/java/org/pegdown/plugins/ToHtmlSerializerPlugin.java
+   [PluginParser]: http://github.com/sirthias/pegdown/blob/master/src/test/java/org/pegdown/PluginParser.java
