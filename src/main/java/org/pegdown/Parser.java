@@ -1171,6 +1171,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
         if (ext(DEFINITIONS) | ext(FENCED_CODE_BLOCKS)) {
             chars += "~";
         }
+        for (Character ch : plugins.getSpecialChars()) {
+            if (!chars.contains(ch.toString())) {
+                chars += ch;
+            }
+        }
         return AnyOf(chars);
     }
 

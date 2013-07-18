@@ -22,9 +22,7 @@ import org.parboiled.BaseParser;
 import org.parboiled.Parboiled;
 import org.parboiled.Rule;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * Encapsulates the plugins provided to pegdown.
@@ -36,10 +34,16 @@ public class PegDownPlugins {
 
     private final Rule[] inlinePluginRules;
     private final Rule[] blockPluginRules;
+    private final Character[] specialChars;
 
     private PegDownPlugins(Rule[] inlinePluginRules, Rule[] blockPluginRules) {
+        this(inlinePluginRules, blockPluginRules, new Character[0]);
+    }
+
+    private PegDownPlugins(Rule[] inlinePluginRules, Rule[] blockPluginRules, Character[] specialChars) {
         this.inlinePluginRules = inlinePluginRules;
         this.blockPluginRules = blockPluginRules;
+        this.specialChars = specialChars;
     }
 
     public Rule[] getInlinePluginRules() {
@@ -48,6 +52,10 @@ public class PegDownPlugins {
 
     public Rule[] getBlockPluginRules() {
         return blockPluginRules;
+    }
+
+    public Character[] getSpecialChars() {
+        return specialChars;
     }
 
     public static Builder builder() {
@@ -69,6 +77,7 @@ public class PegDownPlugins {
     public static class Builder {
         private final List<Rule> inlinePluginRules = new ArrayList<Rule>();
         private final List<Rule> blockPluginRules = new ArrayList<Rule>();
+        private final Set<Character> specialChars = new HashSet<Character>();
 
         public Builder() {
         }
@@ -80,6 +89,11 @@ public class PegDownPlugins {
 
         public Builder withBlockPluginRules(Rule... blockPlugins) {
             this.blockPluginRules.addAll(Arrays.asList(blockPlugins));
+            return this;
+        }
+
+        public Builder withSpecialChars(Character... chars) {
+            Collections.addAll(this.specialChars, chars);
             return this;
         }
 
@@ -107,7 +121,8 @@ public class PegDownPlugins {
         }
 
         public PegDownPlugins build() {
-            return new PegDownPlugins(inlinePluginRules.toArray(new Rule[0]), blockPluginRules.toArray(new Rule[0]));
+            return new PegDownPlugins(inlinePluginRules.toArray(new Rule[0]), blockPluginRules.toArray(new Rule[0]),
+                    specialChars.toArray(new Character[0]));
         }
     }
 }
