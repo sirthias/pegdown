@@ -1,3 +1,8 @@
+Version 1.4.1 (2013-07-20)
+--------------------------
+- Added support for extending SpecialChar rule via plugin
+
+
 Version 1.4.0 (2013-06-23)
 --------------------------
 - Added basic plugin support (see #77, thx to James Roper and also Jakub Jirutka)
