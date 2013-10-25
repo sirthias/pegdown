@@ -60,6 +60,11 @@ public class LinkRenderer {
         return StringUtils.isEmpty(node.title) ? rendering : rendering.withAttribute("title", encode(node.title));
     }
 
+    public Rendering render(ExpImageNode node, String text) {
+        Rendering rendering = new Rendering(node.url, text);
+        return StringUtils.isEmpty(node.title) ? rendering : rendering.withAttribute("title", encode(node.title));
+    }
+
     public Rendering render(MailLinkNode node) {
         String obfuscated = obfuscate(node.getText());
         return new Rendering("mailto:" + obfuscated, obfuscated);
@@ -67,6 +72,11 @@ public class LinkRenderer {
 
     public Rendering render(RefLinkNode node, String url, String title, String text) {
         Rendering rendering = new Rendering(url, text);
+        return StringUtils.isEmpty(title) ? rendering : rendering.withAttribute("title", encode(title));
+    }
+
+    public Rendering render(RefImageNode node, String url, String title, String alt) {
+        Rendering rendering = new Rendering(url, alt);
         return StringUtils.isEmpty(title) ? rendering : rendering.withAttribute("title", encode(title));
     }
 

@@ -123,7 +123,8 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public void visit(ExpImageNode node) {
-        printImageTag(node, node.url);
+        String text = printChildrenToString(node);
+        printImageTag(linkRenderer.render(node, text));
     }
 
     public void visit(ExpLinkNode node) {
@@ -197,7 +198,7 @@ public class ToHtmlSerializer implements Visitor {
                 if (node.referenceKey != null) printer.print(key);
                 printer.print(']');
             }
-        } else printImageTag(node, refNode.getUrl());
+        } else printImageTag(linkRenderer.render(node, refNode.getUrl(), refNode.getTitle(), text));
     }
 
     public void visit(RefLinkNode node) {
@@ -384,9 +385,14 @@ public class ToHtmlSerializer implements Visitor {
         printer.indent(-2).println().print('<').print('/').print(tag).print('>');
     }
 
-    protected void printImageTag(SuperNode imageNode, String url) {
-        printer.print("<img src=\"").print(url).print("\"  alt=\"")
-                .printEncoded(printChildrenToString(imageNode)).print("\"/>");
+    protected void printImageTag(LinkRenderer.Rendering rendering) {
+        printer.print("<img");
+        printAttribute("src", rendering.href);
+        printAttribute("alt", rendering.text);
+        for (LinkRenderer.Attribute attr : rendering.attributes) {
+            printAttribute(attr.name, attr.value);
+        }
+        printer.print("\"/>");
     }
 
     protected void printLink(LinkRenderer.Rendering rendering) {
