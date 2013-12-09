@@ -953,7 +953,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 ext(AUTOLINKS) ?
                         TestNot(
                                 FirstOf(
-                                        '>',
+                                        AnyOf("<>"),
                                         Sequence(Optional(AnyOf(".,;:)}]\"'")), FirstOf(Spacechar(), Newline()))
                                 )
                         ) :
