@@ -20,6 +20,7 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * HTML BLOCK SUPPRESSION: Suppresses the output of HTML blocks.
 * INLINE HTML SUPPRESSION: Suppresses the output of inline HTML elements.
 * WIKILINKS: Support `[[Wiki-style links]]` with a customizable URL rendering logic.
+* STRIKETHROUGH: Support ~~strikethroughs~~ as supported in Pandoc and Github.
 
 Note: _pegdown_ differs from the original Markdown in that it ignores in-word emphasis as in
 
