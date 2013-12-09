@@ -96,6 +96,11 @@ public interface Extensions {
     static final int WIKILINKS = 0x100;
 
     /**
+     * Support ~~strikethroughs~~ as supported in Pandoc and Github.
+     */
+    static final int STRIKETHROUGH = 0x200;
+
+    /**
      * All available extensions excluding the SUPPRESS_... options.
      */
     static final int ALL = 0x0000FFFF;

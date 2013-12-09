@@ -256,6 +256,10 @@ public class ToHtmlSerializer implements Visitor {
     	}
     }
 
+    public void visit(StrikeNode node) {
+        printTag(node, "del");
+    }
+
     public void visit(TableBodyNode node) {
         printIndentedTag(node, "tbody");
     }

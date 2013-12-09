@@ -43,6 +43,7 @@ public interface Visitor {
     void visit(RootNode node);
     void visit(SimpleNode node);
     void visit(SpecialTextNode node);
+    void visit(StrikeNode node);
     void visit(StrongEmphSuperNode node);
     void visit(TableBodyNode node);
     void visit(TableCaptionNode node);
