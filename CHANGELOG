@@ -1,3 +1,11 @@
+Version 1.4.2 (2013-12-00)
+--------------------------
+- Fix autolinks not ending at `<` character (#102)
+- Enable LinkRenderer to influence image rendering (#95)
+- Add STRIKETHROUGH extension
+- Upgrade to parboiled 1.1.6
+
+
 Version 1.4.1 (2013-07-20)
 --------------------------
 - Added support for extending SpecialChar rule via plugin
