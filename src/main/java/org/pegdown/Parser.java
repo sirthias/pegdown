@@ -975,6 +975,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule Label() {
         return Sequence(
                 '[',
+                checkForParsingTimeout(),
                 push(new SuperNode()),
                 OneOrMore(TestNot(']'), NonAutoLinkInline(), addAsChild()),
                 ']'

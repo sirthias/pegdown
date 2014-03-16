@@ -28,6 +28,13 @@ class PathologicalInputSpec extends AbstractPegDownSpec {
       } mustNotEqual null
     }
 
+    "properly parse pathological input example 3" in {
+      new PegDownProcessor(200l).markdownToHtml {
+        "how about a new method thats getObjectIdOrAdjustmentGroup? That w[a[[[[[[[[[[[[[[[[[y we're more explicit" +
+          " and still benefit callers from having to do the iff dance"
+      } must throwA[org.parboiled.errors.ParserRuntimeException]
+    }
+
   }
 
 }
