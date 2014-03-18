@@ -49,9 +49,7 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public ToHtmlSerializer(LinkRenderer linkRenderer, List<ToHtmlSerializerPlugin> plugins) {
-        this.linkRenderer = linkRenderer;
-        this.plugins = plugins;
-        this.verbatimSerializers = Collections.<String, VerbatimSerializer>singletonMap(VerbatimSerializer.DEFAULT, DefaultVerbatimSerializer.INSTANCE);
+    	this (linkRenderer, Collections.<String, VerbatimSerializer>emptyMap(), plugins);
     }
 
     public ToHtmlSerializer(final LinkRenderer linkRenderer, final Map<String, VerbatimSerializer> verbatimSerializers) {

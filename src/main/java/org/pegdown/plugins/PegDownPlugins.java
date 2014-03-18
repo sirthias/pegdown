@@ -35,15 +35,17 @@ public class PegDownPlugins {
     private final Rule[] inlinePluginRules;
     private final Rule[] blockPluginRules;
     private final Character[] specialChars;
+    private final List<ToHtmlSerializerPlugin> serializerPlugins;
 
     private PegDownPlugins(Rule[] inlinePluginRules, Rule[] blockPluginRules) {
-        this(inlinePluginRules, blockPluginRules, new Character[0]);
+        this(inlinePluginRules, blockPluginRules, new Character[0], Collections.<ToHtmlSerializerPlugin>emptyList());
     }
 
-    private PegDownPlugins(Rule[] inlinePluginRules, Rule[] blockPluginRules, Character[] specialChars) {
+    private PegDownPlugins(Rule[] inlinePluginRules, Rule[] blockPluginRules, Character[] specialChars, List<ToHtmlSerializerPlugin> serializerPlugins) {
         this.inlinePluginRules = inlinePluginRules;
         this.blockPluginRules = blockPluginRules;
         this.specialChars = specialChars;
+        this.serializerPlugins = serializerPlugins;
     }
 
     public Rule[] getInlinePluginRules() {
@@ -58,6 +60,10 @@ public class PegDownPlugins {
         return specialChars;
     }
 
+    public List<ToHtmlSerializerPlugin> getHtmlSerializerPlugins() {
+    	return serializerPlugins;
+    }
+    
     public static Builder builder() {
         return new Builder();
     }
@@ -66,7 +72,8 @@ public class PegDownPlugins {
      * Create a builder that is a copy of the existing plugins
      */
     public static Builder builder(PegDownPlugins like) {
-        return builder().withInlinePluginRules(like.getInlinePluginRules()).withBlockPluginRules(like.getBlockPluginRules());
+        return builder().withInlinePluginRules(like.getInlinePluginRules()).withBlockPluginRules(like.getBlockPluginRules()).
+        		withHtmlSerializer(like.serializerPlugins.toArray(new ToHtmlSerializerPlugin[0]));
     }
 
     /**
@@ -78,6 +85,7 @@ public class PegDownPlugins {
         private final List<Rule> inlinePluginRules = new ArrayList<Rule>();
         private final List<Rule> blockPluginRules = new ArrayList<Rule>();
         private final Set<Character> specialChars = new HashSet<Character>();
+        private final List<ToHtmlSerializerPlugin> serializerPlugins = new ArrayList<ToHtmlSerializerPlugin>();
 
         public Builder() {
         }
@@ -95,6 +103,11 @@ public class PegDownPlugins {
         public Builder withSpecialChars(Character... chars) {
             Collections.addAll(this.specialChars, chars);
             return this;
+        }
+        
+        public Builder withHtmlSerializer(ToHtmlSerializerPlugin... plugins) {
+        	Collections.addAll(this.serializerPlugins, plugins);
+        	return this;
         }
 
         /**
@@ -119,10 +132,10 @@ public class PegDownPlugins {
             }
             return this;
         }
-
+        
         public PegDownPlugins build() {
             return new PegDownPlugins(inlinePluginRules.toArray(new Rule[0]), blockPluginRules.toArray(new Rule[0]),
-                    specialChars.toArray(new Character[0]));
+                    specialChars.toArray(new Character[0]), Collections.unmodifiableList(serializerPlugins));
         }
     }
 }

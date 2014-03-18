@@ -19,11 +19,13 @@
 package org.pegdown;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.parboiled.Parboiled;
 import org.pegdown.ast.RootNode;
 import org.pegdown.plugins.PegDownPlugins;
+import org.pegdown.plugins.ToHtmlSerializerPlugin;
 
 /**
  * A clean and lightweight Markdown-to-HTML filter based on a PEG parser implemented with parboiled.
@@ -152,13 +154,21 @@ public class PegDownProcessor {
     }
 
 	public String markdownToHtml(char[] markdownSource, LinkRenderer linkRenderer, Map<String, VerbatimSerializer> verbatimSerializerMap) {
-        try {
+        return markdownToHtml(markdownSource, linkRenderer,
+				verbatimSerializerMap, parser.plugins.getHtmlSerializerPlugins());
+    }
+
+	public String markdownToHtml(char[] markdownSource,
+			LinkRenderer linkRenderer,
+			Map<String, VerbatimSerializer> verbatimSerializerMap, 
+			List<ToHtmlSerializerPlugin> plugins) {
+		try {
             RootNode astRoot = parseMarkdown(markdownSource);
-            return new ToHtmlSerializer(linkRenderer, verbatimSerializerMap).toHtml(astRoot);
+            return new ToHtmlSerializer(linkRenderer, verbatimSerializerMap, plugins).toHtml(astRoot);
         } catch(ParsingTimeoutException e) {
             return null;
         }
-    }
+	}
 
     /**
      * Parses the given markdown source and returns the root node of the generated Abstract Syntax Tree.
