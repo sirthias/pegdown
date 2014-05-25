@@ -398,7 +398,7 @@ public class ToHtmlSerializer implements Visitor {
         for (LinkRenderer.Attribute attr : rendering.attributes) {
             printAttribute(attr.name, attr.value);
         }
-        printer.print("\"/>");
+        printer.print(" />");
     }
 
     protected void printLink(LinkRenderer.Rendering rendering) {
