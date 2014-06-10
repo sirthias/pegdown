@@ -3,7 +3,8 @@
 Wikilinks are simple URIs like [[Autolinks]],
 which will be converted by pegdown.
 
-Another example with spaces: [[Special Chars]].
+Another example with spaces: [[Special Chars]],
+with square brackets: [[[Square]Brackets]].
 
 The following links should work just normally:
 

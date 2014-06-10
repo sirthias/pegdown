@@ -935,7 +935,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule WikiLink() {
         return Sequence(
             "[[",
-            OneOrMore(TestNot(']'), ANY), // might have to restrict from ANY
+            OneOrMore(TestNot(Sequence(']',']')), ANY), // might have to restrict from ANY
             push(new WikiLinkNode(match())),
             "]]"
         );
