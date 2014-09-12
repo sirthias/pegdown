@@ -213,6 +213,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 AtxStart(),
                 Optional(Sp()),
                 OneOrMore(AtxInline(), addAsChild()),
+                wrapInAnchor(),
                 Optional(Sp(), ZeroOrMore('#'), Sp()),
                 Newline()
         );
@@ -245,6 +246,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 SetextInline(), push(new HeaderNode(1, popAsNode())),
                 ZeroOrMore(SetextInline(), addAsChild()),
+                wrapInAnchor(),
                 Newline(), NOrMore('=', 3), Newline()
         );
     }
@@ -253,12 +255,31 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 SetextInline(), push(new HeaderNode(2, popAsNode())),
                 ZeroOrMore(SetextInline(), addAsChild()),
+                wrapInAnchor(),
                 Newline(), NOrMore('-', 3), Newline()
         );
     }
 
     public Rule SetextInline() {
         return Sequence(TestNot(Endline()), Inline());
+    }
+
+    public boolean wrapInAnchor() {
+        if (ext(ANCHORLINKS)) {
+            SuperNode node = (SuperNode) peek();
+            List<Node> children = node.getChildren();
+            if (children.size() == 1) {
+                Node child = children.get(0);
+                if (child instanceof TextNode) {
+                    AnchorLinkNode anchor = new AnchorLinkNode(((TextNode) child).getText());
+                    anchor.setStartIndex(child.getStartIndex());
+                    anchor.setEndIndex(child.getEndIndex());
+                    children.set(0, anchor);
+                }
+            }
+        }
+
+        return true;
     }
 
     //************** Definition Lists ************

@@ -22,9 +22,9 @@ public class LinkRenderer {
      * Simple model class for an HTML tag attribute.
      */
     public static class Attribute {
-        public static Attribute NO_FOLLOW = new Attribute("rel", "nofollow");
-        public String name;
-        public String value;
+        public static final Attribute NO_FOLLOW = new Attribute("rel", "nofollow");
+        public final String name;
+        public final String value;
         public Attribute(String name, String value) {
             this.name = name;
             this.value = value;
@@ -35,9 +35,9 @@ public class LinkRenderer {
      * Simple model class for holding the `href`, link text as well as other tag attributes of an HTML link.
      */
     public static class Rendering {
-        public String href;
-        public String text;
-        public List<Attribute> attributes = new ArrayList<Attribute>(2);
+        public final String href;
+        public final String text;
+        public final List<Attribute> attributes = new ArrayList<Attribute>(2);
         public Rendering(String href, String text) {
             this.href = href;
             this.text = text;
@@ -49,6 +49,11 @@ public class LinkRenderer {
             attributes.add(attr);
             return this;
         }
+    }
+
+    public Rendering render(AnchorLinkNode node) {
+        String name = node.getName();
+        return new Rendering('#' + name, node.getText()).withAttribute("name", name);
     }
 
     public Rendering render(AutoLinkNode node) {

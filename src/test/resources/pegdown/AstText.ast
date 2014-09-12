@@ -1,6 +1,6 @@
 RootNode [0-439]
   HeaderNode [0-11]
-    TextNode [2-10] 'Ast Test'
+    AnchorLinkNode [2-10] 'Ast Test'
   ParaNode [12-53]
     SuperNode [12-50]
       TextNode [12-17] 'This '

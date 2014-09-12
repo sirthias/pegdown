@@ -7,7 +7,7 @@ class EmphStrongSpec extends AbstractPegDownSpec {
 
   "The PegDownProcessor" should {
     "pass all tests in the EmphStrong test suite" in {
-      implicit val processor = new PegDownProcessor(ALL)
+      implicit val processor = new PegDownProcessor(ALL & ~ANCHORLINKS)
 
       test("emph-strong-test/test_1")
       test("emph-strong-test/test_2")

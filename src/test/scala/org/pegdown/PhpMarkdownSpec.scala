@@ -30,7 +30,7 @@ class PhpMarkdownSpec extends AbstractPegDownSpec {
     }
 
     "pass selected parts of the PhpMarkdownExtra test suite" in {
-      implicit val processor = new PegDownProcessor(ALL & ~SMARTYPANTS & ~HARDWRAPS)
+      implicit val processor = new PegDownProcessor(ALL & ~SMARTYPANTS & ~HARDWRAPS & ~ANCHORLINKS)
 
       test("PhpMarkdownExtra/Abbr")
       test("PhpMarkdownExtra/Definition_Lists")
