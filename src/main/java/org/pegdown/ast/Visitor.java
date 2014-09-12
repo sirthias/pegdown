@@ -20,6 +20,7 @@ package org.pegdown.ast;
 
 public interface Visitor {
     void visit(AbbreviationNode node);
+    void visit(AnchorLinkNode node);
     void visit(AutoLinkNode node);
     void visit(BlockQuoteNode node);
     void visit(BulletListNode node);

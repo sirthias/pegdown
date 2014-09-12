@@ -94,6 +94,10 @@ public class ToHtmlSerializer implements Visitor {
     public void visit(AbbreviationNode node) {
     }
 
+    public void visit(AnchorLinkNode node) {
+        printLink(linkRenderer.render(node));
+    }
+
     public void visit(AutoLinkNode node) {
         printLink(linkRenderer.render(node));
     }

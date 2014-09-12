@@ -101,6 +101,11 @@ public interface Extensions {
     static final int STRIKETHROUGH = 0x200;
 
     /**
+     * Enables anchor links in headers.
+     */
+    static final int ANCHORLINKS = 0x300;
+
+    /**
      * All available extensions excluding the SUPPRESS_... options.
      */
     static final int ALL = 0x0000FFFF;

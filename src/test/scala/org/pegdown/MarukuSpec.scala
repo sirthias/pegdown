@@ -7,7 +7,7 @@ class MarukuSpec extends AbstractPegDownSpec {
 
   "The PegDownProcessor" should {
     "pass selected parts of the Maruku test suite" in {
-      implicit val processor = new PegDownProcessor(ALL & ~HARDWRAPS)
+      implicit val processor = new PegDownProcessor(ALL & ~HARDWRAPS & ~ANCHORLINKS)
 
       test("Maruku/abbreviations")
       test("Maruku/alt")

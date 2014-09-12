@@ -40,7 +40,7 @@ class Markdown103Spec extends AbstractPegDownSpec {
 
       "with most extensions enabled" in {
         runMarkdownTestSuite {
-          new PegDownProcessor(ALL & ~SMARTYPANTS & ~HARDWRAPS)
+          new PegDownProcessor(ALL & ~SMARTYPANTS & ~HARDWRAPS & ~ANCHORLINKS)
         }
       }
     }
