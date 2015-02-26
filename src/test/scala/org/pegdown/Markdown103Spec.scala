@@ -8,7 +8,7 @@ class Markdown103Spec extends AbstractPegDownSpec {
   "The PegDownProcessor" should {
 
     "pass the Markdown test suite" in {
-      def runMarkdownTestSuite(implicit processor: PegDownProcessor) {
+      def runMarkdownTestSuite(implicit processor: PegDownProcessor) = {
         test("MarkdownTest103/Amps and angle encoding")
         test("MarkdownTest103/Auto links")
         test("MarkdownTest103/Backslash escapes")

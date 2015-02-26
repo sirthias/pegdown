@@ -15,7 +15,7 @@ class PegDownSpec extends AbstractPegDownSpec {
   "The PegDownProcessor" should {
 
     "pass the custom pegdown tests for all extensions" in {
-      def runSuite(implicit processor: PegDownProcessor) {
+      def runSuite(implicit processor: PegDownProcessor) = {
         test("pegdown/Abbreviations")
         test("pegdown/AttributeWithUnderscore")
         test("pegdown/AnchorLinks")
@@ -98,7 +98,7 @@ class PegDownSpec extends AbstractPegDownSpec {
     }
 
     "pass the custom verbatim-serializer test" in {
-      def runWithSerializerMap(testName: String, verbatimSerializerMap: java.util.Map[String, VerbatimSerializer], suffix: String) {
+      def runWithSerializerMap(testName: String, verbatimSerializerMap: java.util.Map[String, VerbatimSerializer], suffix: String) = {
         val expectedUntidy = FileUtils.readAllTextFromResource(testName + suffix + ".html")
         require(expectedUntidy != null, "Test '" + testName + "' not found")
         test(testName, tidy(expectedUntidy), new ToHtmlSerializer(new LinkRenderer, verbatimSerializerMap))(new PegDownProcessor(FENCED_CODE_BLOCKS))

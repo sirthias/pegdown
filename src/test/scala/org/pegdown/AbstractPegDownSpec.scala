@@ -1,6 +1,7 @@
 package org.pegdown
 
 import java.io.{StringWriter, StringReader}
+import org.specs2.matcher.MatchResult
 import org.specs2.mutable.Specification
 import org.w3c.tidy.Tidy
 import org.parboiled.common.FileUtils
@@ -11,12 +12,13 @@ import ast.Node
 
 abstract class AbstractPegDownSpec extends Specification {
 
-  def test(testName: String)(implicit processor: PegDownProcessor) {
+  def test(testName: String)(implicit processor: PegDownProcessor): MatchResult[String] = {
     implicit val htmlSerializer = new ToHtmlSerializer(new LinkRenderer)
     testWithSerializer(testName)
   }
 
-  def test(testName: String, expectedOutput: String, htmlSerializer: ToHtmlSerializer = null)(implicit processor: PegDownProcessor) {
+  def test(testName: String, expectedOutput: String, htmlSerializer: ToHtmlSerializer = null)
+          (implicit processor: PegDownProcessor): MatchResult[String] = {
     val markdown = FileUtils.readAllCharsFromResource(testName + ".md")
     require(markdown != null, "Test '" + testName + "' not found")
 
@@ -38,13 +40,13 @@ abstract class AbstractPegDownSpec extends Specification {
     normalize(tidyHtml) === normalize(expectedOutput)
   }
 
-  def testWithSerializer(testName: String)(implicit processor: PegDownProcessor, htmlSerializer: ToHtmlSerializer) {
+  def testWithSerializer(testName: String)(implicit processor: PegDownProcessor, htmlSerializer: ToHtmlSerializer) = {
     val expectedUntidy = FileUtils.readAllTextFromResource(testName + ".html")
     require(expectedUntidy != null, "Test '" + testName + "' not found")
     test(testName, tidy(expectedUntidy), htmlSerializer)
   }
 
-  def testAST(testName: String)(implicit processor: PegDownProcessor) {
+  def testAST(testName: String)(implicit processor: PegDownProcessor) = {
     val markdown = FileUtils.readAllCharsFromResource(testName + ".md")
     require(markdown != null, "Test '" + testName + "' not found")
 
