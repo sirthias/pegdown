@@ -1,4 +1,14 @@
-Version 1.4.2 (2013-12-00)
+Version 1.5.0 (2013-12-0)
+--------------------------
+- Upgraded to parboiled 1.1.7
+- Fixed problem with recognizing Wikilinks
+- Fixed problem in image tag HTML rendering
+- Added anchor links to headers
+- Added timeout check in label rule (#104)
+- Added new helper method to PegDownProcessor to supply list of ToHtmlSerializerPlugin's to ToHtmlSerializer.
+
+
+Version 1.4.2 (2013-12-09)
 --------------------------
 - Fix autolinks not ending at `<` character (#102)
 - Enable LinkRenderer to influence image rendering (#95)
