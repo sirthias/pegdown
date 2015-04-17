@@ -103,7 +103,7 @@ public interface Extensions {
     /**
      * Enables anchor links in headers.
      */
-    static final int ANCHORLINKS = 0x300;
+    static final int ANCHORLINKS = 0x400;
 
     /**
      * All available extensions excluding the SUPPRESS_... options.
