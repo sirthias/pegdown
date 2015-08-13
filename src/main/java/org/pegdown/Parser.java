@@ -347,8 +347,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         };
         return NodeSequence(
                 ListItem(Bullet(), itemNodeCreator), push(new BulletListNode(popAsNode())),
-                ZeroOrMore(ListItem(Bullet(), itemNodeCreator), addAsChild()),
-                ZeroOrMore(BlankLine())
+                ZeroOrMore(ZeroOrMore(BlankLine()), ListItem(Bullet(), itemNodeCreator), addAsChild())
         );
     }
 
@@ -360,8 +359,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         };
         return NodeSequence(
                 ListItem(Enumerator(), itemNodeCreator), push(new OrderedListNode(popAsNode())),
-                ZeroOrMore(ListItem(Enumerator(), itemNodeCreator), addAsChild()),
-                ZeroOrMore(BlankLine())
+                ZeroOrMore(ZeroOrMore(BlankLine()), ListItem(Enumerator(), itemNodeCreator), addAsChild())
         );
     }
 
@@ -393,7 +391,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         CrossedOut(Indent(), block),
                         FirstOf(
                                 DoubleIndentedBlocks(block),
-                                IndentedBlock(block)
+                                IndentedBlocks(block)
                         ),
                         (tight.get() ? push(parseListBlock(block)) :
                                 (tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
@@ -419,16 +417,13 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 )
         );
     }
-    
-    public Rule IndentedBlock(StringBuilderVar block) {
+
+    public Rule IndentedBlocks(StringBuilderVar block) {
         return Sequence(
                 Line(block),
                 ZeroOrMore(
-                    FirstOf(
-                            Sequence(TestNot(BlankLine()), CrossedOut(Indent(), block)),
-                            NotItem()
-                    ),
-                    Line(block)
+                    ZeroOrMore(BlankLine(), block.append(match())),
+                    CrossedOut(Indent(), block), Line(block)
                 )
         );
     }

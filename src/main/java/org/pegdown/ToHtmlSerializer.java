@@ -150,7 +150,7 @@ public class ToHtmlSerializer implements Visitor {
 
     public void visit(ListItemNode node) {
         printer.println();
-        printTag(node, "li");
+        printConditionallyIndentedTag(node, "li");
     }
 
     public void visit(MailLinkNode node) {
@@ -162,6 +162,7 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public void visit(ParaNode node) {
+        printer.println();
         printTag(node, "p");
     }
 
@@ -389,6 +390,18 @@ public class ToHtmlSerializer implements Visitor {
         printer.println().print('<').print(tag).print('>').indent(+2);
         visitChildren(node);
         printer.indent(-2).println().print('<').print('/').print(tag).print('>');
+    }
+
+    protected void printConditionallyIndentedTag(SuperNode node, String tag) {
+        if (node.getChildren().size() > 1) {
+            printer.print('<').print(tag).print('>').indent(+2);
+            visitChildren(node);
+            printer.indent(-2).println().print('<').print('/').print(tag).print('>');
+        } else {
+            printer.print('<').print(tag).print('>');
+            visitChildren(node);
+            printer.print('<').print('/').print(tag).print('>');
+        }
     }
 
     protected void printImageTag(LinkRenderer.Rendering rendering) {
