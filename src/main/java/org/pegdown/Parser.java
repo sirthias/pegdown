@@ -330,12 +330,77 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 return new DefinitionNode(child);
             }
         };
-        return ListItem(DefListBullet(), itemNodeCreator);
+        return DefListItem(DefListBullet(), itemNodeCreator);
     }
     
     public Rule DefListBullet() {
         return Sequence(NonindentSpace(), AnyOf(":~"), OneOrMore(Spacechar()));
     }
+
+    @Cached
+    public Rule DefListItem(Rule itemStart, SuperNodeCreator itemNodeCreator) {
+        // for a simpler parser design we use a recursive parsing strategy for list items:
+        // we collect a number of markdown source blocks for an item, run complete parsing cycle on these and attach
+        // the roots of the inner parsing results AST to the outer AST tree
+        StringBuilderVar block = new StringBuilderVar();
+        StringBuilderVar temp = new StringBuilderVar();
+        Var<Boolean> tight = new Var<Boolean>(false);
+        Var<SuperNode> tightFirstItem = new Var<SuperNode>();
+        return Sequence(
+                push(getContext().getCurrentIndex()),
+                FirstOf(CrossedOut(BlankLine(), block), tight.set(true)),
+                CrossedOut(itemStart, block), Line(block),
+                ZeroOrMore(
+                        Optional(CrossedOut(Indent(), temp)),
+                        NotItem(),
+                        Line(temp),
+                        block.append(temp.getString()) && temp.clearContents()
+                ),
+                tight.get() ? push(tightFirstItem.setAndGet(itemNodeCreator.create(parseListBlock(block)))) :
+                        fixFirstItem((SuperNode) peek(1)) &&
+                                push(itemNodeCreator.create(parseListBlock(block.appended("\n\n")))),
+                ZeroOrMore(
+                        push(getContext().getCurrentIndex()),
+                        FirstOf(Sequence(CrossedOut(BlankLine(), block), tight.set(false)), tight.set(true)),
+                        CrossedOut(Indent(), block),
+                        FirstOf(
+                                DefListItemDoubleIndentedBlocks(block),
+                                DefListItemIndentedBlock(block)
+                        ),
+                        (tight.get() ? push(parseListBlock(block)) :
+                                (tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
+                                        push(parseListBlock(block.appended("\n\n")))
+                        ) && addAsChild()
+                ),
+                setListItemIndices()
+        );
+    }
+    
+    public Rule DefListItemDoubleIndentedBlocks(StringBuilderVar block) {
+        StringBuilderVar line = new StringBuilderVar();
+        return Sequence(
+                Indent(), TestNot(BlankLine()), block.append("    "), Line(block),
+                ZeroOrMore(
+                        ZeroOrMore(BlankLine(), line.append(match())),
+                        CrossedOut(Indent(), line), Indent(), line.append("    "), Line(line),
+                        block.append(line.getString()) && line.clearContents()
+                )
+        );
+    }
+    
+    public Rule DefListItemIndentedBlock(StringBuilderVar block) {
+        return Sequence(
+                Line(block),
+                ZeroOrMore(
+                    FirstOf(
+                            Sequence(TestNot(BlankLine()), CrossedOut(Indent(), block)),
+                            NotItem()
+                    ),
+                    Line(block)
+                )
+        );
+    }
+    
 
     //************* LISTS ****************
 
@@ -347,7 +412,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         };
         return NodeSequence(
                 ListItem(Bullet(), itemNodeCreator), push(new BulletListNode(popAsNode())),
-                ZeroOrMore(ZeroOrMore(BlankLine()), ListItem(Bullet(), itemNodeCreator), addAsChild())
+                ZeroOrMore(ListItem(Bullet(), itemNodeCreator), addAsChild())
         );
     }
 
@@ -359,7 +424,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         };
         return NodeSequence(
                 ListItem(Enumerator(), itemNodeCreator), push(new OrderedListNode(popAsNode())),
-                ZeroOrMore(ZeroOrMore(BlankLine()), ListItem(Enumerator(), itemNodeCreator), addAsChild())
+                ZeroOrMore(ListItem(Enumerator(), itemNodeCreator), addAsChild())
         );
     }
 
@@ -389,10 +454,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         push(getContext().getCurrentIndex()),
                         FirstOf(Sequence(CrossedOut(BlankLine(), block), tight.set(false)), tight.set(true)),
                         CrossedOut(Indent(), block),
-                        FirstOf(
-                                DoubleIndentedBlocks(block),
-                                IndentedBlocks(block)
-                        ),
+                        ListItemIndentedBlocks(block),
                         (tight.get() ? push(parseListBlock(block)) :
                                 (tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
                                         push(parseListBlock(block.appended("\n\n")))
@@ -406,28 +468,28 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(rule, appendCrossed(block));
     }
     
-    public Rule DoubleIndentedBlocks(StringBuilderVar block) {
+    public Rule ListItemIndentedBlocks(StringBuilderVar block) {
         StringBuilderVar line = new StringBuilderVar();
         return Sequence(
-                Indent(), TestNot(BlankLine()), block.append("    "), Line(block),
+                Line(block),
+
+                // take the rest of the block, with or without indentations,
+                // if they are not a list item or a sub-list item
                 ZeroOrMore(
-                        ZeroOrMore(BlankLine(), line.append(match())),
-                        CrossedOut(Indent(), line), Indent(), line.append("    "), Line(line),
-                        block.append(line.getString()) && line.clearContents()
+                        TestNot(BlankLine()),
+                        Optional(CrossedOut(Indent(), line), block.append(line.getString()) && line.clearContents()),
+                        TestNot(FirstOf(Bullet(), Enumerator())),
+                        Line(block)
+                ),
+
+                // take the other blocks as long as they are indented.
+                ZeroOrMore(
+                        ZeroOrMore(BlankLine(), block.append(match())),
+                        CrossedOut(Indent(), block), Line(block)
                 )
         );
     }
 
-    public Rule IndentedBlocks(StringBuilderVar block) {
-        return Sequence(
-                Line(block),
-                ZeroOrMore(
-                    ZeroOrMore(BlankLine(), block.append(match())),
-                    CrossedOut(Indent(), block), Line(block)
-                )
-        );
-    }
-    
     public Rule NotItem() {
         return TestNot(
                 FirstOf(new ArrayBuilder<Rule>()

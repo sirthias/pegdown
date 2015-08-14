@@ -21,7 +21,7 @@ RootNode [0-439]
   ParaNode [73-95]
     SuperNode [73-93]
       TextNode [73-93] 'the functionality of'
-  BulletListNode [95-201]
+  BulletListNode [95-198]
     ListItemNode [97-137]
       ParaNode [97-116]
         SuperNode [97-116]
