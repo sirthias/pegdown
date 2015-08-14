@@ -35,11 +35,3 @@ out/
 # Other
 *.pyc
 production
-test.out
-lib/parboiled-core-1.1.7-sources.jar
-lib/parboiled-core-1.1.7.jar
-lib/parboiled-java-1.1.7-sources.jar
-lib/parboiled-java-1.1.7.jar
-lib/specs2_2.10-3.3.1.jar
-META-INF/MANIFEST.MF
-lib
