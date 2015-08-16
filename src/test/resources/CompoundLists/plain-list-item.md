@@ -1,0 +1,1 @@
+*   one line with no eol

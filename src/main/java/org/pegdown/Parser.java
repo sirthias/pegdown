@@ -31,6 +31,7 @@ import org.parboiled.support.StringBuilderVar;
 import org.parboiled.support.StringVar;
 import org.parboiled.support.Var;
 import org.pegdown.ast.*;
+import org.pegdown.ast.Node;
 import org.pegdown.ast.SimpleNode.Type;
 import org.pegdown.plugins.PegDownPlugins;
 
@@ -68,6 +69,12 @@ public class Parser extends BaseParser<Object> implements Extensions {
     final List<AbbreviationNode> abbreviations = new ArrayList<AbbreviationNode>();
     final List<ReferenceNode> references = new ArrayList<ReferenceNode>();
     long parsingStartTimeStamp = 0L;
+
+//    public boolean debugMsg(String msg, String text)
+//    {
+//        System.out.println(msg + ": '" + text + "'");
+//        return true;
+//    }
 
     public Parser(Integer options, Long maxParsingTimeInMillis, ParseRunnerProvider parseRunnerProvider, PegDownPlugins plugins) {
         this.options = options;
@@ -120,7 +127,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     public Rule Para() {
         return NodeSequence(
-                NonindentSpace(), Inlines(), push(new ParaNode(popAsNode())), OneOrMore(BlankLine())
+                // The Para Rule only tests for the presence of a following blank line, but does not consume it.
+                // this means that phantom \n's will not be part of the node's source range, except when
+                // the input had no EOL's at the end at all, even then only one of these will be included
+                NonindentSpace(), Inlines(), push(new ParaNode(popAsNode())), Test(BlankLine())
         );
     }
 
@@ -136,6 +146,12 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         ),
                         ZeroOrMore(BlankLine(), inner.append(match()))
                 ),
+
+                // vsch: the block quotes won't parse into Para because they will not be followed by a blank line,
+                // unless the last line of the block quote is an empty block-quote line: ">". We append one here to
+                // take care of that possibility
+                inner.append("\n"),
+
                 // trigger a recursive parsing run on the inner source we just built
                 // and attach the root of the inner parses AST
                 push(new BlockQuoteNode(withIndicesShifted(parseInternal(inner), (Integer)peek()).getChildren()))
@@ -358,7 +374,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 ),
                 tight.get() ? push(tightFirstItem.setAndGet(itemNodeCreator.create(parseListBlock(block)))) :
                         fixFirstItem((SuperNode) peek(1)) &&
-                                push(itemNodeCreator.create(parseListBlock(block.appended("\n\n")))),
+                                push(itemNodeCreator.create(parseListBlock(block.appended("\n")))),
                 ZeroOrMore(
                         push(getContext().getCurrentIndex()),
                         FirstOf(Sequence(CrossedOut(BlankLine(), block), tight.set(false)), tight.set(true)),
@@ -369,7 +385,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         ),
                         (tight.get() ? push(parseListBlock(block)) :
                                 (tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
-                                        push(parseListBlock(block.appended("\n\n")))
+                                        push(parseListBlock(block.appended("\n")))
                         ) && addAsChild()
                 ),
                 setListItemIndices()
@@ -447,17 +463,27 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         Line(temp),
                         block.append(temp.getString()) && temp.clearContents()
                 ),
+
                 tight.get() ? push(tightFirstItem.setAndGet(itemNodeCreator.create(parseListBlock(block)))) :
                         fixFirstItem((SuperNode) peek(1)) &&
-                                push(itemNodeCreator.create(parseListBlock(block.appended("\n\n")))),
+                                push(itemNodeCreator.create(parseListBlock(block.appended("\n")))),
                 ZeroOrMore(
                         push(getContext().getCurrentIndex()),
-                        FirstOf(Sequence(CrossedOut(BlankLine(), block), tight.set(false)), tight.set(true)),
-                        CrossedOut(Indent(), block),
+                        // it is not safe to gobble up the leading blank line if it is followed by another list item
+                        // it must be left for it to determine its own looseness. Much safer to just test for it but not consume it.
+                        FirstOf(Sequence(Test(BlankLine()), tight.set(false)), tight.set(true)),
                         ListItemIndentedBlocks(block),
+
+                        //debugMsg("have a " + (tight.get() ? "tight" : "loose") + " list body", block.getString()),
+
+                        // vsch: here we have a small problem. Even though a sub-item may be detected as loose, when it is parsed
+                        // via the recursive call to parseListBlock, it will be tight because leading blank lines are pre-parsed
+                        // out in Block Rule before getting to the ListItem rule. This happens if there is nothing else in the
+                        // sub-item that will set its looseness and it is the first sub-item of its list. So we need to wrap it
+                        // in a ParaNode to have its looseness properly reflected.
                         (tight.get() ? push(parseListBlock(block)) :
-                                (tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
-                                        push(parseListBlock(block.appended("\n\n")))
+//                                (tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
+                                        push(wrapFirstSubItemInPara((SuperNode) parseListBlock(block.appended("\n"))))
                         ) && addAsChild()
                 ),
                 setListItemIndices()
@@ -471,22 +497,29 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule ListItemIndentedBlocks(StringBuilderVar block) {
         StringBuilderVar line = new StringBuilderVar();
         return Sequence(
-                Line(block),
+                OneOrMore(
+                        Sequence(
+                                Optional(Sequence(OneOrMore(BlankLine()), line.append("\n"))),
+                                CrossedOut(Indent(), line),
+                                Line(line),
 
-                // take the rest of the block, with or without indentations,
-                // if they are not a list item or a sub-list item
-                ZeroOrMore(
-                        TestNot(BlankLine()),
-                        Optional(CrossedOut(Indent(), line), block.append(line.getString()) && line.clearContents()),
-                        TestNot(FirstOf(Bullet(), Enumerator())),
-                        Line(block)
+                                // take the rest of the block's lines, with or without indentations,
+                                // but only if they are not a list item
+                                ZeroOrMore(
+                                        TestNot(BlankLine()),
+                                        TestNot(FirstOf(Bullet(), Enumerator())),
+                                        Optional(CrossedOut(Indent(), line)),
+                                        Line(line)
+                                ),
+
+                                block.append(line.getString()) && line.clearContents()
+                        )
                 ),
 
-                // take the other blocks as long as they are indented.
-                ZeroOrMore(
-                        ZeroOrMore(BlankLine(), block.append(match())),
-                        CrossedOut(Indent(), block), Line(block)
-                )
+                // if there is a blank line then we append \n, but leave the blank line for the next item, just in case it needs it
+                // to determine looseness, however this can only be done for the last block in the indented set, otherwise
+                // if we do it for each block then code blocks will have their embedded blank lines doubled.
+                Optional(Test(BlankLine(), line.append("\n")))
         );
     }
 
@@ -550,6 +583,17 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return true;
     }
     
+    SuperNode wrapFirstSubItemInPara(SuperNode item) {
+        Node firstItemFirstChild = item.getChildren().get(0);
+        if (firstItemFirstChild.getChildren().size() == 1) {
+            Node firstGrandChild = firstItemFirstChild.getChildren().get(0);
+            if (firstGrandChild instanceof ListItemNode) {
+                wrapFirstItemInPara((SuperNode)firstGrandChild);
+            }
+        }
+        return item;
+    }
+
     boolean setListItemIndices() {
         SuperNode listItem = (SuperNode) getContext().getValueStack().peek();
         List<Node> children = listItem.getChildren();
