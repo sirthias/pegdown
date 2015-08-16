@@ -131,6 +131,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 // this means that phantom \n's will not be part of the node's source range, except when
                 // the input had no EOL's at the end at all, even then only one of these will be included
                 NonindentSpace(), Inlines(), push(new ParaNode(popAsNode())), Test(BlankLine())
+
+
         );
     }
 
@@ -732,7 +734,9 @@ public class Parser extends BaseParser<Object> implements Extensions {
                                 '>',
                                 AtxStart(),
                                 Sequence(ZeroOrMore(NotNewline(), ANY), Newline(),
-                                        FirstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline())
+                                        FirstOf(NOrMore('=', 3), NOrMore('-', 3)), Newline()),
+
+                                FencedCodeBlock()
                         )
                 ),
                 ext(HARDWRAPS) ? toRule(push(new SimpleNode(Type.Linebreak))) : toRule(push(new TextNode(" ")))

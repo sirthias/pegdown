@@ -64,3 +64,8 @@ abbreviation definitions:
 
 *[HTML]: HyperText Markup Language
 ~~~
+
+test fenced code block following a paragraph without a blank line break
+~~~~~~~
+this should be code
+~~~~~~~
