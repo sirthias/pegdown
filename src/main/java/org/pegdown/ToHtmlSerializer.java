@@ -135,7 +135,7 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public void visit(HeaderNode node) {
-        printTag(node, "h" + node.getLevel());
+        printBreakBeforeTag(node, "h" + node.getLevel());
     }
 
     public void visit(HtmlBlockNode node) {
@@ -382,6 +382,12 @@ public class ToHtmlSerializer implements Visitor {
 
     protected void printTag(SuperNode node, String tag) {
         printer.print('<').print(tag).print('>');
+        visitChildren(node);
+        printer.print('<').print('/').print(tag).print('>');
+    }
+
+    protected void printBreakBeforeTag(SuperNode node, String tag) {
+        printer.print("\n<").print(tag).print('>');
         visitChildren(node);
         printer.print('<').print('/').print(tag).print('>');
     }

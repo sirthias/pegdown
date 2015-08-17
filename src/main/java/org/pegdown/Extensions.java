@@ -106,9 +106,14 @@ public interface Extensions {
     static final int ANCHORLINKS = 0x400;
 
     /**
-     * All available extensions excluding the SUPPRESS_... options.
+     * Requires a space char after Atx # header prefixes, so that #dasdsdaf is not a header.
      */
-    static final int ALL = 0x0000FFFF;
+    static final int HEADERSPACE = 0x800;
+
+    /**
+     * All available extensions excluding the SUPPRESS_... options and HEADERSPACE.
+     */
+    static final int ALL = (0x0000FFFF & ~HEADERSPACE);
 
     /**
      * Suppresses HTML blocks. They will be accepted in the input but not be contained in the output.

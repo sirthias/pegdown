@@ -229,7 +229,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule AtxHeading() {
         return Sequence(
                 AtxStart(),
-                Optional(Sp()),
+                //Optional(Sp()), // this should be just Sp() because it is already ZeroOrMore which means it is optional
+                // ISSUE: #144, Add GFM style headers, space after # is required
+                (ext(HEADERSPACE) ? Spacechar() : EMPTY), Sp(),
+
                 OneOrMore(AtxInline(), addAsChild()),
                 wrapInAnchor(),
                 Optional(Sp(), ZeroOrMore('#'), Sp()),
@@ -247,7 +250,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule AtxInline() {
         return Sequence(
                 TestNot(Newline()),
-                TestNot(Optional(Sp()), ZeroOrMore('#'), Sp(), Newline()),
+                TestNot(Sp(), ZeroOrMore('#'), Sp(), Newline()),
                 Inline()
         );
     }
@@ -546,7 +549,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
     //************* LIST ITEM ACTIONS ****************
 
     boolean appendCrossed(StringBuilderVar block) {
-        for (int i = 0; i < matchLength(); i++) {
+        int iMax = matchLength();
+        for (int i = 0; i < iMax; i++) {
             block.append(CROSSED_OUT);
         }
         return true;
@@ -782,31 +786,30 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     @Cached
-    public Rule EmphOrStrong(String chars) {    
+    public Rule EmphOrStrong(String chars) {
         return Sequence(
                 Test(mayEnterEmphOrStrong(chars)),
                 EmphOrStrongOpen(chars),
-                push(new StrongEmphSuperNode(chars)),                
+                push(new StrongEmphSuperNode(chars)),
                 OneOrMore(
-                 TestNot(EmphOrStrongClose(chars)),
-                 Inline(),
-                 FirstOf(
-                  Sequence(
-                   //if current inline ends with a closing char for a current strong node: 
-                   Test(isStrongCloseCharStolen( chars )),
-                   //and composes a valid strong close:
-                   chars.substring(0, 1),
-                   //which is not followed by another closing char (e.g. in __strong _nestedemph___):
-                   TestNot(chars.substring(0, 1)),
-                   //degrade current inline emph to unclosed and mark current strong node for closing
-                   stealBackStrongCloseChar() 
-                  ),
-                  addAsChild()
-                 )
+                        TestNot(EmphOrStrongClose(chars)),
+                        Inline(),
+                        FirstOf(
+                                Sequence(
+                                        //if current inline ends with a closing char for a current strong node:
+                                        Test(isStrongCloseCharStolen(chars)),
+                                        //and composes a valid strong close:
+                                        chars.substring(0, 1),
+                                        //which is not followed by another closing char (e.g. in __strong _nestedemph___):
+                                        TestNot(chars.substring(0, 1)),
+                                        //degrade current inline emph to unclosed and mark current strong node for closing
+                                        stealBackStrongCloseChar()
+                                ),
+                                addAsChild()
+                        )
                 ),
                 Optional(Sequence(EmphOrStrongClose(chars), setClosed()))
         );
-
     }
     
     public Rule EmphOrStrongOpen(String chars) {
@@ -823,19 +826,18 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 Test(isLegalEmphOrStrongClosePos()),
                 FirstOf(
-                 Sequence(
-                  Test(ValidEmphOrStrongCloseNode.class.equals( peek(0).getClass() )),
-                  drop()
-                 ),
-                 Sequence(
-                  TestNot(Spacechar()),
-                  NotNewline(),
-                  chars,
-                  FirstOf((chars.length()==2),TestNot(Alphanumeric()))                
+                        Sequence(
+                                Test(ValidEmphOrStrongCloseNode.class.equals(peek(0).getClass())),
+                                drop()
+                        ),
+                        Sequence(
+                                TestNot(Spacechar()),
+                                NotNewline(),
+                                chars,
+                                FirstOf((chars.length() == 2), TestNot(Alphanumeric()))
+                        )
                 )
-               )
         );
-    
     }
     
     /**
@@ -1303,7 +1305,9 @@ public class Parser extends BaseParser<Object> implements Extensions {
         if (ext(TABLES)) {
             chars += "|";
         }
-        if (ext(DEFINITIONS) | ext(FENCED_CODE_BLOCKS)) {
+
+        // Issue: #131 allow strikethrough to work without defs or fenced code extension
+        if (ext(DEFINITIONS | FENCED_CODE_BLOCKS | STRIKETHROUGH)) {
             chars += "~";
         }
         for (Character ch : plugins.getSpecialChars()) {
@@ -1394,7 +1398,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule TableCaption() {
         return Sequence(
                 CaptionStart(),
-                Optional(Sp()),
+                Sp(),
                 OneOrMore(CaptionInline(), addAsChild()),
                 Optional(Sp(), Optional(']'), Sp()),
                 Newline()
@@ -1410,7 +1414,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public Rule CaptionInline() {
         return Sequence(
                 TestNot(Newline()),
-                TestNot(Optional(Sp()), Optional(']'), Sp(), Newline()),
+                TestNot(Sp(), Optional(']'), Sp(), Newline()),
                 Inline()
         );
     }
