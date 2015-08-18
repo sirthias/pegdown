@@ -1098,6 +1098,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     //************* REFERENCE ****************
 
+    // can't treat labels the same as the image alt since the image alt should be able to empty.
     public Rule ImageAlt(){
         return Sequence(
                 '[',
