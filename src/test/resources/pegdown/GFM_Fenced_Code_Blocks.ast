@@ -1,15 +1,15 @@
 RootNode [0-786]
-  ParaNode [0-22]
+  ParaNode [0-20]
     SuperNode [0-20]
       TextNode [0-19] 'A fenced code block'
       SpecialTextNode [19-20] ':'
   VerbatimNode [22-99] 'class Example(name: String) {\n  val field: Option[Int] = None\n}\n'
-  ParaNode [100-148]
+  ParaNode [100-146]
     SuperNode [100-146]
       TextNode [100-145] 'And another one, this time with an empty line'
       SpecialTextNode [145-146] ':'
   VerbatimNode [148-406] '   var model = ko.sync.Model({\n       dataStore: store,\n       dataTable: table,\n       fields: {counter: 0}\n   });\n\n   var data = ko.sync.use({}, model);\n   data.crud.isDirty(); // false\n   data.counter(1);\n   data.crud.isDirty(); // true\n'
-  ParaNode [407-433]
+  ParaNode [407-431]
     SuperNode [407-431]
       TextNode [407-430] 'and here is another one'
       SpecialTextNode [430-431] ':'
