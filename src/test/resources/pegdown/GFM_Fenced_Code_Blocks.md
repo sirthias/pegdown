@@ -32,3 +32,19 @@ public static String messageOrBlank(@PropertyKey(resourceBundle = BUNDLE_NAME) S
     return CommonBundle.messageOrDefault(BUNDLE, key, "", params);
 }
 ```
+
+test opening with more than 3 ticks
+
+````java
+public static String message(@PropertyKey(resourceBundle = BUNDLE_NAME) String key, Object... params) {
+    return CommonBundle.message(BUNDLE, key, params);
+}
+
+public static String messageOrBlank(@PropertyKey(resourceBundle = BUNDLE_NAME) String key, Object... params) {
+    return CommonBundle.messageOrDefault(BUNDLE, key, "", params);
+}
+```
+should still be fenced
+`````
+should still be fenced
+````
