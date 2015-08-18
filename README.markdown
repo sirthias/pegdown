@@ -25,7 +25,6 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 ##### Modifications in this fork that have not been incorporated into the official version yet, are in the **`develop`** branch:
 
 * HEADERSPACE: Require a space between the `#` and the header title text, as per [Github-flavoured-Markdown]. Frees up `#` without a space to be just plain text.
-* fix: compound list parsing to handle complex hierarchies
 * change: default HTML serializer will put each header on a new line and indent contents of `<li>` tags that have child tags.
 
 Note: _pegdown_ differs from the original Markdown in that it ignores in-word emphasis as in
