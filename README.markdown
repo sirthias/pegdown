@@ -22,7 +22,7 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * WIKILINKS: Support `[[Wiki-style links]]` with a customizable URL rendering logic.
 * STRIKETHROUGH: Support ~~strikethroughs~~ as supported in Pandoc and Github.
 
-Modifications in this fork that have not been incorporated into the official version yet, are in the **`develop`** branch:
+##### Modifications in this fork that have not been incorporated into the official version yet, are in the **`develop`** branch:
 
 * HEADERSPACE: Require a space between the `#` and the header title text, as per [Github-flavoured-Markdown]. Frees up `#` without a space to be just plain text.
 * fix: compound list parsing to handle complex hierarchies
