@@ -996,7 +996,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     public Rule Image() {
         return NodeSequence(
-                '!', Label(),
+                '!', ImageAlt(),
                 FirstOf(ExplicitLink(true), ReferenceLink(true))
         );
     }
@@ -1129,6 +1129,17 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     //************* REFERENCE ****************
+
+    // can't treat labels the same as the image alt since the image alt should be able to empty.
+    public Rule ImageAlt(){
+        return Sequence(
+                '[',
+                checkForParsingTimeout(),
+                push(new SuperNode()),
+                ZeroOrMore(TestNot(']'), NonAutoLinkInline(), addAsChild()),
+                ']'
+        );
+    }
 
     public Rule Label() {
         return Sequence(

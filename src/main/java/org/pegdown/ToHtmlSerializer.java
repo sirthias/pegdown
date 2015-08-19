@@ -407,7 +407,10 @@ public class ToHtmlSerializer implements Visitor {
     protected void printImageTag(LinkRenderer.Rendering rendering) {
         printer.print("<img");
         printAttribute("src", rendering.href);
-        printAttribute("alt", rendering.text);
+        // shouldn't include the alt attribute if its empty
+        if(!rendering.text.equals("")){
+            printAttribute("alt", rendering.text);
+        }
         for (LinkRenderer.Attribute attr : rendering.attributes) {
             printAttribute(attr.name, attr.value);
         }
