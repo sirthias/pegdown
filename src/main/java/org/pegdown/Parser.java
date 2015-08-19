@@ -35,6 +35,8 @@ import org.pegdown.ast.Node;
 import org.pegdown.ast.SimpleNode.Type;
 import org.pegdown.plugins.PegDownPlugins;
 
+import java.util.Set;
+import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -661,14 +663,44 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     public boolean isHtmlTag(String string) {
-        return Arrays.binarySearch(HTML_TAGS, string) >= 0;
+        return HTML_TAGS.contains(string);
     }
 
-    protected static final String[] HTML_TAGS = new String[] {
-            "address", "blockquote", "center", "dd", "dir", "div", "dl", "dt", "fieldset", "form", "frameset", "h1",
-            "h2", "h3", "h4", "h5", "h6", "hr", "isindex", "li", "menu", "noframes", "noscript", "ol", "p", "pre",
-            "script", "style", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "ul"
-    };
+    protected static final Set<String> HTML_TAGS = new HashSet<String>(Arrays.asList(
+        // https://developer.mozilla.org/en/docs/Web/HTML/Element
+        // Basic elements
+        "html",
+        // Document metadata
+        "base", "head", "link", "meta", "style", "title",
+        // Content sectioning
+        "address", "article", "aside", "body", "footer", "header", "h1", "h2", "h3", "h4", "h5", "h6", "hgroup", "nav", "section",
+        // Text bontent
+        "dd", "div", "dl", "dt", "figcaption", "figure", "hr", "li", "main", "ol", "p", "pre", "ul",
+        // Inline text semantics
+        // "abbr" not included, breaks some tests
+        "a", "b", "bdi", "bdo", "br", "cite", "code", "data", "dfn", "em", "i", "kbd", "mark", "q", "rp", "rt",
+        "rtc", "ruby", "s", "samp", "small", "span", "strong", "sub", "sup", "time", "u", "var", "wbr",
+        // Image & multimedia
+        "area", "audio", "img", "map", "track", "video",
+        // Embedded content
+        "embed", "iframe", "object", "param", "source",
+        // Scripting
+        "canvas", "noscript", "script",
+        // Edits
+        "del", "ins",
+        // Table content
+        "caption", "col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr",
+        // Forms
+        "button", "datalist", "fieldset", "form", "input", "keygen", "label", "legend", "meter",
+        "optgroup", "option", "output", "progress", "select", "textarea",
+        // Interactive elements
+        "details", "dialog", "menu", "menuitem", "summary",
+        // Web Components
+        "content", "decorator", "element", "shadow", "template",
+        // Obsolete and deprecated elements
+        "acronym", "applet", "basefont", "big", "blink", "center", "dir", "frame", "frameset",
+        "isindex", "listing", "noembed", "plaintext", "spacer", "strike", "tt", "xmp"
+    ));
 
     //************* INLINES ****************
 

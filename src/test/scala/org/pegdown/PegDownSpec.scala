@@ -33,6 +33,7 @@ class PegDownSpec extends AbstractPegDownSpec {
         test("pegdown/Tables")
         test("pegdown/Wikilinks")
 
+        testAST("pegdown/HTML5 Blocks")
         testAST("pegdown/AstText")
         testAST("pegdown/GFM_Fenced_Code_Blocks")
       }
