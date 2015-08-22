@@ -20,10 +20,14 @@ package org.pegdown.ast;
 
 import java.util.List;
 
-public class StrikeNode extends SuperNode {
+public class StrikeNode extends StrongEmphSuperNode {
 
     public StrikeNode(List<Node> children) {
         super(children);
+    }
+
+    public StrikeNode(StrongEmphSuperNode node) {
+        super(node);
     }
 
     @Override

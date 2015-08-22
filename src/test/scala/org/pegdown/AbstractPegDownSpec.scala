@@ -17,6 +17,11 @@ abstract class AbstractPegDownSpec extends Specification {
     testWithSerializer(testName)
   }
 
+  def testAlt(testName: String, expectedNameSuffix : String)(implicit processor: PegDownProcessor): MatchResult[String] = {
+    implicit val htmlSerializer = new ToHtmlSerializer(new LinkRenderer)
+    testWithSerializer(testName, testName + expectedNameSuffix)
+  }
+
   def test(testName: String, expectedOutput: String, htmlSerializer: ToHtmlSerializer = null)
           (implicit processor: PegDownProcessor): MatchResult[String] = {
     val markdown = FileUtils.readAllCharsFromResource(testName + ".md")
@@ -46,12 +51,22 @@ abstract class AbstractPegDownSpec extends Specification {
     test(testName, tidy(expectedUntidy), htmlSerializer)
   }
 
+  def testWithSerializer(testName: String, expectedName : String)(implicit processor: PegDownProcessor, htmlSerializer: ToHtmlSerializer) = {
+    val expectedUntidy = FileUtils.readAllTextFromResource(expectedName + ".html")
+    require(expectedUntidy != null, "Test '" + testName + "' not found")
+    test(testName, tidy(expectedUntidy), htmlSerializer)
+  }
+
   def testAST(testName: String)(implicit processor: PegDownProcessor) = {
+    testASTAlt(testName, "");
+  }
+
+  def testASTAlt(testName: String, expectedASTNameSuffix : String)(implicit processor: PegDownProcessor) = {
     val markdown = FileUtils.readAllCharsFromResource(testName + ".md")
     require(markdown != null, "Test '" + testName + "' not found")
 
-    val expectedAst = FileUtils.readAllTextFromResource(testName + ".ast")
-    require(expectedAst != null, "Expected AST for '" + testName + "' not found")
+    val expectedAst = FileUtils.readAllTextFromResource(testName + expectedASTNameSuffix + ".ast")
+    require(expectedAst != null, "Expected AST for '" + testName + expectedASTNameSuffix + "' not found")
 
     val astRoot = processor.parseMarkdown(markdown)
 
