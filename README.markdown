@@ -21,7 +21,10 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * INLINE HTML SUPPRESSION: Suppresses the output of inline HTML elements.
 * WIKILINKS: Support `[[Wiki-style links]]` with a customizable URL rendering logic.
 * STRIKETHROUGH: Support ~~strikethroughs~~ as supported in Pandoc and Github.
-
+* ATXHEADERSPACE: Require a space between the `#` and the header title text, as per [Github-flavoured-Markdown]. Frees up `#` without a space to be just plain text.
+* FORCELISTITEMPARA: Wrap a list item or definition term in `<p>` tags if it contains more than a simple paragraph.
+* RELAXEDHRULES: allow horizontal rules without a blank line following them.
+                        
 Note: _pegdown_ differs from the original Markdown in that it ignores in-word emphasis as in
 
     > my_cool_file.txt

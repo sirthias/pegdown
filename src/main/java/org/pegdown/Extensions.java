@@ -106,7 +106,7 @@ public interface Extensions {
     static final int ANCHORLINKS = 0x400;
 
     /**
-     * All available extensions excluding the SUPPRESS_... options.
+     * All available extensions excluding the SUPPRESS_... options, ATXHEADERSPACE. FORCELISTITEMPARA
      */
     static final int ALL = 0x0000FFFF;
 
@@ -125,4 +125,20 @@ public interface Extensions {
      * Both will be accepted in the input but not be contained in the output.
      */
     static final int SUPPRESS_ALL_HTML = 0x00030000;
+
+    /**
+     * Requires a space char after Atx # header prefixes, so that #dasdsdaf is not a header.
+     */
+    static final int ATXHEADERSPACE = 0x00040000;
+
+    /**
+     * Force List and Definition Paragraph wrapping if it includes more than just a single paragraph
+     */
+    static final int FORCELISTITEMPARA = 0x00080000;
+
+    /**
+     * Force List and Definition Paragraph wrapping if it includes more than just a single paragraph
+     */
+    static final int RELAXEDHRULES = 0x00100000;
+
 }

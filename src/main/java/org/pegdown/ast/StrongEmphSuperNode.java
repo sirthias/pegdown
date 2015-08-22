@@ -18,17 +18,28 @@
 
 package org.pegdown.ast;
 
+import java.util.List;
+
 public class StrongEmphSuperNode extends SuperNode {
     
     private boolean isStrong = false;
     private boolean isClosed = false;
-    private String chars;    
+    private String chars;
 
-    public StrongEmphSuperNode(String str) {    
+    public StrongEmphSuperNode(List<Node> children) {
+        super(children);
+    }
+    
+    public StrongEmphSuperNode(String str) {
         this.isStrong = (str.length() == 2); // ** and __ are strong, * and _ emph
         this.chars = str;
     }
-    
+    public StrongEmphSuperNode(StrongEmphSuperNode node) {
+        super(node.getChildren());
+        this.isClosed = node.isClosed;
+        this.chars = node.chars;
+    }
+
     public boolean isStrong() {
         return isStrong;
     }

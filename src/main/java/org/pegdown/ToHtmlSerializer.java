@@ -49,7 +49,7 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public ToHtmlSerializer(LinkRenderer linkRenderer, List<ToHtmlSerializerPlugin> plugins) {
-    	this (linkRenderer, Collections.<String, VerbatimSerializer>emptyMap(), plugins);
+        this(linkRenderer, Collections.<String, VerbatimSerializer>emptyMap(), plugins);
     }
 
     public ToHtmlSerializer(final LinkRenderer linkRenderer, final Map<String, VerbatimSerializer> verbatimSerializers) {
@@ -59,7 +59,7 @@ public class ToHtmlSerializer implements Visitor {
     public ToHtmlSerializer(final LinkRenderer linkRenderer, final Map<String, VerbatimSerializer> verbatimSerializers, final List<ToHtmlSerializerPlugin> plugins) {
         this.linkRenderer = linkRenderer;
         this.verbatimSerializers = new HashMap<String, VerbatimSerializer>(verbatimSerializers);
-        if(!this.verbatimSerializers.containsKey(VerbatimSerializer.DEFAULT)) {
+        if (!this.verbatimSerializers.containsKey(VerbatimSerializer.DEFAULT)) {
             this.verbatimSerializers.put(VerbatimSerializer.DEFAULT, DefaultVerbatimSerializer.INSTANCE);
         }
         this.plugins = plugins;
@@ -70,7 +70,7 @@ public class ToHtmlSerializer implements Visitor {
         astRoot.accept(this);
         return printer.getString();
     }
-    
+
     public void visit(RootNode node) {
         for (ReferenceNode refNode : node.getReferences()) {
             visitChildren(refNode);
@@ -117,11 +117,11 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public void visit(DefinitionNode node) {
-        printTag(node, "dd");
+        printConditionallyIndentedTag(node, "dd");
     }
 
     public void visit(DefinitionTermNode node) {
-        printTag(node, "dt");
+        printConditionallyIndentedTag(node, "dt");
     }
 
     public void visit(ExpImageNode node) {
@@ -135,7 +135,7 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public void visit(HeaderNode node) {
-        printTag(node, "h" + node.getLevel());
+        printBreakBeforeTag(node, "h" + node.getLevel());
     }
 
     public void visit(HtmlBlockNode node) {
@@ -149,7 +149,6 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public void visit(ListItemNode node) {
-        printer.println();
         printConditionallyIndentedTag(node, "li");
     }
 
@@ -162,8 +161,7 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     public void visit(ParaNode node) {
-        printer.println();
-        printTag(node, "p");
+        printBreakBeforeTag(node, "p");
     }
 
     public void visit(QuotedNode node) {
@@ -245,18 +243,18 @@ public class ToHtmlSerializer implements Visitor {
                 throw new IllegalStateException();
         }
     }
-    
+
     public void visit(StrongEmphSuperNode node) {
-    	if(node.isClosed()){
-    		if(node.isStrong())
-    			printTag(node, "strong");
-    		else
-    			printTag(node, "em"); 
-    	} else {
-	    	//sequence was not closed, treat open chars as ordinary chars
-	    	printer.print(node.getChars());
-	    	visitChildren(node);
-    	}
+        if (node.isClosed()) {
+            if (node.isStrong())
+                printTag(node, "strong");
+            else
+                printTag(node, "em");
+        } else {
+            //sequence was not closed, treat open chars as ordinary chars
+            printer.print(node.getChars());
+            visitChildren(node);
+        }
     }
 
     public void visit(StrikeNode node) {
@@ -273,10 +271,11 @@ public class ToHtmlSerializer implements Visitor {
         visitChildren(node);
         printer.print("</caption>");
     }
+
     public void visit(TableCellNode node) {
         String tag = inTableHeader ? "th" : "td";
         List<TableColumnNode> columns = currentTableNode.getColumns();
-        TableColumnNode column = columns.get(Math.min(currentTableColumn, columns.size()-1));
+        TableColumnNode column = columns.get(Math.min(currentTableColumn, columns.size() - 1));
 
         printer.println().print('<').print(tag);
         column.accept(this);
@@ -367,7 +366,6 @@ public class ToHtmlSerializer implements Visitor {
     }
 
     // helpers
-
     protected void visitChildren(SuperNode node) {
         for (Node child : node.getChildren()) {
             child.accept(this);
@@ -386,6 +384,13 @@ public class ToHtmlSerializer implements Visitor {
         printer.print('<').print('/').print(tag).print('>');
     }
 
+    protected void printBreakBeforeTag(SuperNode node, String tag) {
+        boolean startWasNewLine = printer.endsWithNewLine();
+        printer.println();
+        printTag(node, tag);
+        if (startWasNewLine) printer.println();
+    }
+
     protected void printIndentedTag(SuperNode node, String tag) {
         printer.println().print('<').print(tag).print('>').indent(+2);
         visitChildren(node);
@@ -394,13 +399,15 @@ public class ToHtmlSerializer implements Visitor {
 
     protected void printConditionallyIndentedTag(SuperNode node, String tag) {
         if (node.getChildren().size() > 1) {
-            printer.print('<').print(tag).print('>').indent(+2);
+            printer.println().print('<').print(tag).print('>').indent(+2);
             visitChildren(node);
             printer.indent(-2).println().print('<').print('/').print(tag).print('>');
         } else {
-            printer.print('<').print(tag).print('>');
+            boolean startWasNewLine = printer.endsWithNewLine();
+
+            printer.println().print('<').print(tag).print('>');
             visitChildren(node);
-            printer.print('<').print('/').print(tag).print('>');
+            printer.print('<').print('/').print(tag).print('>').printchkln(startWasNewLine);
         }
     }
 
@@ -443,7 +450,7 @@ public class ToHtmlSerializer implements Visitor {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < string.length(); i++) {
             char c = string.charAt(i);
-            switch(c) {
+            switch (c) {
                 case ' ':
                 case '\n':
                 case '\t':
