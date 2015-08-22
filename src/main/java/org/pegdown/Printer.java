@@ -59,6 +59,34 @@ public class Printer {
         return this;
     }
 
+    public Printer printchkln() {
+        if (!endsWithNewLine()) {
+            if (sb.length() > 0) print('\n');
+            for (int i = 0; i < indent; i++) print(' ');
+        }
+        return this;
+    }
+
+    public Printer printchkln(boolean printNewLine) {
+        if (printNewLine) {
+            if (sb.length() > 0) print('\n');
+            for (int i = 0; i < indent; i++) print(' ');
+        }
+        return this;
+    }
+
+    public boolean endsWithNewLine() {
+        int iMax = sb.length();
+
+        for (int i = iMax; i-- > 0; ) {
+           if (sb.charAt(i) != ' ') {
+               return sb.charAt(i) == '\n';
+           }
+        }
+        // all leading spaces
+        return false;
+    }
+
     public String getString() {
         return sb.toString();
     }

@@ -1,0 +1,17 @@
+RootNode [0-74]
+  HeaderNode [0-16]
+    AnchorLinkNode [0-11] 'Hello World'
+  SimpleNode [16-20] HRule
+  SimpleNode [20-24] HRule
+  ParaNode [25-36]
+    SuperNode [25-36]
+      TextNode [25-36] 'Hello World'
+  SimpleNode [37-41] HRule
+  SimpleNode [41-45] HRule
+  SimpleNode [45-49] HRule
+  ParaNode [50-61]
+    SuperNode [50-61]
+      TextNode [50-61] 'Hello World'
+  SimpleNode [62-66] HRule
+  SimpleNode [66-70] HRule
+  SimpleNode [70-74] HRule

@@ -102,3 +102,10 @@ Header 1  | Header 2  |
 Cell      | Cell      |
 Cell      | Cell      
 
+# With Caption (to test correct setting of the node's source range)
+
+Header 1  | Header 2  |
+--------- | --------- |
+Cell      | Cell      |
+Cell      | Cell      
+[Table: Caption]
