@@ -20,19 +20,26 @@ package org.pegdown.ast;
 
 public class TaskListNode extends ListItemNode {
     private boolean isDone;
+    private String taskListMarker;
 
     public TaskListNode(Node child) {
         super(child);
         isDone = false;
+        taskListMarker = null;
     }
 
-    public TaskListNode(Node child, boolean isDone) {
+    public TaskListNode(Node child, boolean isDone, String taskListMarker) {
         super(child);
         this.isDone = isDone;
+        this.taskListMarker = taskListMarker;
     }
 
     public boolean isDone() {
         return isDone;
+    }
+
+    public String getTaskListMarker() {
+        return taskListMarker;
     }
 
     @Override

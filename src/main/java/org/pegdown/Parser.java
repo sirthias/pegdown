@@ -383,8 +383,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 public SuperNode create(Node child) {
                     return new ListItemNode(child);
                 }
-                public SuperNode create(Node child, int taskType) {
-                    return taskType == 0 ? new ListItemNode(child) : new TaskListNode(child, taskType == 2);
+                public SuperNode create(Node child, int taskType, String taskListMarker) {
+                    return taskType == 0 ? new ListItemNode(child) : new TaskListNode(child, taskType == 2, taskListMarker);
                 }
             };
             return NodeSequence(
@@ -471,6 +471,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         // we collect a number of markdown source blocks for an item, run complete parsing cycle on these and attach
         // the roots of the inner parsing results AST to the outer AST tree
         StringBuilderVar block = new StringBuilderVar();
+        StringBuilderVar taskListMarker = new StringBuilderVar();
         StringBuilderVar temp = new StringBuilderVar();
         Var<Boolean> tight = new Var<Boolean>(false);
         Var<Integer> taskType = new Var<Integer>(0);
@@ -478,7 +479,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 push(getContext().getCurrentIndex()),
                 FirstOf(CrossedOut(BlankLine(), block), tight.set(true)),
-                CrossedOut(itemStart, block), Optional(CrossedOut(Sequence(FirstOf(Sequence("[ ]", taskType.set(1)), Sequence("[x]", taskType.set(2))), OneOrMore(Spacechar())), block)), Line(block),
+                CrossedOut(itemStart, block), Optional(CrossedOut(Sequence(FirstOf(Sequence("[ ]", taskType.set(1)), Sequence("[x]", taskType.set(2))), OneOrMore(Spacechar())), taskListMarker)),
+                block.append(taskListMarker.getString()), Line(block),
 //                debugMsg("have a " + taskType.get() + " task list body", block.getString()),
                 ZeroOrMore(
                         Optional(CrossedOut(Indent(), temp)),
@@ -487,9 +489,9 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         block.append(temp.getString()) && temp.clearContents()
                 ),
 
-                tight.get() ? push(tightFirstItem.setAndGet(itemNodeCreator.create(parseListBlock(block), taskType.get()))) :
+                tight.get() ? push(tightFirstItem.setAndGet(itemNodeCreator.create(parseListBlock(block), taskType.get(), taskListMarker.getString()))) && taskListMarker.clearContents() :
                         fixFirstItem((SuperNode) peek(1)) &&
-                                push(itemNodeCreator.create(parseListBlock(block.appended('\n')), taskType.get())),
+                                push(itemNodeCreator.create(parseListBlock(block.appended('\n')), taskType.get(), taskListMarker.getString()))  && taskListMarker.clearContents(),
                 ZeroOrMore(
 //                        debugMsg("have a " + (tight.get() ? "tight" : "loose") + " list body at " + getContext().getCurrentIndex(), block.getString()),
                         push(getContext().getCurrentIndex()),
@@ -1741,7 +1743,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     protected interface SuperNodeTaskItemCreator extends SuperNodeCreator {
-        SuperNode create(Node child, int taskType);
+        SuperNode create(Node child, int taskType, String taskListMarker);
     }
 
 }
