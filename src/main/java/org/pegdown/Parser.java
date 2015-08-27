@@ -1740,4 +1740,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
         SuperNode create(Node child);
     }
 
+    protected interface SuperNodeTaskItemCreator extends SuperNodeCreator {
+        SuperNode create(Node child, int taskType);
+    }
+
 }
