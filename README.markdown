@@ -24,6 +24,9 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * ATXHEADERSPACE: Require a space between the `#` and the header title text, as per [Github-flavoured-Markdown]. Frees up `#` without a space to be just plain text.
 * FORCELISTITEMPARA: Wrap a list item or definition term in `<p>` tags if it contains more than a simple paragraph.
 * RELAXEDHRULES: allow horizontal rules without a blank line following them.
+* TASKLISTITEMS: parses bullet lists of the form `* [ ]` and `* [x]` to create GitHub like task list items:
+    * [ ] open task item
+    * [x] closed or completed task item.
                         
 Note: _pegdown_ differs from the original Markdown in that it ignores in-word emphasis as in
 
