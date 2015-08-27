@@ -12,7 +12,7 @@ RootNode [0-942]
       TextNode [122-123] ' '
       SpecialTextNode [123-124] '&'
       TextNode [124-138] ' small text to'
-  BlockQuoteNode [141-161]
+  BlockQuoteNode [141-160]
     ParaNode [143-159]
       SuperNode [143-159]
         TextNode [143-147] 'test'
@@ -76,7 +76,7 @@ RootNode [0-942]
   ParaNode [470-482]
     SuperNode [470-482]
       TextNode [470-482] 'A Blockquote'
-  BlockQuoteNode [506-528]
+  BlockQuoteNode [506-527]
     ParaNode [508-512]
       SuperNode [508-512]
         TextNode [508-512] 'easy'
@@ -101,18 +101,18 @@ RootNode [0-942]
   TableNode [737-849]
     TableHeaderNode [737-761]
       TableRowNode [737-761]
-        TableCellNode [737-748]
+        TableCellNode [737-747]
           TextNode [737-747] 'Header 1 '
-        TableCellNode [748-760]
+        TableCellNode [748-759]
           TextNode [749-759] 'Header 2 '
     TableBodyNode [785-832]
       TableRowNode [785-809]
-        TableCellNode [785-796]
+        TableCellNode [785-795]
           TextNode [785-795] 'Cell '
-        TableCellNode [796-808]
+        TableCellNode [796-807]
           TextNode [797-807] 'Cell '
       TableRowNode [809-832]
-        TableCellNode [809-820]
+        TableCellNode [809-819]
           TextNode [809-819] 'Cell '
         TableCellNode [820-825]
           TextNode [821-825] 'Cell'

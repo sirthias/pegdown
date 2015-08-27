@@ -141,4 +141,9 @@ public interface Extensions {
      */
     static final int RELAXEDHRULES = 0x00100000;
 
+    /**
+     * GitHub style task list items: - [ ] and - [x]
+     */
+    static final int TASKLISTITEMS = 0x00200000;
+
 }
