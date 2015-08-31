@@ -25,6 +25,7 @@ public class LinkRenderer {
         public static final Attribute NO_FOLLOW = new Attribute("rel", "nofollow");
         public final String name;
         public final String value;
+
         public Attribute(String name, String value) {
             this.name = name;
             this.value = value;
@@ -38,13 +39,16 @@ public class LinkRenderer {
         public final String href;
         public final String text;
         public final List<Attribute> attributes = new ArrayList<Attribute>(2);
+
         public Rendering(String href, String text) {
             this.href = href;
             this.text = text;
         }
+
         public Rendering withAttribute(String name, String value) {
             return withAttribute(new Attribute(name, value));
         }
+
         public Rendering withAttribute(Attribute attr) {
             attributes.add(attr);
             return this;
@@ -87,8 +91,17 @@ public class LinkRenderer {
 
     public Rendering render(WikiLinkNode node) {
         try {
-            String url = "./" + URLEncoder.encode(node.getText().replace(' ', '-'), "UTF-8") + ".html";
-            return new Rendering(url, node.getText());
+            // vsch: #182 handle WikiLinks alternative format [[page|text]]
+            String text = node.getText();
+            String url = text;
+            int pos;
+            if ((pos = text.indexOf("|")) >= 0) {
+                url = text.substring(0, pos);
+                text = text.substring(pos+1);
+            }
+
+            url = "./" + URLEncoder.encode(url.replace(' ', '-'), "UTF-8") + ".html";
+            return new Rendering(url, text);
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException();
         }

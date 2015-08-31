@@ -72,8 +72,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     final List<ReferenceNode> references = new ArrayList<ReferenceNode>();
     long parsingStartTimeStamp = 0L;
 
-    public boolean debugMsg(String msg, String text)
-    {
+    public boolean debugMsg(String msg, String text) {
         System.out.println(msg + ": '" + text + "'");
         return true;
     }
@@ -138,8 +137,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
         );
     }
 
+    // vsch: #184 modified to only include trailing blank lines if there are more blocks for the blockquote following
+    // otherwise don't include the blank lines, they are not part of the block quote
     public Rule BlockQuote() {
         StringBuilderVar inner = new StringBuilderVar();
+        StringBuilderVar optional = new StringBuilderVar();
         return NodeSequence(
                 OneOrMore(
                         CrossedOut(Sequence('>', Optional(' ')), inner), Line(inner),
@@ -148,17 +150,18 @@ public class Parser extends BaseParser<Object> implements Extensions {
                                 TestNot(BlankLine()),
                                 Line(inner)
                         ),
-                        ZeroOrMore(BlankLine(), inner.append(match()))
+//                        ZeroOrMore(BlankLine()), inner.append(match())
+                        Optional(Sequence(OneOrMore(BlankLine()), optional.append(match()), Test('>')), inner.append(optional.getString()) && optional.clearContents())
                 ),
 
                 // vsch: the block quotes won't parse into Para because they will not be followed by a blank line,
                 // unless the last line of the block quote is an empty block-quote line: ">". We append one here to
-                // take care of that possibility
-                inner.append('\n'),
+                // take care of that possibility, now that we don't include blank lines after a block quote we add one extra
+                inner.append("\n\n"),
 
                 // trigger a recursive parsing run on the inner source we just built
                 // and attach the root of the inner parses AST
-                push(new BlockQuoteNode(withIndicesShifted(parseInternal(inner), (Integer)peek()).getChildren()))
+                push(new BlockQuoteNode(withIndicesShifted(parseInternal(inner), (Integer) peek()).getChildren()))
         );
     }
 
@@ -214,7 +217,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 NonindentSpace(),
                 FirstOf(HorizontalRule('*'), HorizontalRule('-'), HorizontalRule('_')),
                 Sp(), Newline(),
-                (ext(RELAXEDHRULES) ? EMPTY: Test(BlankLine())),
+                (ext(RELAXEDHRULES) ? EMPTY : Test(BlankLine())),
                 push(new SimpleNode(Type.HRule))
         );
     }
@@ -277,9 +280,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
         );
     }
 
+    // vsch: #186 add isSetext flag to header node to distinguish header types
     public Rule SetextHeading1() {
         return Sequence(
-                SetextInline(), push(new HeaderNode(1, popAsNode())),
+                SetextInline(), push(new HeaderNode(1, popAsNode(), true)),
                 ZeroOrMore(SetextInline(), addAsChild()),
                 wrapInAnchor(),
                 Sp(), Newline(), NOrMore('=', 3), Sp(), Newline()
@@ -288,7 +292,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     public Rule SetextHeading2() {
         return Sequence(
-                SetextInline(), push(new HeaderNode(2, popAsNode())),
+                SetextInline(), push(new HeaderNode(2, popAsNode(), true)),
                 ZeroOrMore(SetextInline(), addAsChild()),
                 wrapInAnchor(),
                 Sp(), Newline(), NOrMore('-', 3), Sp(), Newline()
@@ -375,15 +379,31 @@ public class Parser extends BaseParser<Object> implements Extensions {
     //************* LISTS ****************
 
     public Rule BulletList() {
-        SuperNodeCreator itemNodeCreator = new SuperNodeCreator() {
-            public SuperNode create(Node child) {
-                return new ListItemNode(child);
-            }
-        };
-        return NodeSequence(
-                ListItem(Bullet(), itemNodeCreator), push(new BulletListNode(popAsNode())),
-                ZeroOrMore(ListItem(Bullet(), itemNodeCreator), addAsChild())
-        );
+        if (ext(TASKLISTITEMS)) {
+            // #185 GFM style task list items [ ] open task, [x] closed task handlings
+            SuperNodeTaskItemCreator itemNodeCreator = new SuperNodeTaskItemCreator() {
+                public SuperNode create(Node child) {
+                    return new ListItemNode(child);
+                }
+                public SuperNode create(Node child, int taskType, String taskListMarker) {
+                    return taskType == 0 ? new ListItemNode(child) : new TaskListNode(child, taskType == 2, taskListMarker);
+                }
+            };
+            return NodeSequence(
+                    TaskListItem(Bullet(), itemNodeCreator), push(new BulletListNode(popAsNode())),
+                    ZeroOrMore(TaskListItem(Bullet(), itemNodeCreator), addAsChild())
+            );
+        } else {
+            SuperNodeCreator itemNodeCreator = new SuperNodeCreator() {
+                public SuperNode create(Node child) {
+                    return new ListItemNode(child);
+                }
+            };
+            return NodeSequence(
+                    ListItem(Bullet(), itemNodeCreator), push(new BulletListNode(popAsNode())),
+                    ZeroOrMore(ListItem(Bullet(), itemNodeCreator), addAsChild())
+            );
+        }
     }
 
     public Rule OrderedList() {
@@ -444,11 +464,64 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 setListItemIndices()
         );
     }
-    
+
+    // vsch: #185 This handles the optional extension TASKLISTITEMS to parse and generate GFM task list styled items. These are
+    // bullet items: * [ ] or * [x] , the space after the ] is not optional.
+    @Cached
+    public Rule TaskListItem(Rule itemStart, SuperNodeTaskItemCreator itemNodeCreator) {
+        // for a simpler parser design we use a recursive parsing strategy for list items:
+        // we collect a number of markdown source blocks for an item, run complete parsing cycle on these and attach
+        // the roots of the inner parsing results AST to the outer AST tree
+        StringBuilderVar block = new StringBuilderVar();
+        StringBuilderVar taskListMarker = new StringBuilderVar();
+        StringBuilderVar temp = new StringBuilderVar();
+        Var<Boolean> tight = new Var<Boolean>(false);
+        Var<Integer> taskType = new Var<Integer>(0);
+        Var<SuperNode> tightFirstItem = new Var<SuperNode>();
+        return Sequence(
+                push(getContext().getCurrentIndex()),
+                FirstOf(CrossedOut(BlankLine(), block), tight.set(true)),
+                CrossedOut(itemStart, block), Optional(CrossedOut(Sequence(FirstOf(Sequence("[ ]", taskType.set(1)), Sequence("[x]", taskType.set(2))), OneOrMore(Spacechar())), taskListMarker)),
+                block.append(taskListMarker.getString()), Line(block),
+//                debugMsg("have a " + taskType.get() + " task list body", block.getString()),
+                ZeroOrMore(
+                        Optional(CrossedOut(Indent(), temp)),
+                        TestNotItem(),
+                        Line(temp),
+                        block.append(temp.getString()) && temp.clearContents()
+                ),
+
+                tight.get() ? push(tightFirstItem.setAndGet(itemNodeCreator.create(parseListBlock(block), taskType.get(), taskListMarker.getString()))) && taskListMarker.clearContents() :
+                        fixFirstItem((SuperNode) peek(1)) &&
+                                push(itemNodeCreator.create(parseListBlock(block.appended('\n')), taskType.get(), taskListMarker.getString()))  && taskListMarker.clearContents(),
+                ZeroOrMore(
+//                        debugMsg("have a " + (tight.get() ? "tight" : "loose") + " list body at " + getContext().getCurrentIndex(), block.getString()),
+                        push(getContext().getCurrentIndex()),
+                        // it is not safe to gobble up the leading blank line if it is followed by another list item
+                        // it must be left for it to determine its own looseness. Much safer to just test for it but not consume it.
+                        FirstOf(Sequence(Test(BlankLine()), tight.set(false)), tight.set(true)),
+                        ListItemIndentedBlocks(block),
+
+                        //debugMsg("have a " + (tight.get() ? "tight" : "loose") + " list body", block.getString()),
+
+                        // vsch: here we have a small problem. Even though a sub-item may be detected as loose, when it is parsed
+                        // via the recursive call to parseListBlock, it will be tight because leading blank lines are pre-parsed
+                        // out in Block Rule before getting to the ListItem rule. This happens if there is nothing else in the
+                        // sub-item that will set its looseness and it is the first sub-item of its list. So we need to wrap it
+                        // in a ParaNode to have its looseness properly reflected.
+                        (tight.get() ? push(parseListBlock(block)) :
+                                ((!ext(FORCELISTITEMPARA)) || tightFirstItem.isNotSet() || wrapFirstItemInPara(tightFirstItem.get())) &&
+                                        push(wrapFirstSubItemInPara((SuperNode) parseListBlock(block.appended('\n'))))
+                        ) && addAsChild()
+                ),
+                setListItemIndices()
+        );
+    }
+
     public Rule CrossedOut(Rule rule, StringBuilderVar block) {
         return Sequence(rule, appendCrossed(block));
     }
-    
+
     public Rule CrossedOutLessOne(Rule rule, StringBuilderVar block) {
         return Sequence(rule, appendCrossedLessOne(block));
     }
@@ -540,13 +613,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
         //debugMsg("parsed list block " + innerRoot.toString() + " adjusting indices by " + getContext().getValueStack().peek(), block.getString());
         return withIndicesShifted(innerRoot, (Integer) context.getValueStack().pop());
     }
-    
+
     Node withIndicesShifted(Node node, int delta) {
-        if (delta != 0)
-        {
+        if (delta != 0) {
             ((AbstractNode) node).shiftIndices(delta);
-            for (Node subNode : node.getChildren())
-            {
+            for (Node subNode : node.getChildren()) {
                 withIndicesShifted(subNode, delta);
             }
         }
@@ -1499,16 +1570,20 @@ public class Parser extends BaseParser<Object> implements Extensions {
         );
     }
 
+    // vsch: TableColumnNode was not setting source range
     public Rule TableColumn(Var<TableNode> tableNode, Var<Boolean> pipeSeen) {
         Var<TableColumnNode> node = new Var<TableColumnNode>(new TableColumnNode());
         return Sequence(
-                Sp(),
-                Optional(':', node.get().markLeftAligned()),
-                Sp(), OneOrMore('-'), Sp(),
-                Optional(':', node.get().markRightAligned()),
-                Sp(),
-                Optional('|', pipeSeen.set(Boolean.TRUE)),
-                tableNode.get().addColumn(node.get())
+                NodeSequence(
+                        push(node.get()),
+                        Sp(),
+                        Optional(':', node.get().markLeftAligned()),
+                        Sp(), OneOrMore('-'), Sp(),
+                        Optional(':', node.get().markRightAligned()),
+                        Sp(),
+                        Optional('|', pipeSeen.set(Boolean.TRUE))
+                ),
+                tableNode.get().addColumn((TableColumnNode) pop())
         );
     }
 
@@ -1524,17 +1599,22 @@ public class Parser extends BaseParser<Object> implements Extensions {
         );
     }
 
+    // vsch: #183 Exclude the trailing || from TableCellNode node, leading ones are not included, it makes it more intuitive
+    // that the TableCell will include only the text of the cell.
     public Rule TableCell() {
-        return NodeSequence(
-                push(new TableCellNode()),
-                TestNot(Sp(), Optional(':'), Sp(), OneOrMore('-'), Sp(), Optional(':'), Sp(), FirstOf('|', Newline())),
-                Optional(Sp(), TestNot('|'), NotNewline()),
-                OneOrMore(
-                        TestNot('|'), TestNot(Sp(), Newline()), Inline(),
-                        addAsChild(),
-                        Optional(Sp(), Test('|'), Test(Newline()))
+        return Sequence(
+                NodeSequence(
+                        push(new TableCellNode()),
+                        TestNot(Sp(), Optional(':'), Sp(), OneOrMore('-'), Sp(), Optional(':'), Sp(), FirstOf('|', Newline())),
+                        Optional(Sp(), TestNot('|'), NotNewline()),
+                        OneOrMore(
+                                TestNot('|'), TestNot(Sp(), Newline()), Inline(),
+                                addAsChild(),
+                                Optional(Sp(), Test('|'), Test(Newline()))
+                        )
                 ),
-                ZeroOrMore('|'), ((TableCellNode) peek()).setColSpan(Math.max(1, matchLength()))
+                ZeroOrMore('|'),
+                ((TableCellNode) peek()).setColSpan(Math.max(1, matchLength()))
         );
     }
 
@@ -1703,6 +1783,10 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
     protected interface SuperNodeCreator {
         SuperNode create(Node child);
+    }
+
+    protected interface SuperNodeTaskItemCreator extends SuperNodeCreator {
+        SuperNode create(Node child, int taskType, String taskListMarker);
     }
 
 }

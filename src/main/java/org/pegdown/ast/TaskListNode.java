@@ -18,36 +18,28 @@
 
 package org.pegdown.ast;
 
-import org.parboiled.common.Preconditions;
+public class TaskListNode extends ListItemNode {
+    private boolean isDone;
+    private String taskListMarker;
 
-public class HeaderNode extends SuperNode {
-    private final int level;
-    private final boolean isSetext;
-
-    public HeaderNode(int level, Node child) {
+    public TaskListNode(Node child) {
         super(child);
-        this.level = level;
-        this.isSetext = false;
+        isDone = false;
+        taskListMarker = null;
     }
 
-    public HeaderNode(int level, Node child, boolean isSetext) {
+    public TaskListNode(Node child, boolean isDone, String taskListMarker) {
         super(child);
-        this.level = level;
-        this.isSetext = isSetext;
+        this.isDone = isDone;
+        this.taskListMarker = taskListMarker;
     }
 
-    public HeaderNode(int level) {
-        Preconditions.checkState(1 <= level && level <= 6);
-        this.level = level;
-        this.isSetext = false;
+    public boolean isDone() {
+        return isDone;
     }
 
-    public int getLevel() {
-        return level;
-    }
-
-    public boolean isSetext() {
-        return isSetext;
+    public String getTaskListMarker() {
+        return taskListMarker;
     }
 
     @Override
