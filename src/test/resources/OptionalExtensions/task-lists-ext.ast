@@ -1,39 +1,44 @@
-RootNode [0-190]
-  BulletListNode [1-190]
-    ListItemNode [3-18]
-      RootNode [3-18]
-        SuperNode [3-18]
-          TextNode [3-17] 'open task item'
-    ListItemNode [20-37]
-      RootNode [20-37]
-        SuperNode [20-37]
-          TextNode [20-36] 'closed task item'
-    ListItemNode [40-60]
-      RootNode [40-60]
-        ParaNode [40-60]
-          SuperNode [40-60]
-            TextNode [40-60] 'loose open task item'
-    ListItemNode [64-86]
-      RootNode [64-86]
-        ParaNode [64-86]
-          SuperNode [64-86]
-            TextNode [64-86] 'loose closed task item'
-    TaskListNode [94-108]
-      RootNode [94-108]
-        ParaNode [94-108]
-          SuperNode [94-108]
-            TextNode [94-108] 'open task item'
-    TaskListNode [115-132]
-      RootNode [115-132]
-        SuperNode [115-132]
-          TextNode [115-131] 'closed task item'
-    TaskListNode [139-159]
-      RootNode [139-159]
-        ParaNode [139-159]
-          SuperNode [139-159]
-            TextNode [139-159] 'loose open task item'
-    TaskListNode [167-189]
-      RootNode [167-189]
-        ParaNode [167-189]
-          SuperNode [167-189]
-            TextNode [167-189] 'loose closed task item'
+RootNode [0-229]
+  BulletListNode [1-229]
+    TaskListNode [7-22]
+      RootNode [7-22]
+        ParaNode [7-22]
+          SuperNode [7-22]
+            TextNode [7-21] 'open task item'
+    TaskListNode [29-68]
+      RootNode [29-68]
+        ParaNode [29-68]
+          SuperNode [29-68]
+            TextNode [29-68] 'loose second, will make first one loose'
+    ListItemNode [72-83]
+      RootNode [72-83]
+        ParaNode [72-83]
+          SuperNode [72-83]
+            TextNode [72-83] 'bullet item'
+    ListItemNode [86-100]
+      RootNode [86-100]
+        SuperNode [86-100]
+          TextNode [86-99] 'bullet item 2'
+    ListItemNode [103-122]
+      RootNode [103-122]
+        ParaNode [103-122]
+          SuperNode [103-122]
+            TextNode [103-122] 'loose bullet item 3'
+    TaskListNode [129-144]
+      RootNode [129-144]
+        SuperNode [129-144]
+          TextNode [129-143] 'open task item'
+    TaskListNode [150-167]
+      RootNode [150-167]
+        SuperNode [150-167]
+          TextNode [150-166] 'closed task item'
+    TaskListNode [176-196]
+      RootNode [176-196]
+        ParaNode [176-196]
+          SuperNode [176-196]
+            TextNode [176-196] 'loose open task item'
+    TaskListNode [206-228]
+      RootNode [206-228]
+        ParaNode [206-228]
+          SuperNode [206-228]
+            TextNode [206-228] 'loose closed task item'

@@ -27,6 +27,11 @@ public class AnchorLinkNode extends TextNode {
         this.name = generateName(text);
     }
 
+    public AnchorLinkNode(String textForName, String text) {
+        super(text);
+        this.name = generateName(textForName);
+    }
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

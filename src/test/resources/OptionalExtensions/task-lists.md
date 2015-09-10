@@ -1,14 +1,19 @@
 
-* open task item
-* closed task item
+* [ ] open task item
 
-* loose open task item
+* [ ] loose second, will make first one loose
 
-* loose closed task item
+* bullet item
+* bullet item 2
 
+* loose bullet item 3
 * [ ] open task item
 * [x] closed task item
 
+
+
 * [ ] loose open task item
 
-* [x] loose closed task item
+
+
+* [X] loose closed task item

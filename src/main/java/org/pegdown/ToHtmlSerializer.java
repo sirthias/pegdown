@@ -353,7 +353,7 @@ public class ToHtmlSerializer implements Visitor {
         serializer.serialize(node, printer);
     }
 
-    private VerbatimSerializer lookupSerializer(final String type) {
+    protected VerbatimSerializer lookupSerializer(final String type) {
         if (type != null && verbatimSerializers.containsKey(type)) {
             return verbatimSerializers.get(type);
         } else {
@@ -465,7 +465,7 @@ public class ToHtmlSerializer implements Visitor {
         printer.print('>').print(rendering.text).print("</a>");
     }
 
-    private void printAttribute(String name, String value) {
+    protected void printAttribute(String name, String value) {
         printer.print(' ').print(name).print('=').print('"').print(value).print('"');
     }
 

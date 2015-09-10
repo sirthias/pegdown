@@ -1,0 +1,41 @@
+RootNode [0-132]
+  HeaderNode [0-39]
+    TextNode [2-9] 'header '
+    SpecialTextNode [9-10] '&'
+    TextNode [10-16] ' some '
+    StrongEmphSuperNode [16-28]
+      TextNode [17-27] 'formatting'
+    TextNode [28-29] ' '
+    StrikeNode [29-38]
+      TextNode [31-36] 'chars'
+  HeaderNode [40-61]
+    TextNode [42-48] 'header'
+    SpecialTextNode [48-49] '-'
+    TextNode [49-53] 'with'
+    SpecialTextNode [53-54] '-'
+    TextNode [54-60] 'dashes'
+  HeaderNode [62-81]
+    TextNode [64-73] 'header/no'
+    SpecialTextNode [73-74] '-'
+    TextNode [74-80] 'header'
+  HeaderNode [82-132]
+    TextNode [84-91] 'header '
+    StrongEmphSuperNode [91-131]
+      StrongEmphSuperNode [92-131]
+        SpecialTextNode [93-94] '`'
+        SpecialTextNode [94-95] '&'
+        SpecialTextNode [95-96] '['
+        SpecialTextNode [96-97] ']'
+        SpecialTextNode [97-98] '<'
+        SpecialTextNode [98-99] '>'
+        SpecialTextNode [99-100] '!'
+        SpecialTextNode [100-101] '#'
+        SpecialTextNode [101-102] '.'
+        SpecialTextNode [102-103] '-'
+        SpecialTextNode [103-104] '('
+        SpecialTextNode [104-105] ')'
+        SpecialTextNode [105-106] '{'
+        SpecialTextNode [106-107] '}'
+        SpecialTextNode [107-108] ':'
+        SpecialTextNode [108-109] '|'
+        TextNode [109-131] ' special chars ignored'

@@ -301,22 +301,58 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(TestNot(Endline()), Inline());
     }
 
+    class AnchorNodeInfo {
+        public int startIndex = 0;
+        public int endIndex = 0;
+        public StringBuilder text = new StringBuilder();
+    }
+
+    // vsch: modified to accumulate text of all children
     public boolean wrapInAnchor() {
-        if (ext(ANCHORLINKS)) {
+        if (ext(ANCHORLINKS | EXTANCHORLINKS)) {
             SuperNode node = (SuperNode) peek();
             List<Node> children = node.getChildren();
-            if (children.size() == 1) {
-                Node child = children.get(0);
-                if (child instanceof TextNode) {
-                    AnchorLinkNode anchor = new AnchorLinkNode(((TextNode) child).getText());
-                    anchor.setStartIndex(child.getStartIndex());
-                    anchor.setEndIndex(child.getEndIndex());
-                    children.set(0, anchor);
+            if (ext(EXTANCHORLINKS)) {
+                if (children.size() > 0) {
+                    AnchorNodeInfo nodeInfo = new AnchorNodeInfo();
+                    collectChildrensText(node, nodeInfo);
+                    String text = nodeInfo.text.toString().trim();
+                    if (text.length() > 0) {
+                        AnchorLinkNode anchor = new AnchorLinkNode(text, "");
+                        anchor.setStartIndex(nodeInfo.startIndex);
+                        anchor.setEndIndex(nodeInfo.endIndex);
+                        children.add(0, anchor);
+                    }
+                }
+            } else {
+                if (children.size() == 1) {
+                    Node child = children.get(0);
+                    if (child instanceof TextNode) {
+                        AnchorLinkNode anchor = new AnchorLinkNode(((TextNode) child).getText());
+                        anchor.setStartIndex(child.getStartIndex());
+                        anchor.setEndIndex(child.getEndIndex());
+                        children.set(0, anchor);
+                    }
                 }
             }
         }
 
         return true;
+    }
+
+    public void collectChildrensText(SuperNode node, AnchorNodeInfo nodeInfo) {
+        for (Node child : node.getChildren()) {
+            // accumulate all the text
+            if (child instanceof TextNode || child instanceof SpecialTextNode) {
+                nodeInfo.text.append(((TextNode) child).getText());
+                if (nodeInfo.startIndex == 0) {
+                    nodeInfo.startIndex = child.getStartIndex();
+                }
+                nodeInfo.endIndex = child.getEndIndex();
+            } else if (child instanceof SuperNode) {
+                collectChildrensText((SuperNode) child, nodeInfo);
+            }
+        }
     }
 
     //************** Definition Lists ************
@@ -328,7 +364,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 Test(
                         OneOrMore(TestNot(BlankLine()), TestNot(DefListBullet()),
                                 OneOrMore(NotNewline(), ANY), Newline()),
-                        Optional(BlankLine()),
+                        ZeroOrMore(BlankLine()),
                         DefListBullet()
                 ),
                 push(new DefinitionListNode()),
@@ -383,13 +419,18 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 public SuperNode create(Node child) {
                     return new ListItemNode(child);
                 }
+
                 public SuperNode create(Node child, int taskType, String taskListMarker) {
                     return taskType == 0 ? new ListItemNode(child) : new TaskListNode(child, taskType == 2, taskListMarker);
                 }
             };
             return NodeSequence(
                     TaskListItem(Bullet(), itemNodeCreator), push(new BulletListNode(popAsNode())),
-                    ZeroOrMore(TaskListItem(Bullet(), itemNodeCreator), addAsChild())
+                    ZeroOrMore(
+                            //vsch: this one will absorb all blank lines but the last one preceding a list item otherwise two blank lines end a list and start a new one
+                            ZeroOrMore(Test(BlankLine(), BlankLine()), BlankLine()),
+                            TaskListItem(Bullet(), itemNodeCreator), addAsChild()
+                    )
             );
         } else {
             SuperNodeCreator itemNodeCreator = new SuperNodeCreator() {
@@ -399,7 +440,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
             };
             return NodeSequence(
                     ListItem(Bullet(), itemNodeCreator), push(new BulletListNode(popAsNode())),
-                    ZeroOrMore(ListItem(Bullet(), itemNodeCreator), addAsChild())
+                    ZeroOrMore(
+                            //vsch: this one will absorb all blank lines but the last one preceding a list item otherwise two blank lines end a list and start a new one
+                            ZeroOrMore(Test(BlankLine(), BlankLine()), BlankLine()),
+                            ListItem(Bullet(), itemNodeCreator), addAsChild()
+                    )
             );
         }
     }
@@ -412,7 +457,11 @@ public class Parser extends BaseParser<Object> implements Extensions {
         };
         return NodeSequence(
                 ListItem(Enumerator(), itemNodeCreator), push(new OrderedListNode(popAsNode())),
-                ZeroOrMore(ListItem(Enumerator(), itemNodeCreator), addAsChild())
+                ZeroOrMore(
+                        //vsch: this one will absorb all blank lines but the last one preceding a list item otherwise two blank lines end a list and start a new one
+                        ZeroOrMore(Test(BlankLine(), BlankLine()), BlankLine()),
+                        ListItem(Enumerator(), itemNodeCreator), addAsChild()
+                )
         );
     }
 
@@ -479,7 +528,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return Sequence(
                 push(getContext().getCurrentIndex()),
                 FirstOf(CrossedOut(BlankLine(), block), tight.set(true)),
-                CrossedOut(itemStart, block), Optional(CrossedOut(Sequence(FirstOf(Sequence("[ ]", taskType.set(1)), Sequence("[x]", taskType.set(2))), OneOrMore(Spacechar())), taskListMarker)),
+                CrossedOut(itemStart, block), Optional(CrossedOut(Sequence(FirstOf(Sequence("[ ]", taskType.set(1)), Sequence(FirstOf("[x]","[X]"), taskType.set(2))), OneOrMore(Spacechar())), taskListMarker)),
                 block.append(taskListMarker.getString()), Line(block),
 //                debugMsg("have a " + taskType.get() + " task list body", block.getString()),
                 ZeroOrMore(
@@ -491,7 +540,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
 
                 tight.get() ? push(tightFirstItem.setAndGet(itemNodeCreator.create(parseListBlock(block), taskType.get(), taskListMarker.getString()))) && taskListMarker.clearContents() :
                         fixFirstItem((SuperNode) peek(1)) &&
-                                push(itemNodeCreator.create(parseListBlock(block.appended('\n')), taskType.get(), taskListMarker.getString()))  && taskListMarker.clearContents(),
+                                push(itemNodeCreator.create(parseListBlock(block.appended('\n')), taskType.get(), taskListMarker.getString())) && taskListMarker.clearContents(),
                 ZeroOrMore(
 //                        debugMsg("have a " + (tight.get() ? "tight" : "loose") + " list body at " + getContext().getCurrentIndex(), block.getString()),
                         push(getContext().getCurrentIndex()),
@@ -596,7 +645,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     }
 
     boolean appendCrossedLessOne(StringBuilderVar block) {
-        int iMax = matchLength()-1;
+        int iMax = matchLength() - 1;
         for (int i = 0; i < iMax; i++) {
             block.append(CROSSED_OUT);
         }
@@ -635,7 +684,12 @@ public class Parser extends BaseParser<Object> implements Extensions {
         ParaNode paraNode = new ParaNode(firstItemFirstChild.getChildren());
         paraNode.setStartIndex(firstItemFirstChild.getStartIndex());
         paraNode.setEndIndex(firstItemFirstChild.getEndIndex());
-        item.getChildren().set(0, paraNode);
+        // vsch: wrap the para in RootNode so that it is identical to the rest of the list items if they are loose, otherwise it creates differences in html serialization of task items
+        RootNode rootNode = new RootNode();
+        rootNode.setStartIndex(paraNode.getStartIndex());
+        rootNode.setEndIndex(paraNode.getEndIndex());
+        rootNode.getChildren().add(paraNode);
+        item.getChildren().set(0, rootNode);
         return true;
     }
     
@@ -1509,6 +1563,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 OneOrMore(CaptionInline(), addAsChild())
         );
     }
+
     public Rule CaptionInline() {
         return Sequence(
                 TestNot(Newline()),
