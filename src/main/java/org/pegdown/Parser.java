@@ -343,7 +343,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
     public void collectChildrensText(SuperNode node, AnchorNodeInfo nodeInfo) {
         for (Node child : node.getChildren()) {
             // accumulate all the text
-            if (child instanceof TextNode || child instanceof SpecialTextNode) {
+            if (child.getClass() == TextNode.class || child.getClass() == SpecialTextNode.class) {
                 nodeInfo.text.append(((TextNode) child).getText());
                 if (nodeInfo.startIndex == 0) {
                     nodeInfo.startIndex = child.getStartIndex();
