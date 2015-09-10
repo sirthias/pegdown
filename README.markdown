@@ -12,6 +12,7 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * QUOTES: Beautifies single quotes, double quotes and double angle quotes (&laquo; and &raquo;)
 * SMARTYPANTS: Convenience extension enabling both, SMARTS and QUOTES, at once.
 * ABBREVIATIONS: Abbreviations in the way of [PHP Markdown Extra](http://michelf.com/projects/php-markdown/extra/#abbr).
+* ANCHORLINKS: generate anchor links for headers by taking the first range of alphanumerics and spaces.
 * HARDWRAPS: Alternative handling of newlines, see [Github-flavoured-Markdown]
 * AUTOLINKS: Plain (undelimited) autolinks the way [Github-flavoured-Markdown] implements them.
 * TABLES: Tables similar to [MultiMarkdown](http://fletcherpenney.net/multimarkdown/) (which is in turn like the [PHP Markdown Extra](http://michelf.com/projects/php-markdown/extra/#table) tables, but with colspan support).
@@ -27,6 +28,8 @@ Currently _pegdown_ supports the following extensions over standard Markdown:
 * TASKLISTITEMS: parses bullet lists of the form `* [ ]` and `* [x]` to create GitHub like task list items:
     * [ ] open task item
     * [x] closed or completed task item.
+    * [X] also closed or completed task item.
+* EXTANCHORLINKS uses all text of the header for ANCHORLINKS, spaces and non-alphanumerics replaced by `-`, multiple dashes trimmed to one.
                         
 Note: _pegdown_ differs from the original Markdown in that it ignores in-word emphasis as in
 
