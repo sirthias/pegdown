@@ -23,9 +23,10 @@ RootNode [0-942]
       TextNode [161-181] 'the functionality of'
   BulletListNode [183-299]
     ListItemNode [185-225]
-      ParaNode [185-204]
-        SuperNode [185-204]
-          TextNode [185-203] 'AST index creation'
+      RootNode [185-204]
+        ParaNode [185-204]
+          SuperNode [185-204]
+            TextNode [185-203] 'AST index creation'
       RootNode [208-225]
         BulletListNode [208-225]
           ListItemNode [210-225]

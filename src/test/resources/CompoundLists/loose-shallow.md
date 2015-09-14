@@ -38,3 +38,12 @@ Item 5 paragraph 2 lazy continuation
             Item 5 code block 2.2
 
 1. Loose Item 6
+
+
+1. Loose Item 7 after many blank lines
+
+- now the same for bullet lists
+
+
+
+- should be the same list

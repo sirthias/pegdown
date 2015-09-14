@@ -1,51 +1,62 @@
-RootNode [0-190]
-  BulletListNode [1-190]
-    ListItemNode [3-18]
-      RootNode [3-18]
-        SuperNode [3-18]
-          TextNode [3-17] 'open task item'
-    ListItemNode [20-37]
-      RootNode [20-37]
-        SuperNode [20-37]
-          TextNode [20-36] 'closed task item'
-    ListItemNode [40-60]
-      RootNode [40-60]
-        ParaNode [40-60]
-          SuperNode [40-60]
-            TextNode [40-60] 'loose open task item'
-    ListItemNode [64-86]
-      RootNode [64-86]
-        ParaNode [64-86]
-          SuperNode [64-86]
-            TextNode [64-86] 'loose closed task item'
-    ListItemNode [90-108]
-      RootNode [90-108]
-        ParaNode [90-108]
-          SuperNode [90-108]
-            RefLinkNode [90-93]
-              SuperNode [90-90]
-                TextNode [91-92] ' '
-            TextNode [93-108] ' open task item'
-    ListItemNode [111-132]
-      RootNode [111-132]
-        SuperNode [111-132]
-          RefLinkNode [111-114]
-            SuperNode [111-111]
-              TextNode [112-113] 'x'
-          TextNode [114-131] ' closed task item'
-    ListItemNode [135-159]
-      RootNode [135-159]
-        ParaNode [135-159]
-          SuperNode [135-159]
-            RefLinkNode [135-138]
-              SuperNode [135-135]
-                TextNode [136-137] ' '
-            TextNode [138-159] ' loose open task item'
-    ListItemNode [163-189]
-      RootNode [163-189]
-        ParaNode [163-189]
-          SuperNode [163-189]
-            RefLinkNode [163-166]
-              SuperNode [163-163]
-                TextNode [164-165] 'x'
-            TextNode [166-189] ' loose closed task item'
+RootNode [0-229]
+  BulletListNode [1-229]
+    ListItemNode [3-22]
+      RootNode [3-22]
+        ParaNode [3-22]
+          SuperNode [3-22]
+            RefLinkNode [3-6]
+              SuperNode [3-3]
+                TextNode [4-5] ' '
+            TextNode [6-21] ' open task item'
+    ListItemNode [25-68]
+      RootNode [25-68]
+        ParaNode [25-68]
+          SuperNode [25-68]
+            RefLinkNode [25-28]
+              SuperNode [25-25]
+                TextNode [26-27] ' '
+            TextNode [28-68] ' loose second, will make first one loose'
+    ListItemNode [72-83]
+      RootNode [72-83]
+        ParaNode [72-83]
+          SuperNode [72-83]
+            TextNode [72-83] 'bullet item'
+    ListItemNode [86-100]
+      RootNode [86-100]
+        SuperNode [86-100]
+          TextNode [86-99] 'bullet item 2'
+    ListItemNode [103-122]
+      RootNode [103-122]
+        ParaNode [103-122]
+          SuperNode [103-122]
+            TextNode [103-122] 'loose bullet item 3'
+    ListItemNode [125-144]
+      RootNode [125-144]
+        SuperNode [125-144]
+          RefLinkNode [125-128]
+            SuperNode [125-125]
+              TextNode [126-127] ' '
+          TextNode [128-143] ' open task item'
+    ListItemNode [146-167]
+      RootNode [146-167]
+        SuperNode [146-167]
+          RefLinkNode [146-149]
+            SuperNode [146-146]
+              TextNode [147-148] 'x'
+          TextNode [149-166] ' closed task item'
+    ListItemNode [172-196]
+      RootNode [172-196]
+        ParaNode [172-196]
+          SuperNode [172-196]
+            RefLinkNode [172-175]
+              SuperNode [172-172]
+                TextNode [173-174] ' '
+            TextNode [175-196] ' loose open task item'
+    ListItemNode [202-228]
+      RootNode [202-228]
+        ParaNode [202-228]
+          SuperNode [202-228]
+            RefLinkNode [202-205]
+              SuperNode [202-202]
+                TextNode [203-204] 'X'
+            TextNode [205-228] ' loose closed task item'

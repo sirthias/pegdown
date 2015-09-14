@@ -147,10 +147,15 @@ public interface Extensions {
     static final int TASKLISTITEMS = 0x00200000;
 
     /**
+     * GitHub style task list items: - [ ] and - [x]
+     */
+    static final int EXTANCHORLINKS = 0x00400000;
+
+    /**
      * All Optionals other than Suppress and FORCELISTITEMPARA which is a backwards compatibility extension
      *
      */
 
-    static final int ALL_OPTIONALS = (ATXHEADERSPACE  | RELAXEDHRULES | TASKLISTITEMS);
+    static final int ALL_OPTIONALS = (ATXHEADERSPACE  | RELAXEDHRULES | TASKLISTITEMS | EXTANCHORLINKS);
     static final int ALL_WITH_OPTIONALS = ALL | (ATXHEADERSPACE  | RELAXEDHRULES | TASKLISTITEMS);
 }
