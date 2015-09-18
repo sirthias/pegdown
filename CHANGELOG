@@ -1,5 +1,32 @@
-Version 1.5.0 (2013-12-0)
+Version 1.6.0 (2015-09-18)
 --------------------------
+- Fixed collision between ANCHORLINKS and STRIKETHROUGH, WIKILINKS extensions (#161)
+- Fixed handling of image `alt` attributes
+- Improved parsing and rendering of nested lists in numerous ways
+- Improved HTML tag recognition
+- Fixed problem in Definition List parsing (#180)
+- Fixed escaping of special chars used by disabled extensions (#179)
+- Extended `StrikeNode` with `isClosed` member (#178)
+- Fixed reference node including trailing blank lines (#177)
+- Fixed Setext header handling to allow trailing spaces/tabs (#176)
+- Fixed `CaptionNode` not having source index range set (#175)
+- Added `ATXHEADERSPACE` extension to require a space/tab after # in AtxHeaders (#144)
+- Added `RELAXEDHRULES` extenstion to relax requirement of a blank line after horiz. rule. (#129)
+- Fixed `STRIKETHROUGH` extension not adding `~` to special characters (#131)
+- Fixex Wiki Link alternate format (#182)
+- Fixed `TableCellNode` not including trailing `|` (#183)
+- Fixed block quotes not followed by another block quote including trailing blank lines (#184)
+- Added `TASKLISTITEMS` optional extension to handle GFM style task list items (#185)
+- Added `isSetext` to `HeaderNode` to distiguish between Atx and Setext types (#186)
+- Added `ALL_OPTIONALS` and `ALL_WITH_OPTIONALS` extension set
+- Added `EXTANCHORS` optional extension
+- Fixed two or more blank lines between list items breaking the list into separate lists (#190)
+- Fixed paragraph wrapping for list items would produce an AST different from how blank lines before list items (#192)
+- Changed `private` to `protected` methods in `ToHtmlSerializer` so that it can be extended without duplicating code (#193)
+
+
+Version 1.5.0 (2013-12-0)
+-------------------------
 - Upgraded to parboiled 1.1.7
 - Fixed problem with recognizing Wikilinks
 - Fixed problem in image tag HTML rendering

@@ -1,6 +1,6 @@
 name := "pegdown"
 
-version := "1.5.0"
+version := "1.6.0"
 
 homepage := Some(new URL("http://pegdown.org"))
 
@@ -28,7 +28,7 @@ javacOptions in doc := Seq(
   "-encoding", "utf8"
 )
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.7"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
