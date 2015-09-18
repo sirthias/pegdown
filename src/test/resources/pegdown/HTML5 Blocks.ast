@@ -1,3 +1,3 @@
-RootNode [0-110]
-  HtmlBlockNode [0-89] '<figure>\n  <img src="foobar.jpg" alt="Foobar">\n  <figcaption>Foo</figcaption>\n</figure>'
-  HtmlBlockNode [89-110] '<aside>Foo</aside>'
+RootNode [0-108]
+  HtmlBlockNode [0-88] '<figure>\n  <img src="foobar.jpg" alt="Foobar">\n  <figcaption>Foo</figcaption>\n</figure>'
+  HtmlBlockNode [89-108] '<aside>Foo</aside>'
