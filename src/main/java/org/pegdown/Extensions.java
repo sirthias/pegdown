@@ -137,7 +137,7 @@ public interface Extensions {
     static final int FORCELISTITEMPARA = 0x00080000;
 
     /**
-     * Force List and Definition Paragraph wrapping if it includes more than just a single paragraph
+     * Allow horizontal rules without a blank line following them.
      */
     static final int RELAXEDHRULES = 0x00100000;
 
@@ -147,7 +147,9 @@ public interface Extensions {
     static final int TASKLISTITEMS = 0x00200000;
 
     /**
-     * GitHub style task list items: - [ ] and - [x]
+     * Generate anchor links for headers using complete contents of the header.
+     * Spaces and non-alphanumerics replaced by `-`, multiple dashes trimmed to one.
+     * Anchor link is added as first element inside the header with empty content: `<h1><a name="header-a"></a>header a</h1>`
      */
     static final int EXTANCHORLINKS = 0x00400000;
 
