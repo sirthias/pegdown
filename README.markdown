@@ -1,5 +1,7 @@
 Introduction
 ------------
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.pegdown/pegdown/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.pegdown/pegdown)
+[![Javadoc](https://javadoc-emblem.rhcloud.com/doc/org.pegdown/pegdown/badge.svg)](http://www.javadoc.io/doc/org.pegdown/pegdown)
 
 _pegdown_ is a pure Java library for clean and lightweight [Markdown] processing based on a [parboiled] PEG parser.
 
