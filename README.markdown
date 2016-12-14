@@ -1,3 +1,39 @@
+:>>> DEPRECATION NOTE <<<:
+==========================
+
+Although still one of the most popular Markdown parsing libraries for the JVM, *pegdown* has reached its end of life.
+
+The project is essentially unmaintained with [tickets][issues] piling up and crucial bugs not being fixed.<br/>
+*pegdown*'s parsing performance isn't great. In some cases of pathological input runtime can even become exponential,
+which means that the parser either appears to "hang" completely or abort processing after a time-out.
+
+Therefore *pegdown* is not recommended anymore for use in new projects requiring a markdown parser.<br/>
+Instead I suggest you turn to [@vsch]'s [flexmark-java], which appears to be an excellent replacement for these reasons:
+
+* Modern parser architecture (based on [commonmark-java]), designed from the ground up as a *pegdown* replacement and
+  supporting all its features and extensions
+* 30x better average parsing performance without pathological input cases
+* Configuration options for a multitude of markdown dialects ([CommonMark], pegdown, [MultiMarkdown], [kramdown] and [Markdown.pl])
+* Actively maintained and used as the basis of an [IntelliJ plugin] with almost 2M downloads per year
+* The author ([@vsch]) has actively contributed to *pegdown* maintenance in the last two years and is intimately familiar with *pegdown*'s internals and quirks.
+
+In case you need support with migrating from *pegdown* to [flexmark-java], [@vsch] welcomes inquiries in [here][issues] or [here][flexmark-java issues].
+
+[issues]: https://github.com/sirthias/pegdown/issues
+[@vsch]: https://github.com/vsch
+[flexmark-java]: https://github.com/vsch/flexmark-java
+[commonmark-java]: https://github.com/atlassian/commonmark-java
+[CommonMark]: http://spec.commonmark.org/0.27/
+[MultiMarkdown]: http://fletcherpenney.net/multimarkdown/
+[kramdown]: https://kramdown.gettalong.org/
+[Markdown.pl]: http://search.cpan.org/~sekimura/Text-Markdown-Discount-0.11/xt/MarkdownXS.pl
+[IntelliJ plugin]: https://vladsch.com/product/markdown-navigator
+[flexmark-java issues]: https://github.com/vsch/flexmark-java/issues
+
+
+---
+
+
 Introduction
 ------------
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.pegdown/pegdown/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.pegdown/pegdown)
